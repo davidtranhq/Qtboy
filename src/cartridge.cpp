@@ -4,8 +4,8 @@
 #include <tuple>
 #include <cstdint>
 
-#include "Rom.hpp"
-#include "Ram.hpp"
+#include "rom.hpp"
+#include "ram.hpp"
 
 namespace gameboy
 {	
