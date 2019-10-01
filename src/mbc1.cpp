@@ -1,7 +1,7 @@
-#include "Memory_bank_controller.hpp"
+#include "memory_bank_controller.hpp"
 
-#include "Rom.hpp"
-#include "Ram.hpp"
+#include "rom.hpp"
+#include "ram.hpp"
 
 namespace gameboy
 {
