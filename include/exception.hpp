@@ -14,7 +14,7 @@ class Exception : public std::exception
 	size_t line() const noexcept;
 	
 	private:
-	const char *msg_, *file_, *fn_;
+	const char *msg_, *file_, *ln_;
 	size_t line_;
 };
 

@@ -10,8 +10,6 @@ namespace gameboy
 
 System::System()
 {
-	if (SDL_Init(SDL_INIT_EVERYTHING) != 0)
-		throw Bad_SDL {SDL_GetError(), __FILE__, __LINE__};
 }
 
 void System::run()
@@ -23,8 +21,19 @@ void System::run()
 		{
 			if (e.type == SDL_QUIT)
 				quit_ = true;
+			else if (e.type == SDL_KEYDOWN)
+			{
+				switch (e.key.keysym.sym)
+				{
+					case SDLK_t:
+						cpu_.dump(std::cout);
+						break;
+				}
+			}
 		}
-		cpu_.dump(std::cout);
+		#ifdef DEBUG_BULID
+			cpu_.dump(std::cout);
+		#endif
 		cpu_.step();
 		display_.draw_frame();
 	}

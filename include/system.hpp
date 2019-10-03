@@ -5,7 +5,6 @@
 #include <chrono>
 
 #include "processor.hpp"
-#include "display.hpp"
 
 namespace gameboy
 {

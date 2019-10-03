@@ -14,7 +14,7 @@ class Memory_bank_controller
 	public:
 	virtual uint8_t read(uint16_t adr) const = 0;
 	virtual void write(uint8_t b, uint16_t adr) = 0; 
-	virtual const char *type() const = 0;
+    virtual const char *type() const = 0;
 };
 
 class Mbc1 : public Memory_bank_controller

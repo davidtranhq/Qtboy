@@ -32,7 +32,7 @@ Processor::Processor(std::function<uint8_t(uint16_t)> rd,
 	std::function<void(uint8_t, uint16_t)> wr)
 	: read {std::move(rd)},
 	  write {std::move(wr)},
-	  af_ {0}, bc_ {0}, de_ {0}, hl_ {0}, sp_ {0}, pc_ {0}
+	  af_ {0}, bc_ {0}, de_ {0}, hl_ {0}, sp_ {0}, pc_ {0x100}
 {}
 
 bool Processor::get_flag(Flags f) const
