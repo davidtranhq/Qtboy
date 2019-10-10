@@ -17,6 +17,8 @@ class Memory
 	uint8_t read(uint16_t adr) const;
 	void write(uint8_t b, uint16_t adr);
 	void load_cartridge(std::istream &is);
+
+    std::vector<uint8_t> dump_rom() const;
 	
 	private:
 	std::optional<Cartridge> cart_;

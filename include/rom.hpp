@@ -16,6 +16,7 @@ class Rom
 	
 	uint8_t read(uint8_t bank, uint16_t adr) const;
 	void dump(std::ostream &os) const;
+    std::vector<uint8_t> dump() const;
 	
 	private:
 	std::vector<Bank> data_;

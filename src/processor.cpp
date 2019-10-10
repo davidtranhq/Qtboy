@@ -644,12 +644,13 @@ void Processor::step()
 				case 0xfd: res(7, L); break;
 				case 0xfe: res_i(7, HL); break;
 				case 0xff: res(7, A); break;
-				cycles_ += instr_cycles[read(PC+1)];
 			}
+			pc_ += cb_instructions[read(PC+1)].length;
+			cycles_ += cb_instructions[read(PC+1)].cycles;
 		} break;
 	}
-	pc_ += instr_len[op];
-	cycles_ += instr_cycles[op];
+	pc_ += instructions[op].length;
+	cycles_ += instructions[op].cycles;
 	return;
 }
 	
@@ -663,26 +664,6 @@ void Processor::dump(std::ostream &os)
 		<< std::setw(4) << static_cast<int>(hl_) << ' '
 		<< std::setw(4) << static_cast<int>(sp_) << ' '
 		<< std::setw(4) << static_cast<int>(pc_) << ' ' << '\n';
-		
-	uint8_t op {read(pc_)};
-	std::vector<uint8_t> ops; // instruction + operands
-	for (uint8_t i {0}; i < instr_len[op]; ++i)
-		ops.push_back(read(pc_+i));
-	try
-	{
-		std::cout << std::left << std::setw(15) << std::setfill(' ')
-			<< disassembler_.disassemble(ops);
-	}
-	catch (Exception &e)
-	{
-		std::cerr << "Exception in file " << e.file() << " at line "
-			<< e.line() << ": " << e.what() << '\n';
-		std::exit(1);
-	}
-	for (int x : ops)
-		std::cout << std::right << std::setw(2) << std::setfill('0') 
-			<< x << ' ';
-	std::cout << '\n' << std::setw(51) << std::setfill('-') << ' ' << '\n';
 }
 
 }

@@ -1,10 +1,8 @@
-#include <fstream>
-#include <string>
+#ifndef DISASSEMBLER_HPP
+#define DISASSEMBLER_HPP
+
 #include <vector>
-#include "json.hpp"
-
-
-using json = nlohmann::json;
+#include <string>
 
 namespace gameboy
 {
@@ -14,12 +12,9 @@ class Disassembler
 	public:
 	explicit Disassembler();
 	
-	std::string disassemble(const std::vector<uint8_t> &op) const;
-	std::string to_hex_string(uint8_t op) const;
-	
-	private:
-	json opcodes_;
-	
+	std::string disassemble(const std::vector<uint8_t> &ops) const;
 };
 	
 }
+
+#endif

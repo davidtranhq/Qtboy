@@ -21,6 +21,8 @@ class Cartridge
 	uint8_t read(uint16_t adr) const;
 	void write(uint8_t b, uint16_t adr);
 	void dump(std::ostream &os) const;
+    std::vector<uint8_t> dump_rom() const;
+    std::vector<uint8_t> dump_ram() const;
 	bool is_cgb() const;
 	
 	private:

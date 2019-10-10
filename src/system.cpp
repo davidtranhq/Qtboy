@@ -1,9 +1,10 @@
 #include <istream>
 #include <fstream>
-#include <SDL.h>
+#include <vector>
 
 #include "system.hpp"
 #include "exception.hpp"
+#include "disassembler.hpp"
 
 namespace gameboy
 {
@@ -14,30 +15,12 @@ System::System()
 
 void System::run()
 {
-	SDL_Event e;
-	while (!quit_)
-	{
-		while (SDL_PollEvent(&e))
-		{
-			if (e.type == SDL_QUIT)
-				quit_ = true;
-			else if (e.type == SDL_KEYDOWN)
-			{
-				switch (e.key.keysym.sym)
-				{
-					case SDLK_t:
-						cpu_.dump(std::cout);
-						break;
-				}
-			}
-		}
-		#ifdef DEBUG_BULID
-			cpu_.dump(std::cout);
-		#endif
-		cpu_.step();
-		display_.draw_frame();
-	}
+    #ifdef DEBUG_BULID
+        cpu_.dump(std::cout);
+    #endif
+    cpu_.step();
 }
+
 
 void System::load_cartridge(std::istream &is)
 {
@@ -50,6 +33,11 @@ void System::load_cartridge(const std::string &path)
 	if (!rom.good())
 		throw std::runtime_error {"Invalid ROM path!\n"};
 	memory_.load_cartridge(rom);
+}
+
+std::string System::disassemble() const
+{
+    return disassembler_.disassemble(memory_.dump_rom());
 }
 
 uint8_t System::memory_read(uint16_t adr)

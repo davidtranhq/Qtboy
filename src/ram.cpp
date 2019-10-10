@@ -59,6 +59,15 @@ void Ram::dump(std::ostream &os) const
 	}
 }
 
+std::vector<uint8_t> Ram::dump() const
+{
+    std::vector<uint8_t> out {};
+    out.reserve(data_.size() * data_[0].size());
+    for (size_t bank {0}; bank < data_.size(); ++bank)
+        out.insert(out.end(), data_[bank].begin(), data_[bank].end());
+    return out;
+}
+
 void Ram::resize(uint8_t nbanks)
 {
 	data_.resize(nbanks);

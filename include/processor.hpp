@@ -41,7 +41,6 @@ class Processor
 	};
 
 	Register_pair af_, bc_, de_, hl_, sp_, pc_;
-	Disassembler disassembler_;
 	bool stpd_ {false};
 	bool hltd_ {false};
 	uint32_t cycles_ {0};

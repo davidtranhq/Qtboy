@@ -15,6 +15,7 @@ class Ram
 	uint8_t read(uint8_t bank, uint16_t adr) const;
 	void write(uint8_t b, uint8_t bank, uint16_t adr);
 	void dump(std::ostream &os) const;
+    std::vector<uint8_t> dump() const;
 	void resize(uint8_t nbanks);
 	
 	private:

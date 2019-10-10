@@ -92,6 +92,11 @@ void Memory::load_cartridge(std::istream &is)
 	set_ram_size();
 }
 
+std::vector<uint8_t> Memory::dump_rom() const
+{
+    return cart_.value().dump_rom();
+}
+
 void Memory::set_ram_size()
 {
 	bool is_cgb {cart_.value().is_cgb()};

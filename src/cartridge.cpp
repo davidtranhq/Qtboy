@@ -114,6 +114,16 @@ void Cartridge::dump(std::ostream &os) const
 	os << "\nCurrent RAM:\n";
 	ram_.dump(os);
 }
+
+std::vector<uint8_t> Cartridge::dump_rom() const
+{
+    return rom_.dump();
+}
+
+std::vector<uint8_t> Cartridge::dump_ram() const
+{
+    return ram_.dump();
+}
 	
 bool Cartridge::is_cgb() const
 {
