@@ -2,6 +2,7 @@
 
 #include <cstdint>
 #include <vector>
+#include <functional>
 
 #include "rom.hpp"
 #include "ram.hpp"
@@ -15,22 +16,31 @@ class Memory_bank_controller
 	virtual uint8_t read(uint16_t adr) const = 0;
 	virtual void write(uint8_t b, uint16_t adr) = 0; 
     virtual const char *type() const = 0;
+    virtual uint8_t rom_bank() const = 0;
+    virtual uint8_t ram_bank() const = 0;
+    virtual ~Memory_bank_controller() = default;
 };
 
 class Mbc1 : public Memory_bank_controller
 {
 	public:
-	explicit Mbc1(Rom &rom, Ram &ram);
-	
+    explicit Mbc1(Rom *rom, std::optional<External_ram> *ram);
+    Mbc1(const Mbc1 &) = delete;
+    Mbc1 &operator=(const Mbc1 &) = delete;
+    ~Mbc1() override = default;
+
 	uint8_t read(uint16_t adr) const override;
 	void write(uint8_t b, uint16_t adr) override;
 	const char *type() const override { return "MBC1"; }
-	
+    uint8_t rom_bank() const override { return rom_bank_; }
+    uint8_t ram_bank() const override { return ram_bank_; }
+
+
 	private:
-	Rom &rom_;
-	Ram &ram_;
+    Rom *rom_;
+    std::optional<External_ram> *ram_;
 	uint8_t ram_bank_ {0};
-	uint8_t rom_bank_ {0};
+    uint8_t rom_bank_ {1};
 	bool ram_enable_ {false};
 	bool ram_mode_select_ {false};
 };

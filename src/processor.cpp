@@ -31,9 +31,31 @@ namespace gameboy
 Processor::Processor(std::function<uint8_t(uint16_t)> rd,
 	std::function<void(uint8_t, uint16_t)> wr)
 	: read {std::move(rd)},
-	  write {std::move(wr)},
-	  af_ {0}, bc_ {0}, de_ {0}, hl_ {0}, sp_ {0}, pc_ {0x100}
-{}
+      write {std::move(wr)}
+{
+    reset();
+}
+
+void Processor::reset()
+{
+    af_ = 0x01b0;
+    bc_ = 0x0013;
+    de_ = 0x00d8;
+    hl_ = 0x014d;
+    sp_ = 0xfffe;
+    pc_ = 0x0100;
+    cycles_ = 0;
+    stpd_ = false;
+    hltd_ = false;
+}
+
+std::vector<uint8_t> Processor::next_ops(uint16_t n) const
+{
+    std::vector<uint8_t> out {};
+    for (uint16_t i {0}; i < n; ++i)
+        out.push_back(read(pc_+i));
+    return out;
+}
 
 bool Processor::get_flag(Flags f) const
 {
@@ -42,7 +64,12 @@ bool Processor::get_flag(Flags f) const
 
 void Processor::set_flag(Flags f, bool cond)
 {
-	F = (F & ~f) | (cond & f);
+    uint8_t mask;
+    if (cond)
+        mask = 0xff;
+    else
+        mask = 0;
+    F = (F & ~f) | (mask & f);
 }
 
 inline uint16_t cat(uint8_t a, uint8_t b)
@@ -79,7 +106,7 @@ void Processor::check_interrupt()
 void Processor::step()
 {
 	uint8_t op {read(PC)};
-	check_interrupt();
+    check_interrupt();
 	switch (op)
 	{	
 		// misc and control
@@ -90,11 +117,11 @@ void Processor::step()
 		case 0xfb: ei(); break;
 	
 		// jump and calls
-		case 0x18: jr(true, read(PC+1)); break;
-		case 0x20: jr(!get_flag(ZERO), read(PC+1)); break;
-		case 0x28: jr(get_flag(ZERO), read(PC+1)); break;
-		case 0x30: jr(!get_flag(CARRY), read(PC+1)); break;
-		case 0x38: jr(get_flag(CARRY), read(PC+1)); break;
+        case 0x18: jr(true, static_cast<int8_t>(read(PC+1))); break;
+        case 0x20: jr(!get_flag(ZERO), static_cast<int8_t>(read(PC+1))); break;
+        case 0x28: jr(get_flag(ZERO), static_cast<int8_t>(read(PC+1))); break;
+        case 0x30: jr(!get_flag(CARRY), static_cast<int8_t>(read(PC+1))); break;
+        case 0x38: jr(get_flag(CARRY), static_cast<int8_t>(read(PC+1))); break;
 		
 		case 0xc0: ret(!get_flag(ZERO)); break; 
 		case 0xc8: ret(get_flag(ZERO)); break;
@@ -113,6 +140,8 @@ void Processor::step()
 		case 0xcd: call(true, cat(read(PC+2), read(PC+1))); break;
 		case 0xd4: call(!get_flag(CARRY), cat(read(PC+2), read(PC+1))); break;
 		case 0xdc: call(get_flag(CARRY), cat(read(PC+2), read(PC+1))); break;
+
+        case 0xe9: jp(true, HL); break;
 
 		case 0xc7: rst(0x00); break;
 		case 0xcf: rst(0x08); break;
@@ -217,8 +246,8 @@ void Processor::step()
 		case 0x7f: break;
 		
 		case 0xe0: ldd(IO_MEMORY + read(PC+1), A); break; // ldh (a8),A
-		case 0xea: ldd(IO_MEMORY + cat(read(PC+2), read(PC+1)), A); break; // ld (a16),A
-		case 0xf0: ldd(IO_MEMORY + read(PC+1), A); break; // ldh A,(a8)
+        case 0xea: ldd(cat(read(PC+2), read(PC+1)), A); break; // ld (a16),A
+        case 0xf0: ldd(A, IO_MEMORY + read(PC+1)); break; // ldh A,(a8)
 		case 0xfa: ld(A, read(IO_MEMORY + cat(read(PC+2), read(PC+1)))); break; // ldh A,(a16)
 		case 0xe2: ldd(IO_MEMORY + C, A); break; // ld (C),A
 		case 0xf2: ld(A, read(IO_MEMORY + C)); break; // ld A,(C)
@@ -228,7 +257,7 @@ void Processor::step()
 		case 0x11: ld(DE, cat(read(PC+2), read(PC+1))); break;
 		case 0x21: ld(HL, cat(read(PC+2), read(PC+1))); break;
 		case 0x31: ld(SP, cat(read(PC+2), read(PC+1))); break;
-		case 0x08: ldd(cat(read(PC+2), read(PC+1)), SP); break;
+        case 0x08: ldd_sp(cat(read(PC+2), read(PC+1))); break;
 		
 		case 0xc1: pop(BC); break;
 		case 0xd1: pop(DE); break;
@@ -240,7 +269,7 @@ void Processor::step()
 		case 0xe5: push(HL); break;
 		case 0xf5: push(AF); break;
 		
-		case 0xf8: ldhl_sp(read(PC+1));
+        case 0xf8: ldhl_sp(static_cast<int8_t>(read(PC+1))); break;
 		case 0xf9: ld(SP, HL); break;
 		
 		// 8-bit arithmetic 
@@ -344,9 +373,33 @@ void Processor::step()
 		case 0xd6: sbc(read(PC+1), false); break;
 		case 0xde: sbc(read(PC+1), get_flag(CARRY)); break;
 		case 0xe6: andr(read(PC+1)); break;
-		case 0xee: xorr(read(PC+1));
+        case 0xee: xorr(read(PC+1)); break;
 		case 0xf6: orr(read(PC+1)); break;
 		case 0xfe: cp(read(PC+1)); break;
+
+        // 16-bit arithmetic
+        case 0x03: inc(BC); break;
+        case 0x13: inc(DE); break;
+        case 0x23: inc(HL); break;
+        case 0x33: inc(SP); break;
+
+        case 0x09: add(BC); break;
+        case 0x19: add(DE); break;
+        case 0x29: add(HL); break;
+        case 0x39: add(SP); break;
+
+        case 0x0b: dec(BC); break;
+        case 0x1b: dec(DE); break;
+        case 0x2b: dec(HL); break;
+        case 0x3b: dec(SP); break;
+
+        case 0xe8: add_sp(static_cast<int8_t>(read(PC+1))); break;
+
+        // bit operations
+        case 0x07: rlc(A); break;
+        case 0x0f: rrc(A); break;
+        case 0x17: rl(A); break;
+        case 0x1f: rr(A); break;
 		
 		// prefix cb
 		case 0xcb:
@@ -648,22 +701,23 @@ void Processor::step()
 			pc_ += cb_instructions[read(PC+1)].length;
 			cycles_ += cb_instructions[read(PC+1)].cycles;
 		} break;
-	}
-	pc_ += instructions[op].length;
-	cycles_ += instructions[op].cycles;
+        default:
+            std::ostringstream error {};
+            error << "Unimplemented opcode: " << std::hex << static_cast<int>(op);
+            throw std::runtime_error {error.str()};
+    }
+    if (control_op_) // don't increment PC if op modified it itself)
+        control_op_ = false;
+    else
+        pc_ += instructions[op].length;
+    cycles_ += instructions[op].cycles;
 	return;
 }
 	
-void Processor::dump(std::ostream &os)
+Cpu_values Processor::dump() const noexcept
 {
-	std::cout << std::hex << std::setfill('0') << std::right;
-	std::cout << "(AF/BC/DE/HL/SP/PC): " 
-		<< std::setw(4) << static_cast<int>(af_) << ' '
-		<< std::setw(4) << static_cast<int>(bc_) << ' '
-		<< std::setw(4) << static_cast<int>(de_) << ' '
-		<< std::setw(4) << static_cast<int>(hl_) << ' '
-		<< std::setw(4) << static_cast<int>(sp_) << ' '
-		<< std::setw(4) << static_cast<int>(pc_) << ' ' << '\n';
+    return {af_, bc_, de_, hl_, sp_, pc_, cycles_,
+            {read(pc_), read(pc_+1), read(pc_+2)}};
 }
 
 }

@@ -1,12 +1,14 @@
 #include "system.hpp"
 
 #include <iostream>
+#include <string>
 
 using namespace gameboy;
 
 int main(int argc, char *argv[])
 {
-	System system;
-	std::cout << system.disassemble("roms/tetris.gb");
-	return 0;
+    System s;
+    std::cout << "QtBoy Emulator v0.1\n";
+    std::string rom {}
+    return 0;
 }

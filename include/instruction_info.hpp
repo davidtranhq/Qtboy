@@ -6,12 +6,12 @@
 
 struct Instruction
 {
-    const std::string name;
+    std::string name;
 	uint8_t length;
 	uint8_t cycles;
 	uint8_t alt_cycles;
-    const std::string operand1;
-    const std::string operand2;
+    std::string operand1;
+    std::string operand2;
 };
 	
 const std::array<Instruction, 256> instructions

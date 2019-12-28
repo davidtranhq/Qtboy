@@ -2,6 +2,8 @@
 #define MAINWINDOW_H
 
 #include "system.hpp"
+#include "qt_renderer.h"
+
 #include <QMainWindow>
 
 QT_BEGIN_NAMESPACE
@@ -10,6 +12,9 @@ class QMenu;
 class QImage;
 class QLabel;
 QT_END_NAMESPACE
+
+class DisassemblerWindow;
+class DebuggerWindow;
 
 class MainWindow : public QMainWindow
 {
@@ -20,21 +25,18 @@ public:
 
     void loadRom(const QString &fileName);
 
-protected:
-    void closeEvent(QCloseEvent *event) override;
-
 private slots:
     void openRom();
     void showDisassembler();
+    void showDebugger();
     void about();
 
 private:
     void createActions();
 
     gameboy::System system;
-    QImage *display;
-    QWidget *displayArea;
-    QLabel *displayLabel;
+    Qt_renderer *renderer {nullptr};
+    QLabel *display;
     QString curRom;
 };
 

@@ -1,6 +1,9 @@
 #include <istream>
 #include <fstream>
+#include <iomanip>
+#include <sstream>
 #include <vector>
+#include <map>
 
 #include "system.hpp"
 #include "exception.hpp"
@@ -9,18 +12,35 @@
 namespace gameboy
 {
 
-System::System()
-{
-}
+System::System(Renderer *r)
+    : ppu_ { [this](uint16_t adr){return this->memory_read(adr);}, r },
+      renderer_ {r}
+{}
+
+// system control
 
 void System::run()
+{}
+
+void System::reset()
 {
-    #ifdef DEBUG_BULID
-        cpu_.dump(std::cout);
-    #endif
-    cpu_.step();
+    memory_.reset();
+    cpu_.reset();
+    ppu_.reset();
 }
 
+void System::step(size_t n)
+{
+    for (size_t i {0}; i < n; ++i)
+    {
+        size_t old_cycles {cpu_.cycles()};
+        cpu_.step();
+        ppu_.step(old_cycles - cpu_.cycles());
+    }
+    memory_changed_ = memory_.was_written();
+}
+
+// system setup
 
 void System::load_cartridge(std::istream &is)
 {
@@ -35,10 +55,17 @@ void System::load_cartridge(const std::string &path)
 	memory_.load_cartridge(rom);
 }
 
-std::string System::disassemble() const
+void System::set_renderer(Renderer *r)
 {
-    return disassembler_.disassemble(memory_.dump_rom());
+    renderer_.reset(r);
+    ppu_.set_renderer(r);
 }
+
+// system debug
+
+
+
+// callbacks to interface other components with memory
 
 uint8_t System::memory_read(uint16_t adr)
 {

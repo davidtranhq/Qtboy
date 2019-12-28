@@ -1,23 +1,16 @@
 #include <QtWidgets>
 #include "mainwindow.h"
 #include "disassemblerwindow.h"
+#include "debuggerwindow.h"
 
 MainWindow::MainWindow(QWidget *parent)
-    : QMainWindow(parent),
-      display(new QImage),
-      displayArea(new QWidget),
-      displayLabel(new QLabel(displayArea))
+    : QMainWindow {parent},
+      renderer {new Qt_renderer},
+      display {new QLabel}
 {
+    loadRom("../../../roms/ldr.gb");
     createActions();
-    displayLabel->setPixmap(QPixmap::fromImage(*display));
-    setCentralWidget(displayArea);
-    displayArea->show();
-    loadRom("C:/Users/david/Documents/GitHub/Gameboy/roms/tetris.gb");
-}
-
-void MainWindow::closeEvent(QCloseEvent *event)
-{
-    event->accept();
+    setCentralWidget(display);
 }
 
 void MainWindow::openRom()
@@ -29,7 +22,14 @@ void MainWindow::openRom()
 
 void MainWindow::showDisassembler()
 {
-    DisassemblerWindow dw {system};
+    auto disassembler = new DisassemblerWindow(this, system);
+    disassembler->show();
+}
+
+void MainWindow::showDebugger()
+{
+    auto debugger = new DebuggerWindow(this, system, *renderer);
+    debugger->show();
 }
 
 void MainWindow::about()
@@ -45,7 +45,8 @@ void MainWindow::createActions()
     openAct->setShortcuts(QKeySequence::Open);
 
     QMenu *toolsMenu = menuBar()->addMenu(tr("&Tools"));
-    QAction *disassembleAct = toolsMenu->addAction(tr("&Disassemble"), this, &MainWindow::showDisassembler);
+    QAction *disassembleAct = toolsMenu->addAction(tr("Disassemble"), this, &MainWindow::showDisassembler);
+    QAction *debuggerAct = toolsMenu->addAction(tr("Debugger"), this, &MainWindow::showDebugger);
 
     QMenu *helpMenu = menuBar()->addMenu(tr("&Help"));
     QAction *aboutAct = helpMenu->addAction(tr("&About"), this, &MainWindow::about);
@@ -53,5 +54,6 @@ void MainWindow::createActions()
 
 void MainWindow::loadRom(const QString &fileName)
 {
+    system.reset();
     system.load_cartridge(fileName.toStdString());
 }

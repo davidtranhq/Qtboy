@@ -5,10 +5,12 @@
 #include <cstdint>
 #include <memory>
 #include <optional>
+#include <map>
 
 #include "rom.hpp"
 #include "ram.hpp"
 #include "memory_bank_controller.hpp"
+#include "debug_types.hpp"
 
 namespace gameboy
 {
@@ -16,20 +18,26 @@ namespace gameboy
 class Cartridge
 {
 	public:
-	explicit Cartridge(std::istream &is);
-	
+    explicit Cartridge(std::istream &is);
+    Cartridge(const Cartridge &) = delete;
+    Cartridge(Cartridge &&) = default;
+    Cartridge &operator=(const Cartridge &) = delete;
+    Cartridge &operator=(Cartridge &&) = default;
+    ~Cartridge() = default;
+
 	uint8_t read(uint16_t adr) const;
-	void write(uint8_t b, uint16_t adr);
-	void dump(std::ostream &os) const;
+    void write(uint8_t b, uint16_t adr);
+    std::map<std::string, Memory_range> dump() const;
     std::vector<uint8_t> dump_rom() const;
     std::vector<uint8_t> dump_ram() const;
-	bool is_cgb() const;
+    bool is_cgb() const;
 	
 	private:
-	Rom rom_;
-	Ram ram_;
-	std::optional<std::unique_ptr<Memory_bank_controller>> mbc_;
-	std::string title_;
+    Rom rom_;
+    std::optional<External_ram> ram_ {std::nullopt};
+
+    std::unique_ptr<Memory_bank_controller> mbc_ {nullptr};
+    std::string title_ {};
 
 	void init_mbc();
 	void init_info();

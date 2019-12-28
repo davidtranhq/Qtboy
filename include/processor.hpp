@@ -16,11 +16,24 @@ namespace gameboy
 class Processor
 {
 	public:
+
 	
 	Processor(std::function<uint8_t(uint16_t)> rd, 
-		std::function<void(uint8_t, uint16_t)> wr);
+              std::function<void(uint8_t, uint16_t)> wr);
 	void step();
-	void dump(std::ostream &os);
+    void reset();
+    Cpu_values dump() const noexcept;
+
+    uint16_t af() const noexcept { return af_; }
+    uint16_t bc() const noexcept { return bc_; }
+    uint16_t de() const noexcept { return de_; }
+    uint16_t hl() const noexcept { return hl_; }
+    uint16_t sp() const noexcept { return sp_; }
+    uint16_t pc() const noexcept { return pc_; }
+    uint32_t cycles() const noexcept { return cycles_; }
+
+    std::vector<uint8_t> next_ops(uint16_t n) const;
+
 	
 	private:
 	
@@ -40,10 +53,11 @@ class Processor
 		JOYPAD = 0x60,
 	};
 
-	Register_pair af_, bc_, de_, hl_, sp_, pc_;
-	bool stpd_ {false};
-	bool hltd_ {false};
+    Register_pair af_, bc_, de_, hl_, sp_, pc_;
 	uint32_t cycles_ {0};
+    bool stpd_ {false};
+    bool hltd_ {false};
+    bool control_op_ {false};
 	
 	std::function<uint8_t(uint16_t)> read;
 	std::function<void(uint8_t, uint16_t)> write;
@@ -57,7 +71,7 @@ class Processor
 	
 	// instructions
 	// misc/control
-	void nop() const {};
+    void nop() const {}
 	void stop() { stpd_ = true; }
 	void halt() { hltd_ = true; }
 	void di() {write(0, 0xffff); }
@@ -71,8 +85,9 @@ class Processor
 	void reti(); // ?
 	// 8-bit load
 	void ld(uint8_t &a, uint8_t b) { a = b; }
-	void ldd(uint16_t adr, uint8_t b) { write(adr, b); }
-	void ldr(const Register_pair &rp, uint8_t b) { write(rp, b); }
+    void ldd(uint16_t adr, uint8_t b) { write(b, adr); }
+    void ldd_sp(uint16_t adr);
+    void ldr(const Register_pair &rp, uint8_t b) { write(b, rp); }
 	
 	// 16-bit load
 	void ld(Register_pair &a, const uint16_t b) { a = b; }
@@ -99,6 +114,7 @@ class Processor
 	void inc(Register_pair &rp) { ++rp; }
 	void dec(Register_pair &rp) { --rp; }
 	void add(const uint16_t);
+    void add_sp(int8_t);
 	// 8-bit rotations and shifts
 	void rlc(uint8_t &);
 	void rlc_i(uint16_t adr);

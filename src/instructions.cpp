@@ -20,8 +20,9 @@ void Processor::jr(bool cond, const int8_t d)
 {
 	if (cond)
 	{
-		pc_ += d;
-		pc_ -= 2; // adjust for PC += 2
+        pc_ += d;
+        // jr is still incremented by the instruction length
+        // afterwards
 	}
 }
 
@@ -29,9 +30,9 @@ void Processor::ret(bool cond)
 {
 	if (cond)
 	{
-		pc_.lo = read(sp_);
-		pc_.hi = read(++sp_);
-		pc_ -= 2; // adjust for PC += 2
+        pc_.lo = read(sp_++);
+        pc_.hi = read(sp_++);
+        control_op_ = true;
 	}
 }
 
@@ -39,8 +40,8 @@ void Processor::jp(bool cond, const uint16_t adr)
 {
 	if (cond)
 	{
-		pc_ = adr;
-		pc_ -= 3; // adjust for PC += 3
+        pc_ = adr;
+        control_op_ = true;
 	}
 }
 
@@ -48,10 +49,11 @@ void Processor::call(bool cond, const uint16_t adr)
 {
 	if (cond)
 	{
-		write(pc_.hi, read(--sp_));
-		write(pc_.lo, read(--sp_));
-		pc_ = adr;
-		pc_ -= 3; // adjust for PC += 3
+        pc_ += 3;
+        write(pc_.hi, --sp_);
+        write(pc_.lo, --sp_);
+        pc_ = adr;
+        control_op_ = true;
 	}
 }
 
@@ -66,22 +68,22 @@ void Processor::rst(const uint8_t n)
 void Processor::reti()
 {
 	pc_.lo = read(sp_);
-	pc_.hi = read(++sp_);
-	--pc_; // adjust for instruction length
+    pc_.hi = read(++sp_);
+    control_op_ = true;
 	write(1, 0xffff); // enable interrupt
 }
 
 // 16-bit load
 void Processor::push(const uint16_t rp)
 {
-	write((rp & 0xff00) >> 8, read(--sp_));
-	write(rp & 0xff, read(--sp_));
+    write((rp & 0xff00) >> 8, --sp_);
+    write(rp & 0xff, --sp_);
 }
 
 void Processor::pop(Register_pair &rp)
 {
-	rp.hi = read(sp_);
-	rp.lo = read(++sp_);
+    rp.lo = read(sp_++);
+    rp.hi = read(sp_++);
 }
 
 void Processor::ldhl_sp(const int8_t d)
@@ -102,9 +104,15 @@ void Processor::ldhl_sp(const int8_t d)
 	hl_ = res;
 }
 
+void Processor::ldd_sp(const uint16_t adr)
+{
+    write(sp_.lo, adr);
+    write(sp_.hi, adr+1);
+}
+
 void Processor::inc(uint8_t &r)
 {
-	set_flag(ZERO, r + 1 == 0);
+    set_flag(ZERO, r + 1 > 0xff);
 	set_flag(HALF, r + 1 > 0x0f);
 	set_flag(NEGATIVE, false);
 	++r;
@@ -130,6 +138,11 @@ void Processor::dec_i(uint16_t adr)
 	uint8_t b {read(adr)};
 	dec(b);
 	write(b, adr);
+}
+
+void Processor::add_sp(int8_t d)
+{
+    sp_ += d;
 }
 
 void Processor::daa()
@@ -182,6 +195,7 @@ void Processor::sbc(const uint8_t r, bool cy)
 	set_flag(ZERO, res == 0);
 	set_flag(NEGATIVE, true);
 	set_flag(HALF, neg_half_check(af_.hi, r - cy));
+    set_flag(CARRY, res < 0);
 	af_.hi = af_.hi - r - cy;
 }
 
@@ -192,6 +206,7 @@ void Processor::andr(const uint8_t r)
 	set_flag(NEGATIVE, false);
 	set_flag(HALF, true);
 	set_flag(CARRY, false);
+    af_.hi = res;
 }
 
 void Processor::xorr(const uint8_t r)
@@ -201,6 +216,7 @@ void Processor::xorr(const uint8_t r)
 	set_flag(NEGATIVE, false);
 	set_flag(HALF, false);
 	set_flag(CARRY, false);
+    af_.hi = res;
 }
 
 void Processor::orr(const uint8_t r)
@@ -208,8 +224,9 @@ void Processor::orr(const uint8_t r)
 	uint8_t res = af_.hi | r;
 	set_flag(ZERO, res == 0);
 	set_flag(NEGATIVE, false);
-	set_flag(HALF, false);
+    set_flag(HALF, false);
 	set_flag(CARRY, false);
+    af_.hi = res;
 }
 
 void Processor::cp(const uint8_t r)
@@ -231,7 +248,7 @@ void Processor::add(const uint16_t rp)
 
 void Processor::rlc(uint8_t &r)
 {
-	bool msb {r & 0x80};
+    bool msb {static_cast<bool>(r & 0x80)};
 	r <<= 1;
 	set_flag(CARRY, msb);
 	r &= (msb & 0x01);
@@ -246,7 +263,7 @@ void Processor::rlc_i(uint16_t adr)
 
 void Processor::rrc(uint8_t &r)
 {
-	bool lsb {r & 0x01};
+    bool lsb = r & 0x01;
 	r >>= 1;
 	set_flag(CARRY, lsb);
 	r &= (lsb & 0x80);

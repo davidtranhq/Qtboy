@@ -3,6 +3,7 @@
 #include <stdexcept>
 #include <tuple>
 #include <cstdint>
+#include <QDebug>
 
 #include "rom.hpp"
 #include "ram.hpp"
@@ -26,9 +27,9 @@ void Cartridge::init_mbc()
 			break; // no MBC
 		case 0x01:
 		case 0x02:
-		case 0x03:
-			mbc_ = std::make_unique<Mbc1>(rom_, ram_);
-			break;
+        case 0x03:
+            mbc_ = std::make_unique<Mbc1>(&rom_, &ram_);
+            break;
 		/*
 		case 0x05:
 		case 0x06:
@@ -63,23 +64,27 @@ void Cartridge::init_info()
 
 void Cartridge::init_ram()
 {
-	switch (rom_.read(0, 0x148))
+    switch (rom_.read(0, 0x149))
 	{
 		default:
-		case 0x00:
+        case 0x00:
 			break; // no ram
 		case 0x01:
 		case 0x02:
-			ram_.resize(1); // 1 bank of 8KB RAM
+            ram_ = {};
+            ram_->resize(1); // 1 bank of 8KB RAM
 			break;
 		case 0x03:
-			ram_.resize(4);
+            ram_ = {};
+            ram_->resize(4);
 			break;
 		case 0x04:
-			ram_.resize(16);
+            ram_ = {};
+            ram_->resize(16);
 			break;
 		case 0x05:
-			ram_.resize(8);
+            ram_ = {};
+            ram_->resize(8);
 			break;
 	}
 }
@@ -87,9 +92,9 @@ void Cartridge::init_ram()
 uint8_t Cartridge::read(uint16_t adr) const
 {
 	uint8_t b;
-	if (mbc_.has_value())
+    if (mbc_)
 	{
-		b = mbc_.value()->read(adr);
+        b = mbc_->read(adr);
 	}
 	else // no banking, 32 KB rom, 2 banks of 16KB
 	{
@@ -102,17 +107,30 @@ uint8_t Cartridge::read(uint16_t adr) const
 
 void Cartridge::write(uint8_t b, uint16_t adr)
 {
-	if (mbc_.has_value())
-		mbc_.value()->write(b, adr);
+    if (mbc_)
+        mbc_->write(b, adr);
 }
-	
-void Cartridge::dump(std::ostream &os) const
-{ 
-	os << "\nMBC type: " << (mbc_ ? mbc_.value()->type() : "No MBC") << '\n';
-	os << "Loaded ROM: " << title_ << '\n';
-	rom_.dump(os);
-	os << "\nCurrent RAM:\n";
-	ram_.dump(os);
+
+std::map<std::string, Memory_range> Cartridge::dump() const
+{
+    std::map<std::string, Memory_range> out {};
+    uint8_t rom_bank {1};
+    if (mbc_)
+    {
+        rom_bank = mbc_->rom_bank();
+        if (ram_)
+        {
+            uint8_t ram_bank {mbc_->ram_bank()};
+            out["RAMX"] = {"RAM" + std::to_string(ram_bank), ram_->dump(ram_bank)};
+        }
+        else
+        {
+            out["RAMX"] = {"RAMX", std::vector<uint8_t>(sizeof(External_ram::Bank))};
+        }
+    }
+    out["ROM0"] = {"ROM0", rom_.dump(0)};
+    out["ROMX"] = {"ROM" + std::to_string(rom_bank), rom_.dump(rom_bank)};
+    return out;
 }
 
 std::vector<uint8_t> Cartridge::dump_rom() const
@@ -122,7 +140,9 @@ std::vector<uint8_t> Cartridge::dump_rom() const
 
 std::vector<uint8_t> Cartridge::dump_ram() const
 {
-    return ram_.dump();
+    if (ram_)
+        return ram_->dump();
+    return {};
 }
 	
 bool Cartridge::is_cgb() const
