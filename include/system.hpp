@@ -26,8 +26,8 @@ class System
     void step(size_t n);
 
     // system setup
-	void load_cartridge(std::istream &is);
-	void load_cartridge(const std::string &path);
+    void load_cartridge(std::istream &is);
+    bool load_cartridge(const std::string &path);
     void set_renderer(Renderer *r);
 
     // system debug

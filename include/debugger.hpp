@@ -26,7 +26,6 @@ class Debugger
     void add_breakpoint(uint16_t);
     void delete_breakpoint(uint16_t);
     void enable_logging(bool b = true);
-    void set_log_file(const std::string &);
     void write_log(); // write log to file
     std::string log(); // return log as string
 
@@ -46,6 +45,7 @@ class Debugger
     std::vector<Assembly> disassemble() const; // disassemble all
 
     private:
+    bool valid_log_file(const std::string &s) const;
     bool at_breakpoint();
     std::string parse_operand(const std::array<uint8_t, 3> &ops,
                               const std::string &operand,
@@ -58,7 +58,7 @@ class Debugger
     std::map<std::string, Memory_range> memory_map_ {};
     bool paused_ {false};
     bool log_ {true};
-    std::string log_path_ {"C:/Users/david/Documents/GitHub/Gameboy/tools/cpu.log"};
+    std::ofstream log_file_ {"cpu.log"};
 };
 
 }

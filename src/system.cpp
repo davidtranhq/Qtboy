@@ -45,12 +45,13 @@ void System::load_cartridge(std::istream &is)
 	memory_.load_cartridge(is);
 }
 
-void System::load_cartridge(const std::string &path)
+bool System::load_cartridge(const std::string &path)
 {
 	std::ifstream rom {path, std::ios::binary};
 	if (!rom.good())
-		throw std::runtime_error {"Invalid ROM path!\n"};
+        return false;
 	memory_.load_cartridge(rom);
+    return true;
 }
 
 void System::set_renderer(Renderer *r)

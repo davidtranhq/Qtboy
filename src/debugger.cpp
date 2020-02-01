@@ -15,7 +15,6 @@ Debugger::Debugger(System *s)
 {
     if (!system_)
         throw Bad_debugger {"Could not attach system to debugger", __FILE__, __LINE__};
-    memory_map_ = dump_mapped_memory();
 }
 
 void Debugger::run()
@@ -54,7 +53,6 @@ void Debugger::reset()
 {
     system_->reset();
     steps_ = 0;
-    memory_map_ = dump_mapped_memory();
     memory_changed_ = false;
 }
 
@@ -73,15 +71,9 @@ void Debugger::enable_logging(bool b)
     log_ = b;
 }
 
-void Debugger::set_log_file(const std::string &s)
-{
-    log_path_ = s;
-}
-
 void Debugger::write_log()
 {
-    static std::ofstream log {log_path_};
-    log << Debugger::log() << '\n';
+    log_file_ << Debugger::log() << '\n';
 }
 
 std::string Debugger::log()
