@@ -22,62 +22,64 @@ Debugger_window::Debugger_window(QWidget *parent, gameboy::System *s)
 
 void Debugger_window::create_stack_viewer()
 {
-    stack = new QPlainTextEdit;
-    stack->setReadOnly(true);
-    stack->setWordWrapMode(QTextOption::NoWrap);
+    stack_ = new QPlainTextEdit;
+    stack_->setReadOnly(true);
+    stack_->setWordWrapMode(QTextOption::NoWrap);
     QFont f {"Courier New"};
-    stack->setFont(f);
-    stack->setPlainText(QString::fromStdString(system.dump_formatted_memory(gameboy::Dump_format::Stack)));
+    stack_->setFont(f);
+    stack_->setPlainText(QString::fromStdString(debugger_.dump_formatted_memory(gameboy::Dump_format::Stack)));
 }
 
-void Debugger_window::createMemoryViewer()
+void Debugger_window::create_memory_viewer()
 {
-    memory = new QPlainTextEdit;
-    memory->setReadOnly(true);
-    memory->setWordWrapMode(QTextOption::NoWrap);
+    memory_ = new QPlainTextEdit;
+    memory_->setReadOnly(true);
+    memory_->setWordWrapMode(QTextOption::NoWrap);
     QFont f {"Courier New"};
-    memory->setFont(f);
-    memory->setPlainText(QString::fromStdString(system.dump_formatted_memory()));
+    memory_->setFont(f);
+    memory_->setPlainText(QString::fromStdString(debugger_.dump_formatted_memory()));
 }
 
-void Debugger_window::createInstructionViewer()
+void Debugger_window::create_instruction_viewer()
 {
-    rom = new QPlainTextEdit;
-    rom->setReadOnly(true);
-    rom->setWordWrapMode(QTextOption::NoWrap);
+    rom_ = new QPlainTextEdit;
+    rom_->setReadOnly(true);
+    rom_->setWordWrapMode(QTextOption::NoWrap);
     QFont romFont {"Courier New"};
-    rom->setFont(romFont);
-    rom->setPlainText(QString::fromStdString(ds.hex_dump(system.dump_memory())));
+    rom_->setFont(romFont);
+    rom_->setPlainText(QString::fromStdString(disassembler_.hex_dump(debugger_.dump_memory())));
 }
 
-void Debugger_window::createLayout()
+void Debugger_window::create_layout()
 {
     auto *run = new QPushButton(tr("Run"));
     auto *step = new QPushButton(tr("Step"));
     auto *stepN = new QPushButton(tr("Step n"));
-    steps = new QLineEdit;
+    steps_to_take_ = new QLineEdit;
     auto *reset = new QPushButton(tr("Reset"));
     auto *viewFrameBuffer = new QPushButton(tr("View frame buffer"));
     auto *pause = new QPushButton(tr("Pause"));
     auto *breakpoint = new QPushButton(tr("Set breakpoint"));
-    enableViewerUpdate = new QCheckBox(tr("Update viewers"));
+    enable_viewer_update_ = new QCheckBox(tr("Update viewers"));
+    enable_log_ = new QCheckBox(tr("Trace log"));
 
-    connect(run, SIGNAL(clicked()), this, SLOT(runCpu()));
-    connect(step, SIGNAL(clicked()), this, SLOT(stepCpu()));
-    connect(stepN, SIGNAL(clicked()), this, SLOT(stepNCpu()));
-    connect(reset, SIGNAL(clicked()), this, SLOT(resetSystem()));
-    connect(viewFrameBuffer, SIGNAL(clicked()), this, SLOT(showFrameBuffer()));
-    connect(pause, SIGNAL(clicked()), this, SLOT(pauseCpu()));
-    connect(breakpoint, SIGNAL(clicked()), this, SLOT(setBreakpoint()));
+    connect(run, SIGNAL(clicked()), this, SLOT(run()));
+    connect(step, SIGNAL(clicked()), this, SLOT(step()));
+    connect(stepN, SIGNAL(clicked()), this, SLOT(stepN()));
+    connect(reset, SIGNAL(clicked()), this, SLOT(reset()));
+    connect(viewFrameBuffer, SIGNAL(clicked()), this, SLOT(show_frame_buffer()));
+    connect(pause, SIGNAL(clicked()), this, SLOT(pause()));
+    connect(breakpoint, SIGNAL(clicked()), this, SLOT(set_breakpoint()));
+    connect(enable_log_, SIGNAL(stateChanged(int)), this, SLOT(toggle_log(int)));
 
-    af = new QLabel;
-    bc = new QLabel;
-    de = new QLabel;
-    hl = new QLabel;
-    sp = new QLabel;
-    pc = new QLabel;
-    cycles = new QLabel;
-    stepsTakenL = new QLabel;
+    af_ = new QLabel;
+    bc_ = new QLabel;
+    de_ = new QLabel;
+    hl_ = new QLabel;
+    sp_ = new QLabel;
+    pc_ = new QLabel;
+    cycles_ = new QLabel;
+    steps_ = new QLabel;
 
     QGridLayout *controls {new QGridLayout};
     controls->addWidget(run, 0, 0);
@@ -85,24 +87,25 @@ void Debugger_window::createLayout()
     controls->addWidget(step, 1, 0);
     controls->addWidget(reset, 1, 1);
     controls->addWidget(stepN, 2, 0);
-    controls->addWidget(steps, 2, 1);
+    controls->addWidget(steps_to_take_, 2, 1);
     controls->addWidget(viewFrameBuffer, 3, 0);
-    controls->addWidget(enableViewerUpdate, 3, 1);
+    controls->addWidget(enable_viewer_update_, 3, 1);
+    controls->addWidget(enable_log_, 4, 0);
 
 
     QVBoxLayout *cpuInfo {new QVBoxLayout};
-    cpuInfo->addWidget(af);
-    cpuInfo->addWidget(bc);
-    cpuInfo->addWidget(de);
-    cpuInfo->addWidget(hl);
-    cpuInfo->addWidget(sp);
-    cpuInfo->addWidget(pc);
-    cpuInfo->addWidget(cycles);
-    cpuInfo->addWidget(stepsTakenL);
+    cpuInfo->addWidget(af_);
+    cpuInfo->addWidget(bc_);
+    cpuInfo->addWidget(de_);
+    cpuInfo->addWidget(hl_);
+    cpuInfo->addWidget(sp_);
+    cpuInfo->addWidget(pc_);
+    cpuInfo->addWidget(cycles_);
+    cpuInfo->addWidget(steps_);
 
-    createInstructionViewer();
-    createMemoryViewer();
-    createStackViewer();
+    create_instruction_viewer();
+    create_stack_viewer();
+    create_memory_viewer();
 
     QVBoxLayout *sidebar {new QVBoxLayout};
     sidebar->addLayout(controls);
@@ -110,24 +113,24 @@ void Debugger_window::createLayout()
 
     QHBoxLayout *top {new QHBoxLayout};
     top->addLayout(sidebar, 30);
-    top->addWidget(rom, 70);
+    top->addWidget(rom_, 70);
 
     QVBoxLayout *left {new QVBoxLayout};
     left->addLayout(top, 30);
-    left->addWidget(memory, 70);
+    left->addWidget(memory_, 70);
 
     QHBoxLayout *mainLayout {new QHBoxLayout};
     mainLayout->addLayout(left, 80);
-    mainLayout->addWidget(stack, 20);
+    mainLayout->addWidget(stack_, 20);
 
-    updateCpuLabels();
+    update_labels();
     setLayout(mainLayout);
 }
 
-void Debugger_window::highlightByte()
+void Debugger_window::highlight_byte()
 {
-    uint16_t nByte = system.dump_cpu().pc;
-    QPlainTextEdit *view = rom;
+    uint16_t nByte = debugger_.dump_cpu().pc;
+    QPlainTextEdit *view = rom_;
     std::ostringstream adr;
     adr << std::hex << std::setfill('0') << std::setw(4)
         << nByte;
@@ -164,10 +167,10 @@ void Debugger_window::highlightByte()
     view->setTextCursor(current);
 }
 
-void Debugger_window::highlightStack()
+void Debugger_window::highlight_stack()
 {
-    uint16_t nByte = system.dump_cpu().sp;
-    QPlainTextEdit *view = stack;
+    uint16_t nByte = debugger_.dump_cpu().sp;
+    QPlainTextEdit *view = stack_;
     std::ostringstream adr;
     adr << std::hex << std::setfill('0') << std::setw(4)
         << nByte;
@@ -208,92 +211,86 @@ void Debugger_window::highlightStack()
     view->setTextCursor(current);
 }
 
-void Debugger_window::updateCpuLabels()
+void Debugger_window::update_labels()
 {
-    gameboy::Cpu_values dump {system.dump_cpu()};
-    af->setText(QStringLiteral("AF: %1").arg(dump.af, 4, 16, QChar('0')));
-    bc->setText(QStringLiteral("BC: %1").arg(dump.bc, 4, 16, QChar('0')));
-    de->setText(QStringLiteral("DE: %1").arg(dump.de, 4, 16, QChar('0')));
-    hl->setText(QStringLiteral("HL: %1").arg(dump.hl, 4, 16, QChar('0')));
-    sp->setText(QStringLiteral("SP: %1").arg(dump.sp, 4, 16, QChar('0')));
-    pc->setText(QStringLiteral("PC: %1").arg(dump.pc, 4, 16, QChar('0')));
-    cycles->setText(QStringLiteral("Cycles: %1").arg(dump.cycles));
-    stepsTakenL->setText(QStringLiteral("Steps taken: %1").arg(stepsTaken));
+    gameboy::Cpu_values dump {debugger_.dump_cpu()};
+    af_->setText(QStringLiteral("AF: %1").arg(dump.af, 4, 16, QChar('0')));
+    bc_->setText(QStringLiteral("BC: %1").arg(dump.bc, 4, 16, QChar('0')));
+    de_->setText(QStringLiteral("DE: %1").arg(dump.de, 4, 16, QChar('0')));
+    hl_->setText(QStringLiteral("HL: %1").arg(dump.hl, 4, 16, QChar('0')));
+    sp_->setText(QStringLiteral("SP: %1").arg(dump.sp, 4, 16, QChar('0')));
+    pc_->setText(QStringLiteral("PC: %1").arg(dump.pc, 4, 16, QChar('0')));
+    cycles_->setText(QStringLiteral("Cycles: %1").arg(dump.cycles));
+    steps_->setText(QStringLiteral("Steps taken: %1").arg(debugger_.steps()));
 }
 
-void Debugger_window::updateViewers()
+void Debugger_window::update_viewers()
 {
-    if (system.memory_changed())
+    if (debugger_.memory_changed())
     {
-        int scroll = memory->verticalScrollBar()->value();
-        memory->setPlainText(QString::fromStdString(system.dump_formatted_memory()));
-        memory->verticalScrollBar()->setValue(scroll);
+        int scroll = memory_->verticalScrollBar()->value();
+        memory_->setPlainText(QString::fromStdString(debugger_.dump_formatted_memory()));
+        memory_->verticalScrollBar()->setValue(scroll);
 
-        int scroll2 = rom->verticalScrollBar()->value();
-        rom->setPlainText(QString::fromStdString(ds.hex_dump(system.dump_memory())));
-        rom->verticalScrollBar()->setValue(scroll2);
+        int scroll2 = rom_->verticalScrollBar()->value();
+        rom_->setPlainText(QString::fromStdString(disassembler_.hex_dump(debugger_.dump_memory())));
+        rom_->verticalScrollBar()->setValue(scroll2);
 
-        int scroll3 = stack->verticalScrollBar()->value();
-        stack->setPlainText(QString::fromStdString(system.dump_formatted_memory(gameboy::Dump_format::Stack)));
-        stack->verticalScrollBar()->setValue(scroll3);
+        int scroll3 = stack_->verticalScrollBar()->value();
+        stack_->setPlainText(QString::fromStdString(debugger_.dump_formatted_memory(gameboy::Dump_format::Stack)));
+        stack_->verticalScrollBar()->setValue(scroll3);
     }
-    highlightByte();
-    highlightStack();
+    highlight_byte();
+    highlight_stack();
 }
 
-void Debugger_window::runCpu()
+void Debugger_window::run()
 {
-    pause = false;
-    for (;;)
+    while (!debugger_.paused())
     {
-        if (pause)
-            break;
         QCoreApplication::processEvents();
-        system.step(1);
-        ++stepsTaken;
-        updateCpuLabels();
-        if (enableViewerUpdate->isChecked())
-            updateViewers();
+        debugger_.step(1);
+        update_labels();
+        if (enable_viewer_update_->isChecked())
+            update_viewers();
     }
 }
 
-void Debugger_window::stepCpu()
+void Debugger_window::step()
 {
-    system.step(1);
-    ++stepsTaken;
-    updateCpuLabels();
-    if (enableViewerUpdate->isChecked())
-        updateViewers();
+    debugger_.step(1);
+    update_labels();
+    if (enable_viewer_update_->isChecked())
+        update_viewers();
 }
 
-void Debugger_window::stepNCpu()
+void Debugger_window::stepN()
 {
-    size_t n {steps->text().toULongLong()};
-    system.step(n);
-    stepsTaken += n;
-    updateCpuLabels();
-    if (enableViewerUpdate->isChecked())
-        updateViewers();
+    size_t n {steps_to_take_->text().toULongLong()};
+    debugger_.step(n);
+    update_labels();
+    if (enable_viewer_update_->isChecked())
+        update_viewers();
 }
 
-void Debugger_window::showFrameBuffer()
+void Debugger_window::show_frame_buffer()
 {
-    frameBuffer = new QLabel(this, Qt::Window);
-    system.draw_framebuffer();
-    frameBuffer->setPixmap(QPixmap::fromImage(display.image()));
-    frameBuffer->show();
 }
 
-void Debugger_window::resetSystem()
+void Debugger_window::reset()
 {
-    system.reset();
-    stepsTaken = 0;
-    updateCpuLabels();
-    if (enableViewerUpdate->isChecked())
-        updateViewers();
+    debugger_.reset();
+    update_labels();
+    if (enable_viewer_update_->isChecked())
+        update_viewers();
 }
 
-void Debugger_window::pauseCpu()
+void Debugger_window::pause()
 {
-    pause = true;
+    debugger_.pause();
+}
+
+void Debugger_window::toggle_log(int state)
+{
+    debugger_.enable_logging(state);
 }

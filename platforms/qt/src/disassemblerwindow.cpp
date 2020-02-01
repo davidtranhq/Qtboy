@@ -4,9 +4,9 @@
 #include <QFont>
 #include <sstream>
 
-DisassemblerWindow::DisassemblerWindow(QWidget *parent, gameboy::System &s)
+DisassemblerWindow::DisassemblerWindow(QWidget *parent, gameboy::System *s)
     : QWidget {parent, Qt::Window},
-      system {s},
+      debugger {s},
       mainLayout {new QVBoxLayout},
       goToLayout {new QHBoxLayout},
       goToPrompt {new QLineEdit},
@@ -20,7 +20,7 @@ DisassemblerWindow::DisassemblerWindow(QWidget *parent, gameboy::System &s)
     textArea->setFont(font);
     textArea->setReadOnly(true);
     textArea->setWordWrapMode(QTextOption::NoWrap);
-    textArea->setPlainText(QString::fromStdString(dsmblr.hex_dump(s.dump_rom())));
+    textArea->setPlainText(QString::fromStdString(dsmblr.hex_dump(debugger.dump_rom())));
 
     goToLayout->addWidget(goToPrompt);
     goToLayout->addWidget(goToButton);

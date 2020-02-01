@@ -3,7 +3,6 @@
 #include <stdexcept>
 #include <tuple>
 #include <cstdint>
-#include <QDebug>
 
 #include "rom.hpp"
 #include "ram.hpp"

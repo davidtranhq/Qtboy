@@ -24,6 +24,8 @@ void Processor::jr(bool cond, const int8_t d)
         // jr is still incremented by the instruction length
         // afterwards
 	}
+    else
+        use_alt_cycles = true;
 }
 
 void Processor::ret(bool cond)
@@ -34,6 +36,8 @@ void Processor::ret(bool cond)
         pc_.hi = read(sp_++);
         control_op_ = true;
 	}
+    else
+        use_alt_cycles = true; // no path taken is shorter in cycle length
 }
 
 void Processor::jp(bool cond, const uint16_t adr)
@@ -43,6 +47,8 @@ void Processor::jp(bool cond, const uint16_t adr)
         pc_ = adr;
         control_op_ = true;
 	}
+    else
+        use_alt_cycles = true;
 }
 
 void Processor::call(bool cond, const uint16_t adr)
@@ -55,6 +61,8 @@ void Processor::call(bool cond, const uint16_t adr)
         pc_ = adr;
         control_op_ = true;
 	}
+    else
+        use_alt_cycles = true;
 }
 
 void Processor::rst(const uint8_t n)
@@ -113,7 +121,7 @@ void Processor::ldd_sp(const uint16_t adr)
 void Processor::inc(uint8_t &r)
 {
     set_flag(ZERO, r + 1 > 0xff);
-	set_flag(HALF, r + 1 > 0x0f);
+    set_flag(HALF, half_check(r, 1));
 	set_flag(NEGATIVE, false);
 	++r;
 }

@@ -13,8 +13,7 @@ namespace gameboy
 {
 
 System::System(Renderer *r)
-    : ppu_ { [this](uint16_t adr){return this->memory_read(adr);}, r },
-      renderer_ {r}
+    : renderer_ {r}
 {}
 
 // system control
@@ -37,7 +36,6 @@ void System::step(size_t n)
         cpu_.step();
         ppu_.step(old_cycles - cpu_.cycles());
     }
-    memory_changed_ = memory_.was_written();
 }
 
 // system setup

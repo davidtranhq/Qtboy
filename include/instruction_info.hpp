@@ -3,6 +3,7 @@
 
 #include <array>
 #include <string>
+#include <optional>
 
 struct Instruction
 {

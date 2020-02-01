@@ -247,7 +247,7 @@ void Processor::step()
 		
 		case 0xe0: ldd(IO_MEMORY + read(PC+1), A); break; // ldh (a8),A
         case 0xea: ldd(cat(read(PC+2), read(PC+1)), A); break; // ld (a16),A
-        case 0xf0: ldd(A, IO_MEMORY + read(PC+1)); break; // ldh A,(a8)
+        case 0xf0: ld(A, read(IO_MEMORY + read(PC+1))); break; // ldh A,(a8)
 		case 0xfa: ld(A, read(IO_MEMORY + cat(read(PC+2), read(PC+1)))); break; // ldh A,(a16)
 		case 0xe2: ldd(IO_MEMORY + C, A); break; // ld (C),A
 		case 0xf2: ld(A, read(IO_MEMORY + C)); break; // ld A,(C)
@@ -710,7 +710,8 @@ void Processor::step()
         control_op_ = false;
     else
         pc_ += instructions[op].length;
-    cycles_ += instructions[op].cycles;
+    cycles_ += (use_alt_cycles) ? instructions[op].alt_cycles : instructions[op].cycles;
+    use_alt_cycles = false;
 	return;
 }
 	

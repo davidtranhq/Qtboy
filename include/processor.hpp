@@ -58,6 +58,7 @@ class Processor
     bool stpd_ {false};
     bool hltd_ {false};
     bool control_op_ {false};
+    bool use_alt_cycles {false};
 	
 	std::function<uint8_t(uint16_t)> read;
 	std::function<void(uint8_t, uint16_t)> write;

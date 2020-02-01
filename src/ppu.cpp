@@ -5,8 +5,10 @@
 using namespace gameboy;
 
 Ppu::Ppu(std::function<uint8_t(uint16_t)> rd,
+         std::function<void(uint8_t, uint16_t)> wr,
          Renderer *r)
     : read {std::move(rd)},
+      write {std::move(wr)},
       renderer_ {r}
 {}
 
@@ -136,6 +138,8 @@ void Ppu::hblank()
         {
             mode_ = 2;
         }
+        write(line_, 0xff44); // update LY register, indicating current
+                              // horizontal scanline
     }
 }
 
@@ -151,5 +155,7 @@ void Ppu::vblank()
             mode_ = 2;
             line_ = 0;
         }
+        write(line_, 0xff44); // update LY register, indicating current
+                              // horizontal scanline
     }
 }

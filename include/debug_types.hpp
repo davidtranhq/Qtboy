@@ -42,7 +42,7 @@ struct Cpu_values
 {
     uint16_t af, bc, de, hl, sp, pc;
     uint32_t cycles;
-    std::vector<uint8_t> next_ops;
+    std::array<uint8_t, 3> next_ops;
 };
 
 struct Assembly

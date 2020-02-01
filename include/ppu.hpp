@@ -22,6 +22,7 @@ class Ppu
     };
 
     Ppu(std::function<uint8_t(uint16_t)> rd,
+        std::function<void(uint8_t, uint16_t)> wr,
         Renderer *r = nullptr);
     void reset();
     void step(size_t cycles);
@@ -31,6 +32,7 @@ class Ppu
 
     private:
     std::function<uint8_t(uint16_t)> read;
+    std::function<void(uint8_t, uint16_t)> write;
     void oam_scan(); // mode 2
     void vram_read(); // mode 3
     void hblank(); // mode 0

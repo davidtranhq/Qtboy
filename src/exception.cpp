@@ -24,6 +24,10 @@ Bad_memory::Bad_memory(const char *msg, const char *file, size_t ln)
     : Exception(msg, file, ln)
 {}
 
+Bad_debugger::Bad_debugger(const char *msg, const char *file, size_t ln)
+    : Exception(msg, file, ln)
+{}
+
 
 
 }

@@ -28,6 +28,7 @@ private slots:
     void reset();
     void show_frame_buffer();
     void pause();
+    void toggle_log(int state);
 
 private:
     void create_stack_viewer();
@@ -42,13 +43,12 @@ private:
 
     gameboy::Debugger debugger_;
     gameboy::Disassembler disassembler_;
-    size_t steps_taken_;
 
     QLabel *af_, *bc_, *de_, *hl_, *sp_, *pc_, *cycles_,
            *steps_;
     QLineEdit *steps_to_take_;
     QPlainTextEdit *rom_, *memory_, *stack_;
-    QCheckBox *enable_viewer_update_;
+    QCheckBox *enable_viewer_update_, *enable_log_;
 
 };
 

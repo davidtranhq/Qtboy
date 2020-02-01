@@ -40,4 +40,10 @@ class Bad_memory : public Exception
     Bad_memory(const char *msg, const char *file, size_t ln);
 };
 
+class Bad_debugger : public Exception
+{
+    public:
+    Bad_debugger(const char *msg, const char *file, size_t ln);
+};
+
 };

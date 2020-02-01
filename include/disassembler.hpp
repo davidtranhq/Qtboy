@@ -16,13 +16,12 @@ class Disassembler
 	
     std::string hex_dump(const std::vector<uint8_t> &ops) const;
     std::vector<Assembly> disassemble(const std::vector<uint8_t> &ops) const;
-
+    Assembly disassemble_op(const std::array<uint8_t, 3> &ops, uint16_t adr) const;
 
     private:
     class Hex;
-    Assembly disassemble_op(const std::array<uint8_t, 3> &ops) const;
     void parse_operand(std::ostream &, const std::array<uint8_t, 3> &,
-                       const std::string &) const;
+                       const std::string &, uint16_t adr) const;
 };
 	
 }

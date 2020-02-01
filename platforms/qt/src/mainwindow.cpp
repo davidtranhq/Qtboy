@@ -8,7 +8,7 @@ MainWindow::MainWindow(QWidget *parent)
       renderer {new Qt_renderer},
       display {new QLabel}
 {
-    loadRom("../../../roms/ldr.gb");
+    loadRom("../../../roms/cpu_instrs.gb");
     createActions();
     setCentralWidget(display);
 }
@@ -22,13 +22,13 @@ void MainWindow::openRom()
 
 void MainWindow::showDisassembler()
 {
-    auto disassembler = new DisassemblerWindow(this, system);
+    auto disassembler = new DisassemblerWindow(this, &system);
     disassembler->show();
 }
 
 void MainWindow::showDebugger()
 {
-    auto debugger = new DebuggerWindow(this, system, *renderer);
+    auto debugger = new Debugger_window(this, &system);
     debugger->show();
 }
 

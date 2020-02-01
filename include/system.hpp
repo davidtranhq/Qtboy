@@ -46,7 +46,8 @@ class System
     };
     Ppu ppu_
     {
-        [this](uint16_t adr){return this->memory_read(adr);}
+        [this](uint16_t adr){ return this->memory_read(adr); },
+        [this](uint8_t b, uint16_t adr){ this->memory_write(b, adr); }
     };
     // the renderer is an interface to facilitate the implementation of other
     // libraries for different platforms

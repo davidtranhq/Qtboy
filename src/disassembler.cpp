@@ -46,35 +46,39 @@ std::string Disassembler::hex_dump(const std::vector<uint8_t> &ops) const
 class Disassembler::Hex
 {
     public:
-    explicit Hex(int x) : x_ {x} {}
+    explicit Hex(uint8_t x) : x_ {x}, width_ {2} {}
+    explicit Hex(uint16_t x) : x_ {x}, width_ {4} {}
     friend std::ostream &operator<<(std::ostream &os, const Hex &h)
     {
-        os << std::hex << std::setfill('0') << std::setw(2) << h.x_;
+        os << std::right << std::hex << std::setfill('0')
+           << std::uppercase << std::setw(h.width_) << h.x_;
         return os;
     }
 
     private:
     int x_;
+    int width_;
 };
 
 void Disassembler::parse_operand(std::ostream &out, const std::array<uint8_t, 3> &ops,
-                                const std::string &operand) const
+                                const std::string &operand, uint16_t adr) const
 {
     if (operand == "a16" || operand == "d16") // 16-bit immediate
-        out << Hex(ops[2]) << Hex(ops[1]);
+        out << '#' << Hex(ops[2]) << Hex(ops[1]) << 'h';
     else if (operand == "r8") // 8-bit signed immediate
-        out << Hex(static_cast<int8_t>(ops[1]));
+        out << Hex(static_cast<uint16_t>(adr+ops[1]+2)) << 'h';
     else if (operand == "d8") // 8-bit unsigned immediate
-        out << Hex(ops[1]);
+        out << '#' << Hex(ops[1]) << 'h';
     else if (operand == "(a8)") // 8-bit unsigned indexing
-        out << '(' << Hex(ops[1]) << ')';
+        out << "(#FF" << Hex(ops[1]) << "h)";
     else if (operand == "(a16)" || operand == "(d16)") // 16-bit direct
-        out << '(' << Hex(ops[2]) << Hex(ops[1]) << ')';
+        out << "(#" << Hex(ops[2]) << Hex(ops[1]) << "h)";
     else
         out << operand;
 }
 
-Assembly Disassembler::disassemble_op(const std::array<uint8_t, 3> &ops) const
+Assembly Disassembler::disassemble_op(const std::array<uint8_t, 3> &ops,
+                                      uint16_t adr) const
 {
     Instruction ins;
     if (ops[0] == 0xcb)
@@ -84,15 +88,15 @@ Assembly Disassembler::disassemble_op(const std::array<uint8_t, 3> &ops) const
     std::ostringstream code {};
     const std::string operand1 {ins.operand1.empty() ? "" : ins.operand1};
     const std::string operand2 {ins.operand2.empty() ? "" : ins.operand2};
-    code << ins.name; // instruction
+    code << std::setfill(' ') << std::left << std::setw(4) << ins.name; // instruction
     if (!operand1.empty())
     {
         code << ' ';
-        parse_operand(code, ops, operand1);
+        parse_operand(code, ops, operand1, adr);
         if (!operand2.empty())
         {
             code << ',';
-            parse_operand(code, ops, operand2);
+            parse_operand(code, ops, operand2, adr);
         }
     }
     std::vector<uint8_t> ops_used(ins.length);
@@ -107,7 +111,7 @@ std::vector<Assembly> Disassembler::disassemble(const std::vector<uint8_t> &ops)
     for (size_t i {0}; i < ops.size(); i += instructions[ops[i]].length)
     {
         std::array<uint8_t, 3> next_bytes {ops[i], ops[i+1], ops[i+2]};
-        out.push_back(disassemble_op(next_bytes));
+        out.push_back(disassemble_op(next_bytes, i));
     }
     return out;
 }

@@ -1,7 +1,7 @@
 #include "memory.hpp"
 
 #include <cstdint>
-#include <QDebug>
+// #include <QDebug>
 
 namespace gameboy
 {
@@ -76,12 +76,12 @@ uint8_t Memory::read(uint16_t adr) const
 	return b;
 }
 
-QTextStream &qStdOut()
-{
-    static QTextStream ts (stdout);
-    ts.flush();
-    return ts;
-}
+//QTextStream &qStdOut()
+//{
+//    static QTextStream ts (stdout);
+//    ts.flush();
+//    return ts;
+//}
 
 void Memory::write(uint8_t b, uint16_t adr)
 {
@@ -89,7 +89,8 @@ void Memory::write(uint8_t b, uint16_t adr)
         return;
     was_written_ = true;
     if (adr == 0xff02 && b == 0x81)
-        qStdOut() << static_cast<char>(read(0xff01));
+        // qStdOut() << static_cast<char>(read(0xff01));
+        std::cout << static_cast<char>(read(0xff01));
 	if (adr < 0x8000) // enabling flags (dependant on MBC)
 	{
 		cart_.value().write(b, adr);
@@ -254,6 +255,7 @@ void Memory::init_io()
     io_[0x40] = 0x91;   // LCDC
     io_[0x42] = 0x00;   // SCY
     io_[0x43] = 0x00;   // SCX
+    io_[0x44] = 0x91;   // LY
     io_[0x45] = 0x00;   // LYC
     io_[0x47] = 0xFC;   // BGP
     io_[0x48] = 0xFF;   // OBP0
