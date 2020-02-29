@@ -1,6 +1,10 @@
 # This file is used to ignore files which are generated
 # ----------------------------------------------------------------------------
 
+# project specific
+tools/
+platforms/qt/build/
+
 *~
 *.autosave
 *.a
@@ -23,7 +27,7 @@ tags
 .DS_Store
 .directory
 *.debug
-Makefile*
+*.d
 *.prl
 *.app
 moc_*.cpp
