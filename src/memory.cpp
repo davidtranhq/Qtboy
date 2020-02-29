@@ -24,11 +24,8 @@ uint8_t Memory::read(uint16_t adr) const
 	}
 	else if (adr < 0xa000) // VRAM accessing
 	{
-		uint16_t a = adr - 0x8000; // adjusted for placement in memory map
-		if (!cart_.value().is_cgb()) // no banking for DMG
-			b = vram_.read(0, a);
-		else // CGB, check 0xff4f flag for vram bank
-			b = vbk_ ? vram_.read(1, a) : vram_.read(0, a);
+        uint16_t a = adr - 0x8000; // adjusted for placement in memory map
+        b = vram_.read(0, a);
 	}
 	else if (adr < 0xc000) // external RAM accessing
 	{
@@ -40,12 +37,8 @@ uint8_t Memory::read(uint16_t adr) const
 	}
 	else if (adr < 0xe000) // WRAM bank 1-7 accessing (CGB)
 	{
-		uint16_t a = adr - 0xd000; // adjust
-		if (!cart_.value().is_cgb()) // no WRAM banking for DMG
-			b = wram_.read(1, a);
-		else // CGB, check 0xff70 (svbk) for bank 1-7
-			// bit 0-2 of svbk selects bank 1-7, svbk of 0 is bank 1
-			b = svbk_ ? wram_.read(svbk_ & 3, a) : wram_.read(1, a);
+        uint16_t a = adr - 0xd000; // adjust
+        b = wram_.read(1, a);
 	}
 	else if (adr < 0xfe00) // echo RAM
 	{
@@ -98,10 +91,7 @@ void Memory::write(uint8_t b, uint16_t adr)
 	else if (adr < 0xa000) // VRAM accessing
 	{
 		uint16_t a = adr - 0x8000; // adjusted for placement in memory map
-		if (!cart_.value().is_cgb()) // no banking for DMG
-            vram_.write(b, 0, a);
-		else // CGB, check 0xff4f flag for vram bank
-            vbk_ ? vram_.write(b, 1, a) : vram_.write(b, 0, a);
+        vram_.write(b, 0, a);
 	}
 	else if (adr < 0xc000) // RAM bank access
     {
@@ -111,15 +101,9 @@ void Memory::write(uint8_t b, uint16_t adr)
     {
         wram_.write(b, 0, adr-0xc000);
     }
-    else if (adr < 0xe000) // write to WRAM bank N
+    else if (adr < 0xe000) // write to WRAM bank 1
     {
-
-        if (!cart_.value().is_cgb()) // no WRAM banking for DMG
-            wram_.write(b, 1, adr-0xd000);
-        else
-            // bit 0-2 of svbk selects bank 1-7, svbk of 0 is bank 1
-            svbk_ ? wram_.write(b, svbk_ & 3, adr-0xd000)
-                  : wram_.write(b, 1, adr-0xd000);
+        wram_.write(b, 1, adr-0xd000);
 
     }
     else if (adr < 0xfe00) // echo RAM
@@ -179,8 +163,6 @@ std::map<std::string, Memory_range> Memory::dump() const
     {
         out["ROM0"] = Memory_range {"ROM0", std::vector<uint8_t>(0x4000)};
         out["ROMX"] = Memory_range {"ROM1", std::vector<uint8_t>(0x4000)};
-        out["VRMX"] = {"VRM0", vram_.dump(0)};
-        out["WRMX"] = {"WRM1", wram_.dump(1)};
     }
     else // cartridge dependant memory locations
     {
@@ -188,24 +170,10 @@ std::map<std::string, Memory_range> Memory::dump() const
                 cart {cart_.value().dump()};
         // concatenate memory map recieved from cartridge to output
         out.insert(cart.begin(), cart.end());
-        if (cart_.value().is_cgb()) // CGB specific memory
-        {
-            if (vbk_) // specifies vram bank
-                out["VRMX"] = {"VRM1", vram_.dump(1)};
-            else
-                out["VRMX"] = {"VRM0", vram_.dump(0)};
-            if (svbk_) // specifies wram bank
-            {
-                uint8_t bank = (svbk_ & 3);
-                out["WRMX"] = {"WRM" + std::to_string(bank), wram_.dump(bank)};
-            }
-            else
-            {
-                out["WRMX"] = {"WRM1", wram_.dump(1)};
-            }
-        }
     }
     out["WRM0"] = {"WRM0", wram_.dump(0)};
+    out["VRMX"] = {"VRM0", vram_.dump(0)};
+    out["WRMX"] = {"WRM1", wram_.dump(1)};
     std::vector<uint8_t> oam(oam_.begin(), oam_.end());
     std::vector<uint8_t> io(io_.begin(), io_.end());
     std::vector<uint8_t> hram(hram_.begin(), hram_.end());
@@ -224,9 +192,8 @@ bool Memory::was_written()
 
 void Memory::set_ram_size()
 {
-	bool is_cgb {cart_.value().is_cgb()};
-	vram_.resize(is_cgb ? 2 : 1); // CGB has 2 banks of VRAM
-	wram_.resize(is_cgb ? 8 : 2); // CGB has 8 banks of WRAM
+    vram_.resize(1); // DMG has 1 bank of VRAM
+    wram_.resize(2); // DMG has 2 banks of WRAM
 }
 
 void Memory::init_io()

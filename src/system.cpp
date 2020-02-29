@@ -34,7 +34,7 @@ void System::step(size_t n)
     {
         size_t old_cycles {cpu_.cycles()};
         cpu_.step();
-        ppu_.step(old_cycles - cpu_.cycles());
+        ppu_.step(cpu_.cycles() - old_cycles);
     }
 }
 

@@ -2,6 +2,8 @@
 #include "renderer.hpp"
 #include "exception.hpp"
 
+#include <iostream>
+
 using namespace gameboy;
 
 Ppu::Ppu(std::function<uint8_t(uint16_t)> rd,
@@ -14,13 +16,21 @@ Ppu::Ppu(std::function<uint8_t(uint16_t)> rd,
 
 void Ppu::reset()
 {
-    mode_ = 2;
+    mode_ = 0;
     clock_ = 0;
     line_ = 0;
+    write(line_, 0xff44);
 }
 
 void Ppu::step(size_t cycles)
 {
+    lcdc_ = read(0xff40);
+    if (!lcdc_[7])
+    {
+        reset();
+        return; // don't execute if master bit is off
+    }
+    // PPU operates on 4.194 MHz clock, 1 clock = 1/4 cycle
     clock_ += cycles;
     switch (mode_)
     {
@@ -100,11 +110,16 @@ void Ppu::set_renderer(Renderer *r)
     renderer_ = r;
 }
 
+int Ppu::mode() const
+{
+    return mode_;
+}
+
 void Ppu::oam_scan()
 {
     if (clock_ >= 80)
     {
-        clock_ = 0;
+        clock_ -= 80;
         mode_ = 3;
     }
 }
@@ -113,7 +128,7 @@ void Ppu::vram_read()
 {
     if (clock_ >= 172)
     {
-        clock_ = 0;
+        clock_ -= 172;
         mode_ = 0;
         if (!renderer_)
             return;
@@ -125,7 +140,7 @@ void Ppu::hblank()
 {
     if (clock_ >= 204)
     {
-        clock_ = 0;
+        clock_ -= 204;
         ++line_;
         if (line_ == 143)
         {
@@ -147,13 +162,14 @@ void Ppu::vblank()
 {
     if (clock_ >= 456)
     {
-        clock_ = 0;
+        clock_ -= 456;
         ++line_;
         if (line_ > 153)
         {
             // restart scanning modes
             mode_ = 2;
             line_ = 0;
+            write(line_, 0xff44);
         }
         write(line_, 0xff44); // update LY register, indicating current
                               // horizontal scanline

@@ -13,14 +13,19 @@ int main()
     System s;
     Debugger d {&s}; // attach system to debugger
     d.enable_logging(true);
-
+    if (!d.set_log_file("C:/Users/david/Documents/Github/Gameboy/tools/cpu.log"))
+    {
+        std::cerr << "Could not open log file.\n";
+        return -1;
+    }
     bool valid_rom {false};
     std::cout << "Gameboy v0.1\n";
     for (;;)
     {
-        std::cout << "Enter a path for of a ROM to load: ";
-        std::cin >> rom_path;
-        valid_rom = s.load_cartridge(rom_path);
+        // std::cout << "Enter a path for of a ROM to load: ";
+        // std::cin >> rom_path;
+        // valid_rom = s.load_cartridge(rom_path);
+        valid_rom = s.load_cartridge("C:/Users/david/Documents/GitHub/Gameboy/roms/01-special.gb");
         if (valid_rom)
             break;
         std::cout << "Could not find " << rom_path << '\n';
@@ -35,9 +40,8 @@ int main()
         d.step();
     auto finish = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::microseconds>(finish-start);
-    auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(duration);
     std::cout << "Logged " << i << " CPU steps.\n"
               << "Took " << duration.count() << " microseconds "
-              << '(' << ms.count() << " ms).\n";
+              << '(' << duration.count()/1000 << " ms).\n";
     return 0;
 }

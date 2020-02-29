@@ -100,7 +100,7 @@ Assembly Disassembler::disassemble_op(const std::array<uint8_t, 3> &ops,
         }
     }
     std::vector<uint8_t> ops_used(ins.length);
-    for (uint8_t i {0}; i < ops.size(); ++i)
+    for (uint8_t i {0}; i < ins.length; ++i)
         ops_used[i] = ops[i];
     return Assembly {ops_used, ins, code.str()};
 }

@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <memory>
 #include <functional>
+#include <bitset>
 
 namespace gameboy
 {
@@ -29,6 +30,7 @@ class Ppu
     void draw_framebuffer();
     void draw_scanline();
     void set_renderer(Renderer *r);
+    int mode() const;
 
     private:
     std::function<uint8_t(uint16_t)> read;
@@ -39,8 +41,9 @@ class Ppu
     void vblank(); // mode 1
 
     uint8_t mode_ {2};
-    size_t clock_ {0};
+    int clock_ {0};
     uint8_t line_ {0};
+    std::bitset<8> lcdc_ {0};
     Renderer *renderer_;
 };
 

@@ -37,10 +37,6 @@ class Memory
     std::array<uint8_t, 0x80> io_ {};
     std::array<uint8_t, 0x7f> hram_ {};
     uint8_t ie_ {};
-
-    uint8_t &vbk_ {io_[0x4f]}; // CGB only, specifies vram bank
-    uint8_t &svbk_ {io_[0x70]}; // CGB only, specifies wram bank
-
     bool was_written_ {false};
 
     void set_ram_size();

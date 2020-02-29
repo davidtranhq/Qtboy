@@ -52,7 +52,6 @@ class System
     // the renderer is an interface to facilitate the implementation of other
     // libraries for different platforms
     std::unique_ptr<Renderer> renderer_;
-    bool memory_changed_ {false}; // true if memory was written to the last instruction
 };
 	
 }

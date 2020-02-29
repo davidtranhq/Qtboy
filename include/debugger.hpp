@@ -28,6 +28,8 @@ class Debugger
     void enable_logging(bool b = true);
     void write_log(); // write log to file
     std::string log(); // return log as string
+    bool set_log_file(const std::string &);
+
 
     size_t steps() const;
     bool paused() const;
@@ -58,7 +60,7 @@ class Debugger
     std::map<std::string, Memory_range> memory_map_ {};
     bool paused_ {false};
     bool log_ {true};
-    std::ofstream log_file_ {"cpu.log"};
+    std::ofstream log_file_;
 };
 
 }

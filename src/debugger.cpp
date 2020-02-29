@@ -73,6 +73,8 @@ void Debugger::enable_logging(bool b)
 
 void Debugger::write_log()
 {
+    if (!log_file_)
+        set_log_file("cpu.log");
     log_file_ << Debugger::log() << '\n';
 }
 
@@ -100,16 +102,17 @@ std::string Debugger::log()
     }};
 
     // begin output
-    out << std::nouppercase << std::right << std::hex << std::setfill('0')
+    out << std::uppercase << std::right << std::hex << std::setfill('0')
         << "A:" << std::setw(2) << static_cast<int>(a) << ' '
         << "F:" << flag_char[(f >> 4)] << ' '
-        << "BC:" << std::setw(2) << static_cast<int>(b) << std::setw(2) << static_cast<int>(c) << ' '
+        << "BC:" << std::setw(2) << static_cast<int>(b) << std::setw(2) << static_cast<int>(c) << ' ' << std::nouppercase
         << "DE:" << std::setw(2) << static_cast<int>(d) << std::setw(2) << static_cast<int>(e) << ' '
         << "HL:" << std::setw(2) << static_cast<int>(h) << std::setw(2) << static_cast<int>(l) << ' '
         << "SP:" << std::setw(4) << dump.sp << ' '
         << "PC:" << std::setw(4) << dump.pc << ' '
         << "LY:" << std::setw(2) << static_cast<int>(ly) << ' '
-        << "(cy: " << std::dec << dump.cycles << ") ";
+        << "(cy: " << std::dec << dump.cycles << ") "
+        << "ppu: +" << system_->ppu_.mode() << ' ';
 
     out << std::nouppercase << std::right << std::setfill('0') << std::hex
         << std::setw(4) << dump.pc << ":  "; // PC
@@ -134,6 +137,17 @@ std::string Debugger::log()
         << "Cy:" << std::dec << dump.cycles;
     */
     return out.str();
+}
+
+bool Debugger::set_log_file(const std::string &path)
+{
+    if (log_file_) // close log file if one is already open
+    {
+        log_file_.close();
+        log_file_.clear();
+    }
+    log_file_.open(path);
+    return log_file_.good();
 }
 
 size_t Debugger::steps() const
@@ -228,7 +242,7 @@ std::string Debugger::dump_formatted_memory(Dump_format d) const
 
 bool Debugger::memory_changed() const
 {
-    return system_->memory_changed_;
+    return memory_changed_;
 }
 
 std::vector<uint8_t> Debugger::dump_rom() const noexcept

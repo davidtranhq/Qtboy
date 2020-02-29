@@ -8,7 +8,7 @@ MainWindow::MainWindow(QWidget *parent)
       renderer {new Qt_renderer},
       display {new QLabel}
 {
-    loadRom("../../../roms/cpu_instrs.gb");
+    loadRom("../../../roms/01-special.gb");
     createActions();
     setCentralWidget(display);
 }

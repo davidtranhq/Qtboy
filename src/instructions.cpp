@@ -1,6 +1,11 @@
 #include <cstdint>
 #include "processor.hpp"
 
+// change the nth bit of b to x
+#define CHANGE_BIT(b, n, x) b ^= (-x ^ b) & (1UL << n);
+#define CLEAR_BIT(b, n) b &= ~(1UL << n);
+#define SET_BIT(b, n) b |= (1UL << n);
+
 namespace gameboy
 {
 
@@ -136,7 +141,7 @@ void Processor::inc_i(uint16_t adr)
 void Processor::dec(uint8_t &r)
 {
 	set_flag(ZERO, r - 1 == 0);
-	set_flag(HALF, half_check(r, 1));
+    set_flag(HALF, neg_half_check(r, 1));
 	set_flag(NEGATIVE, true);
 	--r;
 }
@@ -190,7 +195,7 @@ void Processor::ccf()
 void Processor::adc(const uint8_t r, bool cy)
 {
 	uint16_t res = af_.hi + r + cy;
-	set_flag(ZERO, res == 0);
+    set_flag(ZERO, res == 0x100);
 	set_flag(NEGATIVE, false);
 	set_flag(HALF, half_check(af_.hi, r + cy));
 	set_flag(CARRY, res > 0x00ff);
@@ -239,7 +244,7 @@ void Processor::orr(const uint8_t r)
 
 void Processor::cp(const uint8_t r)
 {
-	int8_t res = af_.hi - r;
+    int16_t res = af_.hi - r;
 	set_flag(ZERO, res == 0);
 	set_flag(NEGATIVE, true);
 	set_flag(HALF, neg_half_check(af_.hi, r));
@@ -249,6 +254,7 @@ void Processor::cp(const uint8_t r)
 void Processor::add(const uint16_t rp)
 {
 	uint32_t res = hl_ + rp;
+    set_flag(ZERO, res == 0);
 	set_flag(NEGATIVE, false);
 	set_flag(HALF, half_check(hl_, rp));
 	set_flag(CARRY, res > 0xffff);
@@ -259,7 +265,7 @@ void Processor::rlc(uint8_t &r)
     bool msb {static_cast<bool>(r & 0x80)};
 	r <<= 1;
 	set_flag(CARRY, msb);
-	r &= (msb & 0x01);
+    CHANGE_BIT(r, 0, msb);
 }
 
 void Processor::rlc_i(uint16_t adr)
@@ -274,7 +280,7 @@ void Processor::rrc(uint8_t &r)
     bool lsb = r & 0x01;
 	r >>= 1;
 	set_flag(CARRY, lsb);
-	r &= (lsb & 0x80);
+    CHANGE_BIT(r, 7, lsb);
 }
 
 void Processor::rrc_i(uint16_t adr)
@@ -289,7 +295,7 @@ void Processor::rl(uint8_t &r)
 	bool old_carry = get_flag(CARRY);
 	set_flag(CARRY, r & 0x80);
 	r <<= 1;
-	r &= (old_carry & 0x01);
+    CHANGE_BIT(r, 0, old_carry);
 }
 
 void Processor::rl_i(uint16_t adr)
@@ -304,7 +310,7 @@ void Processor::rr(uint8_t &r)
 	bool old_carry = get_flag(CARRY);
 	set_flag(CARRY, r & 0x01);
 	r >>= 1;
-	r &= (old_carry & 0x80);
+    CHANGE_BIT(r, 7, old_carry);
 }
 
 void Processor::rr_i(uint16_t adr)
@@ -330,9 +336,9 @@ void Processor::sla_i(uint16_t adr)
 void Processor::sra(uint8_t &r)
 {
 	set_flag(CARRY, r & 0x01);
-	uint8_t msb = r & 0x80;
+    bool msb = r & 0x80;
 	r >>= 1;
-	r &= msb;
+    CHANGE_BIT(r, 7, msb);
 }
 
 void Processor::sra_i(uint16_t adr)
@@ -359,6 +365,8 @@ void Processor::swap_i(uint16_t adr)
 void Processor::srl(uint8_t &r)
 {
 	set_flag(CARRY, r & 0x01);
+    set_flag(NEGATIVE, false);
+    set_flag(HALF, false);
 	r >>= 1;
 }
 
@@ -390,7 +398,7 @@ void Processor::res_i(uint8_t n, uint16_t adr)
 
 void Processor::set(const uint8_t n, uint8_t &r)
 {
-	r &= (1UL << n);
+    r |= (1UL << n);
 }
 
 void Processor::set_i(uint8_t n, uint16_t adr)

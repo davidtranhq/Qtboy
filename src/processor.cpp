@@ -246,7 +246,7 @@ void Processor::step()
 		case 0x7f: break;
 		
 		case 0xe0: ldd(IO_MEMORY + read(PC+1), A); break; // ldh (a8),A
-        case 0xea: ldd(cat(read(PC+2), read(PC+1)), A); break; // ld (a16),A
+        case 0xea: ldd(IO_MEMORY + cat(read(PC+2), read(PC+1)), A); break; // ld (a16),A
         case 0xf0: ld(A, read(IO_MEMORY + read(PC+1))); break; // ldh A,(a8)
 		case 0xfa: ld(A, read(IO_MEMORY + cat(read(PC+2), read(PC+1)))); break; // ldh A,(a16)
 		case 0xe2: ldd(IO_MEMORY + C, A); break; // ld (C),A
@@ -700,6 +700,7 @@ void Processor::step()
 			}
 			pc_ += cb_instructions[read(PC+1)].length;
 			cycles_ += cb_instructions[read(PC+1)].cycles;
+            return; // skip the incrementing of pc and cycles at the end
 		} break;
         default:
             std::ostringstream error {};
