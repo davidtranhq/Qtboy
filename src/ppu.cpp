@@ -115,6 +115,11 @@ int Ppu::mode() const
     return mode_;
 }
 
+int Ppu::clock() const
+{
+    return clock_;
+}
+
 void Ppu::oam_scan()
 {
     if (clock_ >= 80)
@@ -142,9 +147,10 @@ void Ppu::hblank()
     {
         clock_ -= 204;
         ++line_;
-        if (line_ == 143)
+        if (line_ == 144)
         {
             mode_ = 1;
+            write(line_, 0xff44);
             if (!renderer_)
                 return;
             renderer_->present_screen();

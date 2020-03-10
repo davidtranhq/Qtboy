@@ -10,8 +10,8 @@ struct Register_pair
 	public:
 	explicit Register_pair(uint16_t rp = 0);
 	
-	Register_pair &operator+=(const int16_t);
-	Register_pair &operator-=(const int16_t);
+    Register_pair &operator+=(const uint16_t);
+    Register_pair &operator-=(const uint16_t);
 	Register_pair &operator++();
 	Register_pair operator++(int);
 	Register_pair &operator--();
@@ -27,14 +27,14 @@ inline Register_pair::Register_pair(uint16_t rp)
 	  lo {static_cast<uint8_t>(rp & 0xff)}
 {}
 
-inline Register_pair &Register_pair::operator+=(const int16_t d)
+inline Register_pair &Register_pair::operator+=(const uint16_t d)
 {
 	uint16_t x {*this};
 	*this = x + d;
 	return *this;
 }
 
-inline Register_pair &Register_pair::operator-=(const int16_t d)
+inline Register_pair &Register_pair::operator-=(const uint16_t d)
 {
 	uint16_t x {*this};
 	*this = x - d;

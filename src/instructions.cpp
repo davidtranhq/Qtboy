@@ -2,23 +2,21 @@
 #include "processor.hpp"
 
 // change the nth bit of b to x
-#define CHANGE_BIT(b, n, x) b ^= (-x ^ b) & (1UL << n);
-#define CLEAR_BIT(b, n) b &= ~(1UL << n);
-#define SET_BIT(b, n) b |= (1UL << n);
+#define CHANGE_BIT(b, n, x) b ^= (-x ^ b) & (1UL << n)
+#define CLEAR_BIT(b, n) b &= ~(1UL << n)
+#define SET_BIT(b, n) b |= (1UL << n)
 
 namespace gameboy
 {
 
-
-	
-inline bool half_check(const uint8_t a, const uint8_t b)
+inline bool half_check(const uint8_t a, const uint8_t b, const uint8_t res)
 {
-	return ((a & 0xf) + (b & 0xf)) & 0x10;
+    return ((a ^ b ^ res) & 0x10);
 }
 
-inline bool neg_half_check(const uint8_t a, const uint8_t b)
+inline bool half_check_16(const uint16_t a, const uint16_t b, const uint16_t res)
 {
-	return ((a & 0xf) - (b & 0xf)) < 0;
+    return ((a ^ b ^ res) & 0x1000);
 }
 
 void Processor::jr(bool cond, const int8_t d)
@@ -72,16 +70,18 @@ void Processor::call(bool cond, const uint16_t adr)
 
 void Processor::rst(const uint8_t n)
 {
-	write(pc_.hi, read(--sp_));
-	write(pc_.lo, read(--sp_));
+    ++pc_;
+    write(pc_.hi, --sp_);
+    write(pc_.lo, --sp_);
 	pc_.hi = 0;
 	pc_.lo = n;
+    control_op_ = true;
 }
 
 void Processor::reti()
 {
-	pc_.lo = read(sp_);
-    pc_.hi = read(++sp_);
+    pc_.lo = read(sp_++);
+    pc_.hi = read(sp_++);
     control_op_ = true;
 	write(1, 0xffff); // enable interrupt
 }
@@ -99,15 +99,22 @@ void Processor::pop(Register_pair &rp)
     rp.hi = read(sp_++);
 }
 
+void Processor::pop_af()
+{
+    af_.lo = read(sp_++);
+    af_.hi = read(sp_++);
+    af_.lo &= 0xf0; // the lower 4 bits of the f register are unused
+}
+
 void Processor::ldhl_sp(const int8_t d)
 {
 	set_flag(ZERO, false);
 	set_flag(NEGATIVE, false);
-	uint16_t res = sp_ + d;
+    uint16_t res = sp_ + static_cast<uint16_t>(d);
 	if (d >= 0)
 	{
 		set_flag(CARRY, (sp_ & 0xff) + d > 0xff);
-		set_flag(HALF, half_check(sp_, d));
+        set_flag(HALF, half_check(sp_.lo, static_cast<uint8_t>(d), res & 0xff));
 	}
 	else
 	{
@@ -126,7 +133,7 @@ void Processor::ldd_sp(const uint16_t adr)
 void Processor::inc(uint8_t &r)
 {
     set_flag(ZERO, r + 1 > 0xff);
-    set_flag(HALF, half_check(r, 1));
+    set_flag(HALF, half_check(r, 1, r+1));
 	set_flag(NEGATIVE, false);
 	++r;
 }
@@ -141,7 +148,7 @@ void Processor::inc_i(uint16_t adr)
 void Processor::dec(uint8_t &r)
 {
 	set_flag(ZERO, r - 1 == 0);
-    set_flag(HALF, neg_half_check(r, 1));
+    set_flag(HALF, half_check(r, 1, r-1));
 	set_flag(NEGATIVE, true);
 	--r;
 }
@@ -155,60 +162,81 @@ void Processor::dec_i(uint16_t adr)
 
 void Processor::add_sp(int8_t d)
 {
-    sp_ += d;
+    uint16_t res = sp_ + d;
+    set_flag(ZERO, false);
+    set_flag(NEGATIVE, false);
+    set_flag(HALF, (res & 0xf) < (sp_ & 0xf));
+    set_flag(CARRY, (res & 0xff) < (sp_ & 0xff));
+    sp_ = res;
 }
 
 void Processor::daa()
 {
-	uint8_t low_nib = af_.hi & 0x0f;
-	bool n {get_flag(NEGATIVE)};
-	if (low_nib > 9 || get_flag(HALF))
-	{
-		af_.hi += (n ? -0x06 : 0x06);
-		set_flag(CARRY, false);
-	}
-	uint8_t hi_nib = (af_.hi & 0xf0) >> 4;
-	if (hi_nib > 9 || get_flag(CARRY))
-	{
-		af_.hi += (n ? -0x60 : 0x60);
-		set_flag(CARRY, true);
-	}
-	set_flag(ZERO, af_.hi == 0);
-	set_flag(HALF, false);
+    uint8_t a = af_.hi;
+    if (!get_flag(NEGATIVE))
+    {
+        if (get_flag(CARRY) || a > 0x99)
+        {
+            a += 0x60;
+            set_flag(CARRY, true);
+        }
+        if (get_flag(HALF) || (a & 0x0f) > 0x09)
+        {
+            a += 0x6;
+        }
+    }
+    else
+    {
+        if (get_flag(CARRY))
+            a -= 0x60;
+        if (get_flag(HALF))
+            a -= 0x6;
+    }
+    set_flag(ZERO, a == 0);
+    set_flag(HALF, false);
+    af_.hi = a;
 }
 
 void Processor::scf()
 {
 	set_flag(CARRY, true);
+    set_flag(NEGATIVE, false);
+    set_flag(HALF, false);
 }
 
 void Processor::cpl()
 {
 	af_.hi = ~af_.hi;
+    set_flag(NEGATIVE, true);
+    set_flag(HALF, true);
 }
 
 void Processor::ccf()
 {
 	set_flag(CARRY, !get_flag(CARRY));
+    set_flag(NEGATIVE, false);
+    set_flag(HALF, false);
 }
 
 void Processor::adc(const uint8_t r, bool cy)
 {
 	uint16_t res = af_.hi + r + cy;
-    set_flag(ZERO, res == 0x100);
+    uint8_t res8 = af_.hi + r + cy;
+    set_flag(ZERO, res8 == 0);
 	set_flag(NEGATIVE, false);
-	set_flag(HALF, half_check(af_.hi, r + cy));
+    set_flag(HALF, half_check(af_.hi, r, res8));
 	set_flag(CARRY, res > 0x00ff);
 	af_.hi = af_.hi + r + cy;
 }
 
 void Processor::sbc(const uint8_t r, bool cy)
 {
-	int16_t res = af_.hi - r - cy;
-	set_flag(ZERO, res == 0);
+    uint16_t res = af_.hi - r - cy;
+    uint8_t res8 = af_.hi - r - cy;
+    set_flag(ZERO, res8 == 0);
 	set_flag(NEGATIVE, true);
-	set_flag(HALF, neg_half_check(af_.hi, r - cy));
-    set_flag(CARRY, res < 0);
+    set_flag(HALF, half_check(af_.hi, r, res8));
+    set_flag(CARRY, res > 0xff);
 	af_.hi = af_.hi - r - cy;
 }
 
@@ -247,25 +275,33 @@ void Processor::cp(const uint8_t r)
     int16_t res = af_.hi - r;
 	set_flag(ZERO, res == 0);
 	set_flag(NEGATIVE, true);
-	set_flag(HALF, neg_half_check(af_.hi, r));
+    set_flag(HALF, half_check(af_.hi, r, res & 0xff));
 	set_flag(CARRY, res < 0); 
 }
 
 void Processor::add(const uint16_t rp)
 {
-	uint32_t res = hl_ + rp;
-    set_flag(ZERO, res == 0);
-	set_flag(NEGATIVE, false);
-	set_flag(HALF, half_check(hl_, rp));
-	set_flag(CARRY, res > 0xffff);
+    set_flag(NEGATIVE, false);
+    set_flag(HALF, half_check_16(hl_, rp, hl_ + rp));
+    set_flag(CARRY, (hl_ + rp) > 0xffff);
+    hl_ += rp;
 }
 
 void Processor::rlc(uint8_t &r)
 {
     bool msb {static_cast<bool>(r & 0x80)};
 	r <<= 1;
-	set_flag(CARRY, msb);
     CHANGE_BIT(r, 0, msb);
+    set_flag(ZERO, r == 0);
+    set_flag(NEGATIVE, false);
+    set_flag(HALF, false);
+    set_flag(CARRY, msb);
+}
+
+void Processor::rlca()
+{
+    rlc(af_.hi);
+    set_flag(ZERO, false);
 }
 
 void Processor::rlc_i(uint16_t adr)
@@ -279,8 +315,18 @@ void Processor::rrc(uint8_t &r)
 {
     bool lsb = r & 0x01;
 	r >>= 1;
-	set_flag(CARRY, lsb);
     CHANGE_BIT(r, 7, lsb);
+    set_flag(CARRY, lsb);
+    set_flag(ZERO, r == 0);
+    set_flag(NEGATIVE, false);
+    set_flag(HALF, false);
+}
+
+// 0x0f (rrca) modifies flags differently than cb 0f
+void Processor::rrca()
+{
+    rrc(af_.hi);
+    set_flag(ZERO, false);
 }
 
 void Processor::rrc_i(uint16_t adr)
@@ -294,8 +340,17 @@ void Processor::rl(uint8_t &r)
 {
 	bool old_carry = get_flag(CARRY);
 	set_flag(CARRY, r & 0x80);
-	r <<= 1;
+    r <<= 1;
     CHANGE_BIT(r, 0, old_carry);
+    set_flag(ZERO, r == 0);
+    set_flag(NEGATIVE, false);
+    set_flag(HALF, false);
+}
+
+void Processor::rla()
+{
+    rl(af_.hi);
+    set_flag(ZERO, false);
 }
 
 void Processor::rl_i(uint16_t adr)
@@ -305,12 +360,22 @@ void Processor::rl_i(uint16_t adr)
 	write(b, adr);
 }
 
+// 0x1f modifies flags differently to cb 1f
+void Processor::rra()
+{
+    rr(af_.hi);
+    set_flag(ZERO, false);
+}
+
 void Processor::rr(uint8_t &r)
 {
 	bool old_carry = get_flag(CARRY);
 	set_flag(CARRY, r & 0x01);
 	r >>= 1;
     CHANGE_BIT(r, 7, old_carry);
+    set_flag(ZERO, r == 0);
+    set_flag(HALF, false);
+    set_flag(NEGATIVE, false);
 }
 
 void Processor::rr_i(uint16_t adr)
@@ -324,6 +389,9 @@ void Processor::sla(uint8_t &r)
 {
 	set_flag(CARRY, r & 0x80);
 	r <<= 1;
+    set_flag(ZERO, r == 0);
+    set_flag(NEGATIVE, false);
+    set_flag(HALF, false);
 }
 
 void Processor::sla_i(uint16_t adr)
@@ -335,10 +403,12 @@ void Processor::sla_i(uint16_t adr)
 
 void Processor::sra(uint8_t &r)
 {
-	set_flag(CARRY, r & 0x01);
-    bool msb = r & 0x80;
-	r >>= 1;
-    CHANGE_BIT(r, 7, msb);
+    bool lsb = r & 1;
+    r = (r >> 1) | (r & 0x80);
+    set_flag(ZERO, r == 0);
+    set_flag(NEGATIVE, false);
+    set_flag(HALF, false);
+    set_flag(CARRY, lsb);
 }
 
 void Processor::sra_i(uint16_t adr)
@@ -353,6 +423,10 @@ void Processor::swap(uint8_t &r)
 	uint8_t low_nibble = r & 0x0f;
 	uint8_t high_nibble = r & 0xf0;
 	r = (low_nibble << 4) | (high_nibble >> 4);
+    set_flag(ZERO, r == 0);
+    set_flag(HALF, false);
+    set_flag(NEGATIVE, false);
+    set_flag(CARRY, false);
 }
 
 void Processor::swap_i(uint16_t adr)
@@ -368,6 +442,7 @@ void Processor::srl(uint8_t &r)
     set_flag(NEGATIVE, false);
     set_flag(HALF, false);
 	r >>= 1;
+    set_flag(ZERO, r == 0);
 }
 
 void Processor::srl_i(uint16_t adr)
@@ -379,7 +454,7 @@ void Processor::srl_i(uint16_t adr)
 
 void Processor::bit(const uint8_t n, const uint8_t r)
 {
-	set_flag(ZERO, r & n);
+    set_flag(ZERO, !(r & (1 << n))); // set Z if bit is NOT set
 	set_flag(NEGATIVE, false);
 	set_flag(HALF, true);
 }
@@ -392,7 +467,7 @@ void Processor::res(const uint8_t n, uint8_t &r)
 void Processor::res_i(uint8_t n, uint16_t adr)
 {
 	uint8_t b {read(adr)};
-	res(n, b);
+    res(n, b);
 	write(b, adr);
 }
 

@@ -95,6 +95,7 @@ class Processor
 	void ldhl_sp(const int8_t);
 	void push(const uint16_t);
 	void pop(Register_pair &);
+    void pop_af(); // special logic for AF needed
 	// 8-bit arithmetic and logic
 	void inc(uint8_t &);
 	void inc_i(uint16_t adr); // we could refactor this indirect addressing
@@ -118,12 +119,16 @@ class Processor
     void add_sp(int8_t);
 	// 8-bit rotations and shifts
 	void rlc(uint8_t &);
+    void rlca();
 	void rlc_i(uint16_t adr);
 	void rrc(uint8_t &);
+    void rrca();
 	void rrc_i(uint16_t adr);
 	void rl(uint8_t &);
+    void rla();
 	void rl_i(uint16_t adr);
 	void rr(uint8_t &);
+    void rra();
 	void rr_i(uint16_t adr);
 	void sla(uint8_t &);
 	void sla_i(uint16_t adr);

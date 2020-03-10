@@ -31,6 +31,7 @@ class Ppu
     void draw_scanline();
     void set_renderer(Renderer *r);
     int mode() const;
+    int clock() const;
 
     private:
     std::function<uint8_t(uint16_t)> read;

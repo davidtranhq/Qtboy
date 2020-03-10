@@ -112,10 +112,10 @@ std::string Debugger::log()
         << "PC:" << std::setw(4) << dump.pc << ' '
         << "LY:" << std::setw(2) << static_cast<int>(ly) << ' '
         << "(cy: " << std::dec << dump.cycles << ") "
-        << "ppu: +" << system_->ppu_.mode() << ' ';
+        << "ppu:+" << system_->ppu_.mode() << ' ';
 
     out << std::nouppercase << std::right << std::setfill('0') << std::hex
-        << std::setw(4) << dump.pc << ":  "; // PC
+        << std::setw(4) << dump.pc << ": "; // PC
     std::ostringstream ops {}; // so we can set fixed width for variable
                                // number of ops
     for (uint8_t x : as.ops)

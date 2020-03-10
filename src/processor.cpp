@@ -246,9 +246,9 @@ void Processor::step()
 		case 0x7f: break;
 		
 		case 0xe0: ldd(IO_MEMORY + read(PC+1), A); break; // ldh (a8),A
-        case 0xea: ldd(IO_MEMORY + cat(read(PC+2), read(PC+1)), A); break; // ld (a16),A
+        case 0xea: ldd(cat(read(PC+2), read(PC+1)), A); break; // ld (a16),A
         case 0xf0: ld(A, read(IO_MEMORY + read(PC+1))); break; // ldh A,(a8)
-		case 0xfa: ld(A, read(IO_MEMORY + cat(read(PC+2), read(PC+1)))); break; // ldh A,(a16)
+        case 0xfa: ld(A, read(cat(read(PC+2), read(PC+1)))); break; // ldh A,(a16)
 		case 0xe2: ldd(IO_MEMORY + C, A); break; // ld (C),A
 		case 0xf2: ld(A, read(IO_MEMORY + C)); break; // ld A,(C)
 		
@@ -262,7 +262,7 @@ void Processor::step()
 		case 0xc1: pop(BC); break;
 		case 0xd1: pop(DE); break;
 		case 0xe1: pop(HL); break;
-		case 0xf1: pop(AF); break;
+        case 0xf1: pop_af(); break;
 		
 		case 0xc5: push(BC); break;
 		case 0xd5: push(DE); break;
@@ -396,10 +396,10 @@ void Processor::step()
         case 0xe8: add_sp(static_cast<int8_t>(read(PC+1))); break;
 
         // bit operations
-        case 0x07: rlc(A); break;
-        case 0x0f: rrc(A); break;
-        case 0x17: rl(A); break;
-        case 0x1f: rr(A); break;
+        case 0x07: rlca(); break;
+        case 0x0f: rrca(); break;
+        case 0x17: rla(); break;
+        case 0x1f: rra(); break;
 		
 		// prefix cb
 		case 0xcb:
@@ -554,149 +554,149 @@ void Processor::step()
 				case 0x7e: bit(7, read(HL)); break;
 				case 0x7f: bit(7, A); break;
 				
-				case 0x80: set(0, B); break;
-				case 0x81: set(0, C); break;
-				case 0x82: set(0, D); break;
-				case 0x83: set(0, E); break;
-				case 0x84: set(0, H); break;
-				case 0x85: set(0, L); break;
-				case 0x86: set_i(0, HL); break;
-				case 0x87: set(0, A); break;
+				case 0x80: res(0, B); break;
+				case 0x81: res(0, C); break;
+				case 0x82: res(0, D); break;
+				case 0x83: res(0, E); break;
+				case 0x84: res(0, H); break;
+				case 0x85: res(0, L); break;
+				case 0x86: res_i(0, HL); break;
+				case 0x87: res(0, A); break;
 				     
-				case 0x88: set(1, B); break;
-				case 0x89: set(1, C); break;
-				case 0x8a: set(1, D); break;
-				case 0x8b: set(1, E); break;
-				case 0x8c: set(1, H); break;
-				case 0x8d: set(1, L); break;
-				case 0x8e: set_i(1, HL); break;
-				case 0x8f: set(1, A); break;
+				case 0x88: res(1, B); break;
+				case 0x89: res(1, C); break;
+				case 0x8a: res(1, D); break;
+				case 0x8b: res(1, E); break;
+				case 0x8c: res(1, H); break;
+				case 0x8d: res(1, L); break;
+				case 0x8e: res_i(1, HL); break;
+				case 0x8f: res(1, A); break;
 				
-				case 0x90: set(2, B); break;
-				case 0x91: set(2, C); break;
-				case 0x92: set(2, D); break;
-				case 0x93: set(2, E); break;
-				case 0x94: set(2, H); break;
-				case 0x95: set(2, L); break;
-				case 0x96: set_i(2, HL); break;
-				case 0x97: set(2, A); break;
+				case 0x90: res(2, B); break;
+				case 0x91: res(2, C); break;
+				case 0x92: res(2, D); break;
+				case 0x93: res(2, E); break;
+				case 0x94: res(2, H); break;
+				case 0x95: res(2, L); break;
+				case 0x96: res_i(2, HL); break;
+				case 0x97: res(2, A); break;
 				     
-				case 0x98: set(3, B); break;
-				case 0x99: set(3, C); break;
-				case 0x9a: set(3, D); break;
-				case 0x9b: set(3, E); break;
-				case 0x9c: set(3, H); break;
-				case 0x9d: set(3, L); break;
-				case 0x9e: set_i(3, HL); break;
-				case 0x9f: set(3, A); break;
+				case 0x98: res(3, B); break;
+				case 0x99: res(3, C); break;
+				case 0x9a: res(3, D); break;
+				case 0x9b: res(3, E); break;
+				case 0x9c: res(3, H); break;
+				case 0x9d: res(3, L); break;
+				case 0x9e: res_i(3, HL); break;
+				case 0x9f: res(3, A); break;
 				
-				case 0xa0: set(4, B); break;
-				case 0xa1: set(4, C); break;
-				case 0xa2: set(4, D); break;
-				case 0xa3: set(4, E); break;
-				case 0xa4: set(4, H); break;
-				case 0xa5: set(4, L); break;
-				case 0xa6: set_i(4, HL); break;
-				case 0xa7: set(4, A); break;
+				case 0xa0: res(4, B); break;
+				case 0xa1: res(4, C); break;
+				case 0xa2: res(4, D); break;
+				case 0xa3: res(4, E); break;
+				case 0xa4: res(4, H); break;
+				case 0xa5: res(4, L); break;
+				case 0xa6: res_i(4, HL); break;
+				case 0xa7: res(4, A); break;
 				     
-				case 0xa8: set(5, B); break;
-				case 0xa9: set(5, C); break;
-				case 0xaa: set(5, D); break;
-				case 0xab: set(5, E); break;
-				case 0xac: set(5, H); break;
-				case 0xad: set(5, L); break;
-				case 0xae: set_i(5, HL); break;
-				case 0xaf: set(5, A); break;
+				case 0xa8: res(5, B); break;
+				case 0xa9: res(5, C); break;
+				case 0xaa: res(5, D); break;
+				case 0xab: res(5, E); break;
+				case 0xac: res(5, H); break;
+				case 0xad: res(5, L); break;
+				case 0xae: res_i(5, HL); break;
+				case 0xaf: res(5, A); break;
 				
-				case 0xb0: set(6, B); break;
-				case 0xb1: set(6, C); break;
-				case 0xb2: set(6, D); break;
-				case 0xb3: set(6, E); break;
-				case 0xb4: set(6, H); break;
-				case 0xb5: set(6, L); break;
-				case 0xb6: set_i(6, HL); break;
-				case 0xb7: set(6, A); break;
+				case 0xb0: res(6, B); break;
+				case 0xb1: res(6, C); break;
+				case 0xb2: res(6, D); break;
+				case 0xb3: res(6, E); break;
+				case 0xb4: res(6, H); break;
+				case 0xb5: res(6, L); break;
+				case 0xb6: res_i(6, HL); break;
+				case 0xb7: res(6, A); break;
 				     
-				case 0xb8: set(7, B); break;
-				case 0xb9: set(7, C); break;
-				case 0xba: set(7, D); break;
-				case 0xbb: set(7, E); break;
-				case 0xbc: set(7, H); break;
-				case 0xbd: set(7, L); break;
-				case 0xbe: set_i(7, HL); break;
-				case 0xbf: set(7, A); break;
+				case 0xb8: res(7, B); break;
+				case 0xb9: res(7, C); break;
+				case 0xba: res(7, D); break;
+				case 0xbb: res(7, E); break;
+				case 0xbc: res(7, H); break;
+				case 0xbd: res(7, L); break;
+				case 0xbe: res_i(7, HL); break;
+				case 0xbf: res(7, A); break;
 				
-				case 0xc0: res(0, B); break;
-				case 0xc1: res(0, C); break;
-				case 0xc2: res(0, D); break;
-				case 0xc3: res(0, E); break;
-				case 0xc4: res(0, H); break;
-				case 0xc5: res(0, L); break;
-				case 0xc6: res_i(0, HL); break;
-				case 0xc7: res(0, A); break;
+				case 0xc0: set(0, B); break;
+				case 0xc1: set(0, C); break;
+				case 0xc2: set(0, D); break;
+				case 0xc3: set(0, E); break;
+				case 0xc4: set(0, H); break;
+				case 0xc5: set(0, L); break;
+				case 0xc6: set_i(0, HL); break;
+				case 0xc7: set(0, A); break;
 				     
-				case 0xc8: res(1, B); break;
-				case 0xc9: res(1, C); break;
-				case 0xca: res(1, D); break;
-				case 0xcb: res(1, E); break;
-				case 0xcc: res(1, H); break;
-				case 0xcd: res(1, L); break;
-				case 0xce: res_i(1, HL); break;
-				case 0xcf: res(1, A); break;
+				case 0xc8: set(1, B); break;
+				case 0xc9: set(1, C); break;
+				case 0xca: set(1, D); break;
+				case 0xcb: set(1, E); break;
+				case 0xcc: set(1, H); break;
+				case 0xcd: set(1, L); break;
+				case 0xce: set_i(1, HL); break;
+				case 0xcf: set(1, A); break;
 				
-				case 0xd0: res(2, B); break;
-				case 0xd1: res(2, C); break;
-				case 0xd2: res(2, D); break;
-				case 0xd3: res(2, E); break;
-				case 0xd4: res(2, H); break;
-				case 0xd5: res(2, L); break;
-				case 0xd6: res_i(2, HL); break;
-				case 0xd7: res(2, A); break;
+				case 0xd0: set(2, B); break;
+				case 0xd1: set(2, C); break;
+				case 0xd2: set(2, D); break;
+				case 0xd3: set(2, E); break;
+				case 0xd4: set(2, H); break;
+				case 0xd5: set(2, L); break;
+				case 0xd6: set_i(2, HL); break;
+				case 0xd7: set(2, A); break;
 				     
-				case 0xd8: res(3, B); break;
-				case 0xd9: res(3, C); break;
-				case 0xda: res(3, D); break;
-				case 0xdb: res(3, E); break;
-				case 0xdc: res(3, H); break;
-				case 0xdd: res(3, L); break;
-				case 0xde: res_i(3, HL); break;
-				case 0xdf: res(3, A); break;
+				case 0xd8: set(3, B); break;
+				case 0xd9: set(3, C); break;
+				case 0xda: set(3, D); break;
+				case 0xdb: set(3, E); break;
+				case 0xdc: set(3, H); break;
+				case 0xdd: set(3, L); break;
+				case 0xde: set_i(3, HL); break;
+				case 0xdf: set(3, A); break;
 				
-				case 0xe0: res(4, B); break;
-				case 0xe1: res(4, C); break;
-				case 0xe2: res(4, D); break;
-				case 0xe3: res(4, E); break;
-				case 0xe4: res(4, H); break;
-				case 0xe5: res(4, L); break;
-				case 0xe6: res_i(4, HL); break;
-				case 0xe7: res(4, A); break;
+				case 0xe0: set(4, B); break;
+				case 0xe1: set(4, C); break;
+				case 0xe2: set(4, D); break;
+				case 0xe3: set(4, E); break;
+				case 0xe4: set(4, H); break;
+				case 0xe5: set(4, L); break;
+				case 0xe6: set_i(4, HL); break;
+				case 0xe7: set(4, A); break;
 				     
-				case 0xe8: res(5, B); break;
-				case 0xe9: res(5, C); break;
-				case 0xea: res(5, D); break;
-				case 0xeb: res(5, E); break;
-				case 0xec: res(5, H); break;
-				case 0xed: res(5, L); break;
-				case 0xee: res_i(5, HL); break;
-				case 0xef: res(5, A); break;
+				case 0xe8: set(5, B); break;
+				case 0xe9: set(5, C); break;
+				case 0xea: set(5, D); break;
+				case 0xeb: set(5, E); break;
+				case 0xec: set(5, H); break;
+				case 0xed: set(5, L); break;
+				case 0xee: set_i(5, HL); break;
+				case 0xef: set(5, A); break;
 				
-				case 0xf0: res(6, B); break;
-				case 0xf1: res(6, C); break;
-				case 0xf2: res(6, D); break;
-				case 0xf3: res(6, E); break;
-				case 0xf4: res(6, H); break;
-				case 0xf5: res(6, L); break;
-				case 0xf6: res_i(6, HL); break;
-				case 0xf7: res(6, A); break;
+				case 0xf0: set(6, B); break;
+				case 0xf1: set(6, C); break;
+				case 0xf2: set(6, D); break;
+				case 0xf3: set(6, E); break;
+				case 0xf4: set(6, H); break;
+				case 0xf5: set(6, L); break;
+				case 0xf6: set_i(6, HL); break;
+				case 0xf7: set(6, A); break;
 				     
-				case 0xf8: res(7, B); break;
-				case 0xf9: res(7, C); break;
-				case 0xfa: res(7, D); break;
-				case 0xfb: res(7, E); break;
-				case 0xfc: res(7, H); break;
-				case 0xfd: res(7, L); break;
-				case 0xfe: res_i(7, HL); break;
-				case 0xff: res(7, A); break;
+				case 0xf8: set(7, B); break;
+				case 0xf9: set(7, C); break;
+				case 0xfa: set(7, D); break;
+				case 0xfb: set(7, E); break;
+				case 0xfc: set(7, H); break;
+				case 0xfd: set(7, L); break;
+				case 0xfe: set_i(7, HL); break;
+				case 0xff: set(7, A); break;
 			}
 			pc_ += cb_instructions[read(PC+1)].length;
 			cycles_ += cb_instructions[read(PC+1)].cycles;
