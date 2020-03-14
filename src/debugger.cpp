@@ -73,8 +73,6 @@ void Debugger::enable_logging(bool b)
 
 void Debugger::write_log()
 {
-    if (!log_file_)
-        set_log_file("cpu.log");
     log_file_ << Debugger::log() << '\n';
 }
 
@@ -110,7 +108,7 @@ std::string Debugger::log()
         << "HL:" << std::setw(2) << static_cast<int>(h) << std::setw(2) << static_cast<int>(l) << ' '
         << "SP:" << std::setw(4) << dump.sp << ' '
         << "PC:" << std::setw(4) << dump.pc << ' '
-        << "LY:" << std::setw(2) << static_cast<int>(ly) << ' '
+        << "IME:" << std::setw(2) << dump.ime << ' '
         << "(cy: " << std::dec << dump.cycles << ") "
         << "ppu:+" << system_->ppu_.mode() << ' ';
 
