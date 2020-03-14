@@ -42,6 +42,7 @@ struct Cpu_values
 {
     uint16_t af, bc, de, hl, sp, pc;
     uint32_t cycles;
+    bool ime;
     std::array<uint8_t, 3> next_ops;
 };
 
