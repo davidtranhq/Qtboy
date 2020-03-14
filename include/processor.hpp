@@ -17,12 +17,21 @@ class Processor
 {
 	public:
 
+    enum Interrupt : uint8_t
+    {
+        VBLANK = 0,
+        LCD_STAT,
+        TIMER,
+        SERIAL,
+        JOYPAD,
+    };
 	
 	Processor(std::function<uint8_t(uint16_t)> rd, 
               std::function<void(uint8_t, uint16_t)> wr);
 	void step();
     void reset();
     Cpu_values dump() const noexcept;
+    void request_interrupt(Interrupt i);
 
     uint16_t af() const noexcept { return af_; }
     uint16_t bc() const noexcept { return bc_; }
@@ -34,7 +43,8 @@ class Processor
 
     std::vector<uint8_t> next_ops(uint16_t n) const;
 
-	
+
+
 	private:
 	
 	enum Flags : uint8_t
@@ -43,15 +53,7 @@ class Processor
 		HALF = 1 << 5,
 		NEGATIVE = 1 << 6,
 		ZERO = 1 << 7,
-	};
-	enum Interrupts : uint8_t
-	{
-		VBLANK = 0x40,
-		LCD_STAT = 0x48,
-		TIMER = 0x50,
-		SERIAL = 0x58,
-		JOYPAD = 0x60,
-	};
+    };
 
     Register_pair af_, bc_, de_, hl_, sp_, pc_;
 	uint32_t cycles_ {0};
@@ -59,7 +61,9 @@ class Processor
     bool hltd_ {false};
     bool control_op_ {false};
     bool use_alt_cycles {false};
-	
+    bool ime_ {false};
+    bool halt_bug_ {false};
+
 	std::function<uint8_t(uint16_t)> read;
 	std::function<void(uint8_t, uint16_t)> write;
 	
@@ -67,16 +71,16 @@ class Processor
 	bool get_flag(Flags f) const;
 	void set_flag(Flags, bool);
 	
-	void interrupt(Interrupts i);
-	void check_interrupt();
+    bool execute_interrupt(Interrupt i);
+    bool check_interrupt();
 	
 	// instructions
 	// misc/control
     void nop() const {}
 	void stop() { stpd_ = true; }
-	void halt() { hltd_ = true; }
-	void di() {write(0, 0xffff); }
-	void ei() {write(1, 0xffff); }
+    void halt();
+    void di() { ime_ = false; }
+    void ei() { ime_ = true; }
 	// jump and calls
 	void jr(bool, const int8_t);
 	void ret(bool);
