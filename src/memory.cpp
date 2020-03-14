@@ -1,4 +1,5 @@
 #include "memory.hpp"
+#include "timer.hpp"
 
 #include <cstdint>
 // #include <QDebug>
@@ -6,7 +7,8 @@
 namespace gameboy
 {
 	
-Memory::Memory()
+Memory::Memory(Timer &t)
+    : timer_ {t}
 {
     init_io();
 }
@@ -56,6 +58,8 @@ uint8_t Memory::read(uint16_t adr) const
 	}
 	else if (adr < 0xff80) // IO accessing
 	{
+        if (adr > 0xff03 || adr < 0xff08) // timer registers
+            timer_.read(adr);
 		b = io_[adr - 0xff00];
 	}
 	else if (adr < 0xffff) // High RAM accessing
@@ -121,6 +125,8 @@ void Memory::write(uint8_t b, uint16_t adr)
     }
     else if (adr < 0xff80) // IO accessing
     {
+        if (adr > 0xff03 || adr < 0xff08) // timer registers
+            timer_.write(b, adr);
         io_[adr - 0xff00] = b;
     }
     else if (adr < 0xffff) // High RAM accessing
