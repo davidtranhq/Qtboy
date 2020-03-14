@@ -18,7 +18,8 @@ SOURCES += \
     ../../../src/processor.cpp \
     ../../../src/ram.cpp \
     ../../../src/rom.cpp \
-    ../../../src/system.cpp
+    ../../../src/system.cpp \
+    ../../../src/timer.cpp
 
 HEADERS += \
     ../../../include/cartridge.hpp \
@@ -36,4 +37,5 @@ HEADERS += \
     ../../../include/register_pair.hpp \
     ../../../include/renderer.hpp \
     ../../../include/rom.hpp \
-    ../../../include/system.hpp
+    ../../../include/system.hpp \
+    ../../../include/timer.hpp
