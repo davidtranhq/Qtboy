@@ -25,6 +25,9 @@
 #define SP sp_
 #define PC pc_
 
+#define SET_BIT(b, n) b |= (1UL << n)
+#define CLEAR_BIT(b, n) b &= ~(1UL << n)
+
 namespace gameboy
 {
 	
@@ -47,6 +50,8 @@ void Processor::reset()
     cycles_ = 0;
     stpd_ = false;
     hltd_ = false;
+    ime_ = false;
+    halt_bug_ = false;
 }
 
 std::vector<uint8_t> Processor::next_ops(uint16_t n) const
@@ -77,36 +82,61 @@ inline uint16_t cat(uint8_t a, uint8_t b)
 	return static_cast<uint16_t>(a) << 8 | static_cast<uint16_t>(b);
 }
 
-void Processor::interrupt(Interrupts i)
+bool Processor::execute_interrupt(Interrupt i)
 {	
-	di();
-	write((pc_.hi & 0xff00) >> 8, read(--sp_));
-	write(pc_.lo, read(--sp_));
+    hltd_ = false;
+    if (!ime_)
+        return false; // don't service the interrupt if IME is disabled
+    write(pc_.hi, --sp_);
+    write(pc_.lo, --sp_);
 	pc_.hi = 0;
-	pc_.lo = i;
+    pc_.lo = 0x40 + i*8;
+    ime_ = false;
+    uint8_t int_flag {read(0xff0f)};
+    CLEAR_BIT(int_flag, i);
+    write(int_flag, 0xff0f);
+    return true;
+
 }
 
-void Processor::check_interrupt()
+bool Processor::check_interrupt()
 {
 	uint8_t int_enable {read(0xffff)};
 	uint8_t int_flag {read(0xff0f)};
 	uint8_t request = int_enable & int_flag;
-	if (request & 1)
-		interrupt(VBLANK);
+    bool serviced {false};
+    if (request & 1)
+        serviced = execute_interrupt(VBLANK);
 	else if (request & 1 << 1)
-		interrupt(LCD_STAT);
+        serviced = execute_interrupt(LCD_STAT);
 	else if (request & 1 << 2)
-		interrupt(TIMER);
+        serviced = execute_interrupt(TIMER);
 	else if (request & 1 << 3)
-		interrupt(SERIAL);
+        serviced = execute_interrupt(SERIAL);
 	else if (request & 1 << 4)
-		interrupt(JOYPAD);
+        serviced = execute_interrupt(JOYPAD);
+    return serviced;
+}
+
+void Processor::request_interrupt(Interrupt i)
+{
+    uint8_t int_flag {read(0xff0f)};
+    SET_BIT(int_flag, i);
+    write(int_flag, 0xff0f);
 }
 
 void Processor::step()
 {
-	uint8_t op {read(PC)};
-    check_interrupt();
+    if (check_interrupt())
+        return;
+    uint8_t op {read(PC)};
+    if (hltd_)
+        return;
+    if (halt_bug_)
+    {
+        --PC;
+        halt_bug_ = false;
+    }
 	switch (op)
 	{	
 		// misc and control
@@ -718,7 +748,7 @@ void Processor::step()
 	
 Cpu_values Processor::dump() const noexcept
 {
-    return {af_, bc_, de_, hl_, sp_, pc_, cycles_,
+    return {af_, bc_, de_, hl_, sp_, pc_, cycles_, ime_,
             {read(pc_), read(pc_+1), read(pc_+2)}};
 }
 
