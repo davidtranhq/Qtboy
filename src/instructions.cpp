@@ -19,6 +19,19 @@ inline bool half_check_16(const uint16_t a, const uint16_t b, const uint16_t res
     return ((a ^ b ^ res) & 0x1000);
 }
 
+void Processor::halt()
+{
+    if (ime_)
+        hltd_ = true;
+    else
+    {
+        if ((read(0xffff) & read(0xff0f) & 0x1f) != 0) // HALT bug
+            halt_bug_ = true;
+        else
+            hltd_ = true;
+    }
+}
+
 void Processor::jr(bool cond, const int8_t d)
 {
 	if (cond)
@@ -83,7 +96,7 @@ void Processor::reti()
     pc_.lo = read(sp_++);
     pc_.hi = read(sp_++);
     control_op_ = true;
-	write(1, 0xffff); // enable interrupt
+    ime_ = true;
 }
 
 // 16-bit load
