@@ -10,6 +10,7 @@
 #include "ppu.hpp"
 #include "renderer.hpp"
 #include "debug_types.hpp"
+#include "timer.hpp"
 
 namespace gameboy
 {
@@ -38,7 +39,6 @@ class System
 	uint8_t memory_read(uint16_t adr);
 	void memory_write(uint8_t b, uint16_t adr);
     // components
-	Memory memory_ {};
 	Processor cpu_ 
 	{
 		[this](uint16_t adr){ return this->memory_read(adr); }, 
@@ -48,6 +48,14 @@ class System
     {
         [this](uint16_t adr){ return this->memory_read(adr); },
         [this](uint8_t b, uint16_t adr){ this->memory_write(b, adr); }
+    };
+    Timer timer_
+    {
+        cpu_
+    };
+    Memory memory_
+    {
+        timer_,
     };
     // the renderer is an interface to facilitate the implementation of other
     // libraries for different platforms
