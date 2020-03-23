@@ -1,6 +1,6 @@
 # QtBoy
 
-A Game Boy (DMG) emulator written in C++ using [Qt 5.13](https://qt.io) for the GUI. WIP.
+A Game Boy (DMG only) emulator written in C++ using [Qt 5.13](https://qt.io) for the GUI. WIP.
 
 ## Build
 
