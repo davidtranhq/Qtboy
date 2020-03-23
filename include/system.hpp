@@ -11,6 +11,7 @@
 #include "renderer.hpp"
 #include "debug_types.hpp"
 #include "timer.hpp"
+#include "joypad.h"
 
 namespace gameboy
 {
@@ -25,6 +26,8 @@ class System
     void run();
     void reset();
     void step(size_t n);
+    void press(Joypad::Input);
+    void release(Joypad::Input);
 
     // system setup
     void load_cartridge(std::istream &is);
@@ -47,15 +50,20 @@ class System
     Ppu ppu_
     {
         [this](uint16_t adr){ return this->memory_read(adr); },
-        [this](uint8_t b, uint16_t adr){ this->memory_write(b, adr); }
+        [this](uint8_t b, uint16_t adr){ this->memory_write(b, adr); },
+        cpu_
     };
     Timer timer_
     {
         cpu_
     };
+    Joypad joypad_
+    {
+        cpu_
+    };
     Memory memory_
     {
-        timer_,
+        ppu_, timer_, joypad_
     };
     // the renderer is an interface to facilitate the implementation of other
     // libraries for different platforms
