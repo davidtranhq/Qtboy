@@ -23,12 +23,8 @@ uint8_t Mbc1::read(uint16_t adr) const
         b = rom_->read(rom_bank_, adr - 0x4000);
 	}
 	else if (adr < 0xc000)
-	{
-        if (!ram_enable_)
-            throw Bad_memory {"Attempt to read from RAM while "
-                              "RAM_ENABLE is set to false",
-                              __FILE__, __LINE__};
-        if (ram_)
+    {
+        if (ram_ && ram_enable_)
             b = ram_->value().read(ram_bank_, adr - 0xc000);
         else
             b = 0xff;
@@ -64,12 +60,8 @@ void Mbc1::write(uint8_t b, uint16_t adr)
         ram_mode_select_ = b;
 	}
 	else if (adr >= 0xa000 && adr < 0xc000)
-	{
-        if (!ram_enable_)
-            throw Bad_memory {"Attempt to write to RAM while"
-                             "RAM_ENABLE is set to false",
-                             __FILE__, __LINE__};
-        if (ram_)
+    {
+        if (ram_ && ram_enable_)
             ram_->value().write(b, ram_bank_, adr - 0xa000);
 	}
 }

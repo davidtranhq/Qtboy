@@ -113,21 +113,19 @@ void Cartridge::write(uint8_t b, uint16_t adr)
 std::map<std::string, Memory_range> Cartridge::dump() const
 {
     std::map<std::string, Memory_range> out {};
-    uint8_t rom_bank {1};
-    if (mbc_)
+    // external ram on cartridge is optional
+    if (ram_) // external ram exists
     {
-        rom_bank = mbc_->rom_bank();
-        if (ram_)
-        {
-            uint8_t ram_bank {mbc_->ram_bank()};
-            out["RAMX"] = {"RAM" + std::to_string(ram_bank), ram_->dump(ram_bank)};
-        }
-        else
-        {
-            out["RAMX"] = {"RAMX", std::vector<uint8_t>(sizeof(External_ram::Bank))};
-        }
+        // if no mbc chip, default bank 0
+        uint8_t ram_bank = mbc_ ? mbc_->ram_bank() : 0;
+        out["RAMX"] = {"RAM" + std::to_string(ram_bank), ram_->dump(ram_bank)};
+    }
+    else if (!ram_) // ex ram doesn't exist, dump empty ram bank
+    {
+        out["RAMX"] = {"RAMX", std::vector<uint8_t>(sizeof(External_ram::Bank))};
     }
     out["ROM0"] = {"ROM0", rom_.dump(0)};
+    uint8_t rom_bank = mbc_ ? mbc_->rom_bank() : 1;
     out["ROMX"] = {"ROM" + std::to_string(rom_bank), rom_.dump(rom_bank)};
     return out;
 }

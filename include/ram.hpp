@@ -23,7 +23,7 @@ class Ram
     void reset();
 	
 	private:
-	std::vector<Bank> data_;
+    std::vector<Bank> data_ {{}};
 	
 };
 
