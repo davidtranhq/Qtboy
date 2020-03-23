@@ -10,7 +10,7 @@ Use `make` to build a CLI version of the emulator on Windows or Linux.
 
 ## Progress
 
-blaarg's CPU tests can be found [here](https://github.com/retrio/gb-test-roms)
+blaarg's CPU tests can be found [here.](https://github.com/retrio/gb-test-roms)
 
 Test|Status
 ---|---
