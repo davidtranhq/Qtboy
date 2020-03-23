@@ -131,7 +131,10 @@ void Processor::step()
         return;
     uint8_t op {read(PC)};
     if (hltd_)
+    {
+        cycles_ += 4; // assume NOP when CPU is halted
         return;
+    }
     if (halt_bug_)
     {
         --PC;
