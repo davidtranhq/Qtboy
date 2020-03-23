@@ -22,20 +22,26 @@ class MainWindow : public QMainWindow
 
 public:
     explicit MainWindow(QWidget *parent = nullptr);
-
     void loadRom(const QString &fileName);
+
+protected:
+    void keyPressEvent(QKeyEvent *);
+    void keyReleaseEvent(QKeyEvent *);
 
 private slots:
     void openRom();
     void showDisassembler();
     void showDebugger();
+    void showVramViewer();
     void about();
+
+    void update_display();
 
 private:
     void createActions();
 
     gameboy::System system;
-    Qt_renderer *renderer {nullptr};
+    Qt_renderer *renderer_ {nullptr};
     QLabel *display;
     QString curRom;
 };
