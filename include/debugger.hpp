@@ -8,6 +8,7 @@
 
 #include "debug_types.hpp"
 #include "instruction_info.hpp"
+#include "ppu.hpp"
 
 namespace gameboy
 {
@@ -39,7 +40,12 @@ class Debugger
     bool memory_changed() const;
     std::vector<uint8_t> dump_rom() const noexcept;
     Cpu_values dump_cpu() const noexcept;
-    void draw_framebuffer();
+    std::array<Tile_data, 384> dump_tileset();
+    std::array<std::array<uint8_t, 16>, 384> dump_raw_tileset();
+    Frame_data dump_background();
+    Frame_data dump_window();
+    std::array<uint8_t, 32*32> dump_raw_background();
+    std::array<Sprite, 40> dump_sprites();
 
     std::string hex_dump() const;
     Assembly disassemble_op() const; // disassemble next instruction

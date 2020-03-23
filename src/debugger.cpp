@@ -108,9 +108,9 @@ std::string Debugger::log()
         << "HL:" << std::setw(2) << static_cast<int>(h) << std::setw(2) << static_cast<int>(l) << ' '
         << "SP:" << std::setw(4) << dump.sp << ' '
         << "PC:" << std::setw(4) << dump.pc << ' '
-        << "IME:" << std::setw(2) << dump.ime << ' '
+        << "LY:" << std::setw(2) << static_cast<int>(ly) << ' '
         << "(cy: " << std::dec << dump.cycles << ") "
-        << "ppu:+" << system_->ppu_.mode() << ' ';
+        << "ppu:+" << system_->ppu_.mode() << '-' << system_->ppu_.clock() << ' ';
 
     out << std::nouppercase << std::right << std::setfill('0') << std::hex
         << std::setw(4) << dump.pc << ": "; // PC
@@ -253,9 +253,45 @@ Cpu_values Debugger::dump_cpu() const noexcept
     return system_->cpu_.dump();
 }
 
-void Debugger::draw_framebuffer()
+std::array<Tile_data, 384> Debugger::dump_tileset()
 {
-    system_->ppu_.draw_framebuffer();
+    std::array<Tile_data, 384> set {};
+    for (uint16_t i = 0; i < 384; ++i)
+        set[i] = system_->ppu_.get_tile(i);
+    return set;
+}
+
+std::array<std::array<uint8_t, 16>, 384> Debugger::dump_raw_tileset()
+{
+    std::array<std::array<uint8_t, 16>, 384> raw {};
+    for (uint16_t i = 0; i < 384; ++i)
+    {
+        for (uint8_t j = 0; j < 16; ++j)
+        {
+            raw[i][j] = system_->memory_read(0x8000+(i*16)+j);
+        }
+    }
+    return raw;
+}
+
+Frame_data Debugger::dump_background()
+{
+    return system_->ppu_.get_layer(Ppu::Layer::Background);
+}
+
+Frame_data Debugger::dump_window()
+{
+    return system_->ppu_.get_layer(Ppu::Layer::Window);
+}
+
+std::array<uint8_t, 32*32> Debugger::dump_raw_background()
+{
+    return system_->ppu_.get_raw_background();
+}
+
+std::array<Sprite, 40> Debugger::dump_sprites()
+{
+    return system_->ppu_.get_sprites();
 }
 
 std::string Debugger::hex_dump() const
