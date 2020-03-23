@@ -40,6 +40,16 @@ void System::step(size_t n)
     }
 }
 
+void System::press(Joypad::Input i)
+{
+    joypad_.press(i);
+}
+
+void System::release(Joypad::Input i)
+{
+    joypad_.release(i);
+}
+
 // system setup
 
 void System::load_cartridge(std::istream &is)
