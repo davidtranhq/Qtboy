@@ -1,5 +1,8 @@
 #include "memory.hpp"
 #include "timer.hpp"
+#include "ppu.hpp"
+#include "joypad.h"
+#include "exception.hpp"
 
 #include <cstdint>
 // #include <QDebug>
@@ -7,8 +10,10 @@
 namespace gameboy
 {
 	
-Memory::Memory(Timer &t)
-    : timer_ {t}
+Memory::Memory(Ppu &p, Timer &t, Joypad &j)
+    : ppu_ {p},
+      timer_ {t},
+      joypad_ {j}
 {
     init_io();
 }
@@ -58,9 +63,16 @@ uint8_t Memory::read(uint16_t adr) const
 	}
 	else if (adr < 0xff80) // IO accessing
 	{
-        if (adr > 0xff03 || adr < 0xff08) // timer registers
-            timer_.read(adr);
-		b = io_[adr - 0xff00];
+        if (adr == 0xff01)
+            joypad_.read_reg();
+        else if (adr > 0xff03 && adr < 0xff08) // timer registers
+            b = timer_.read(adr);
+        else if (adr > 0xff39 && adr < 0xff4c && adr != 0xff46) // ppu registers
+            b = ppu_.read_reg(adr);
+        else if (adr == 0xff00)
+            b = 0xff;
+        else
+            b = io_[adr - 0xff00];
 	}
 	else if (adr < 0xffff) // High RAM accessing
 	{
@@ -125,8 +137,14 @@ void Memory::write(uint8_t b, uint16_t adr)
     }
     else if (adr < 0xff80) // IO accessing
     {
-        if (adr > 0xff03 || adr < 0xff08) // timer registers
+        if (adr == 0xff01)
+            joypad_.write_reg(b);
+        else if (adr > 0xff03 && adr < 0xff08) // timer registers
             timer_.write(b, adr);
+        else if (adr > 0xff3f && adr < 0xff4c && adr != 0xff46) // PPU registers
+            ppu_.write_reg(b, adr);
+        else if (adr == 0xff46) // DMA
+            dma_transfer(b);
         io_[adr - 0xff00] = b;
     }
     else if (adr < 0xffff) // High RAM accessing
@@ -204,6 +222,7 @@ void Memory::set_ram_size()
 
 void Memory::init_io()
 {
+    io_[0x00] = 0xff;
     io_[0x05] = 0x00;   // TIMA
     io_[0x06] = 0x00;   // TMA
     io_[0x07] = 0x00;   // TAC
@@ -238,4 +257,16 @@ void Memory::init_io()
     io_[0xFF] = 0x00;   // IE
 }
 
+void Memory::dma_transfer(uint8_t b)
+{
+    if (b > 0xf1) // only defined for range between 00-f1
+        throw Bad_memory("Attempted to write value outside 00-f1"
+                         "to DMA register (ff46)\n", __FILE__, __LINE__);
+    // copy from XX00-XX9f to oam (fe00-fe9f), where XXh = b
+    for (uint8_t i {0}; i < oam_.size(); ++i)
+        oam_[i] = read(b << 8 | i);
 }
+
+}
+
+
