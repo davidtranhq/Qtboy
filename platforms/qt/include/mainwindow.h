@@ -5,6 +5,7 @@
 #include "qt_renderer.h"
 
 #include <QMainWindow>
+#include <chrono>
 
 QT_BEGIN_NAMESPACE
 class QAction;
@@ -27,6 +28,7 @@ public:
 protected:
     void keyPressEvent(QKeyEvent *);
     void keyReleaseEvent(QKeyEvent *);
+    void closeEvent(QCloseEvent *);
 
 private slots:
     void openRom();
@@ -44,6 +46,8 @@ private:
     Qt_renderer *renderer_ {nullptr};
     QLabel *display;
     QString curRom;
+    std::chrono::high_resolution_clock::time_point start_;
+
 };
 
 #endif // MAINWINDOW_H

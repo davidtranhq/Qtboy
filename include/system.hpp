@@ -28,6 +28,7 @@ class System
     void step(size_t n);
     void press(Joypad::Input);
     void release(Joypad::Input);
+    size_t cycles() { return cpu_.cycles(); }
 
     // system setup
     void load_cartridge(std::istream &is);

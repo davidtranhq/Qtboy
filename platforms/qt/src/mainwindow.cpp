@@ -4,6 +4,7 @@
 #include "debuggerwindow.h"
 #include "vram_window.h"
 
+
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow {parent},
       renderer_ {new Qt_renderer(160, 144)},
@@ -21,6 +22,7 @@ void MainWindow::loadRom(const QString &fileName)
 {
     system.reset();
     system.load_cartridge(fileName.toStdString());
+    start_ = std::chrono::high_resolution_clock::now();
     for (;;)
     {
         QCoreApplication::processEvents();
@@ -57,6 +59,7 @@ void MainWindow::keyPressEvent(QKeyEvent *event)
             system.press(gameboy::Joypad::Input::Start);
             break;
     }
+    qInfo() << "Pressed " + event->text();
 }
 
 void MainWindow::keyReleaseEvent(QKeyEvent *event)
@@ -88,6 +91,19 @@ void MainWindow::keyReleaseEvent(QKeyEvent *event)
             system.release(gameboy::Joypad::Input::Start);
             break;
     }
+    qInfo() << "Released " + event->text();
+}
+
+void MainWindow::closeEvent(QCloseEvent *event)
+{
+    auto runtime = std::chrono::high_resolution_clock::now() - start_;
+    auto runtime_ms = std::chrono::duration_cast<std::chrono::milliseconds>(runtime);
+    auto cycle_time = runtime.count()/system.cycles();
+    qInfo() << "Took " << QString::number(runtime.count())
+            << " ms to run " << QString::number(system.cycles())
+            << " cycles.\n" << QString::number(cycle_time)
+            << " ms/cycle.\n";
+    event->accept();
 }
 
 void MainWindow::openRom()
