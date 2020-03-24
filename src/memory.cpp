@@ -63,14 +63,12 @@ uint8_t Memory::read(uint16_t adr) const
 	}
 	else if (adr < 0xff80) // IO accessing
 	{
-        if (adr == 0xff01)
-            joypad_.read_reg();
+        if (adr == 0xff00)
+            b = joypad_.read_reg();
         else if (adr > 0xff03 && adr < 0xff08) // timer registers
             b = timer_.read(adr);
         else if (adr > 0xff39 && adr < 0xff4c && adr != 0xff46) // ppu registers
             b = ppu_.read_reg(adr);
-        else if (adr == 0xff00)
-            b = 0xff;
         else
             b = io_[adr - 0xff00];
 	}
@@ -137,7 +135,7 @@ void Memory::write(uint8_t b, uint16_t adr)
     }
     else if (adr < 0xff80) // IO accessing
     {
-        if (adr == 0xff01)
+        if (adr == 0xff00)
             joypad_.write_reg(b);
         else if (adr > 0xff03 && adr < 0xff08) // timer registers
             timer_.write(b, adr);

@@ -78,8 +78,4 @@ void Joypad::write_reg(uint8_t b)
     select_button_ = (b & 1 << 4);
     select_direction_ = (b & 1 << 5);
     // clear button/direction if either are unselected
-    if (!select_button_)
-        buttons_ = 0;
-    if (!select_direction_)
-        directions_ = 0;
 }
