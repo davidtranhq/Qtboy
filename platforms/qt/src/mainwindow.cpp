@@ -58,7 +58,6 @@ void MainWindow::keyPressEvent(QKeyEvent *event)
             system.press(gameboy::Joypad::Input::Start);
             break;
     }
-    qInfo() << "Pressed " + event->text();
 }
 
 void MainWindow::keyReleaseEvent(QKeyEvent *event)
@@ -90,7 +89,6 @@ void MainWindow::keyReleaseEvent(QKeyEvent *event)
             system.release(gameboy::Joypad::Input::Start);
             break;
     }
-    qInfo() << "Released " + event->text();
 }
 
 void MainWindow::openRom()
