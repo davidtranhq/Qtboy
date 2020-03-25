@@ -350,7 +350,10 @@ void Ppu::render_sprite_line(Line_data &ld)
             else // 8x8 sprite
                 tile_i = s.tile;
         }
-        uint16_t adr = tile_data+tile_i*16+(ln%8)*2; // tile is 16 bytes, each line is 2
+        bool y_flip = s.attr & 1 << 6;
+        uint16_t adr = y_flip
+                ? tile_data+(tile_i+1)*16-(ln%8)*2
+                : tile_data+tile_i*16+(ln%8)*2; // tile is 16 bytes, each line is 2
         uint8_t low_byte = read(adr);
         uint8_t high_byte = read(adr+1);
         Palette pal = get_sprite_palette(s.attr & 1 << 4);
@@ -362,10 +365,12 @@ void Ppu::render_sprite_line(Line_data &ld)
             // only draw pixel if on screen and if priority is 0 or priority is 1 and bg pixel is 0
             if (on_screen && (!priority || (priority && ld.bg_px_index[x] == 0)))
             {
-                bool hi_bit = (high_byte & 1 << (7-px));
-                bool lo_bit = (low_byte & 1 << (7-px));
+                bool x_flip = s.attr & 1 << 5;
+                bool hi_bit = (high_byte & 1 << (x_flip ? px : 7-px));
+                bool lo_bit = (low_byte & 1 << (x_flip ? px : 7-px));
                 uint8_t p = static_cast<uint8_t>(hi_bit << 1 | lo_bit);
-                ld.pixels[x] = pal[p].argb(); // draw
+                if (p != 0) // only draw if not transparent
+                    ld.pixels[x] = pal[p].argb(); // draw
             }
         }
         ++sprites_drawn;

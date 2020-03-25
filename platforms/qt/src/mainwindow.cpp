@@ -22,7 +22,6 @@ void MainWindow::loadRom(const QString &fileName)
 {
     system.reset();
     system.load_cartridge(fileName.toStdString());
-    start_ = std::chrono::high_resolution_clock::now();
     for (;;)
     {
         QCoreApplication::processEvents();
@@ -92,18 +91,6 @@ void MainWindow::keyReleaseEvent(QKeyEvent *event)
             break;
     }
     qInfo() << "Released " + event->text();
-}
-
-void MainWindow::closeEvent(QCloseEvent *event)
-{
-    auto runtime = std::chrono::high_resolution_clock::now() - start_;
-    auto runtime_ms = std::chrono::duration_cast<std::chrono::milliseconds>(runtime);
-    auto cycle_time = runtime.count()/system.cycles();
-    qInfo() << "Took " << QString::number(runtime.count())
-            << " ms to run " << QString::number(system.cycles())
-            << " cycles.\n" << QString::number(cycle_time)
-            << " ms/cycle.\n";
-    event->accept();
 }
 
 void MainWindow::openRom()

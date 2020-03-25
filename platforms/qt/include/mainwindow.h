@@ -28,7 +28,6 @@ public:
 protected:
     void keyPressEvent(QKeyEvent *);
     void keyReleaseEvent(QKeyEvent *);
-    void closeEvent(QCloseEvent *);
 
 private slots:
     void openRom();
@@ -46,7 +45,6 @@ private:
     Qt_renderer *renderer_ {nullptr};
     QLabel *display;
     QString curRom;
-    std::chrono::high_resolution_clock::time_point start_;
 
 };
 
