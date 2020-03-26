@@ -2,6 +2,7 @@ TEMPLATE = app
 TARGET = QtBoy
 
 CONFIG += c++17
+CONFIG += O3
 
 QT = gui core
 
