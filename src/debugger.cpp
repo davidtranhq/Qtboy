@@ -253,11 +253,11 @@ Cpu_values Debugger::dump_cpu() const noexcept
     return system_->cpu_.dump();
 }
 
-std::array<Tile_data, 384> Debugger::dump_tileset()
+std::vector<Texture> Debugger::dump_tileset()
 {
-    std::array<Tile_data, 384> set {};
+    std::vector<Texture> set;
     for (uint16_t i = 0; i < 384; ++i)
-        set[i] = system_->ppu_.get_tile(i);
+        set.push_back(system_->ppu_.get_tile(i));
     return set;
 }
 
@@ -274,12 +274,12 @@ std::array<std::array<uint8_t, 16>, 384> Debugger::dump_raw_tileset()
     return raw;
 }
 
-Frame_data Debugger::dump_background()
+Texture Debugger::dump_background()
 {
     return system_->ppu_.get_layer(Ppu::Layer::Background);
 }
 
-Frame_data Debugger::dump_window()
+Texture Debugger::dump_window()
 {
     return system_->ppu_.get_layer(Ppu::Layer::Window);
 }

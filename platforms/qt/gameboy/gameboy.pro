@@ -45,7 +45,7 @@ HEADERS += \
     ../../../include/debugger.hpp \
     ../../../include/disassembler.hpp \
     ../../../include/exception.hpp \
-    ../../../include/graphics.h \
+    ../../../include/graphics.hpp \
     ../../../include/instruction_info.hpp \
     ../../../include/joypad.h \
     ../../../include/memory.hpp \

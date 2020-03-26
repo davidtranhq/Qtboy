@@ -30,7 +30,7 @@ void Ppu::reset()
     stat_ = 0x85;
     scy_ = 0;
     scx_ = 0;
-    ly_ = 0x91;
+    ly_ = 0;
     lyc_ = 0;
     bgp_ = 0xfc;
     obp0_ = 0xff;
@@ -43,7 +43,10 @@ void Ppu::reset()
 void Ppu::step(size_t cycles)
 {
     if (!(lcdc_ & 0x80)) // bit 7
+    {
+        ly_ = 0;
         return; // don't execute if master bit is off
+    }
     // PPU operates on 4.194 MHz clock, 1 clock = 1/4 cycle
     clock_ += cycles;
     switch (stat_ & 3) // bit 0-1
@@ -85,6 +88,8 @@ uint8_t Ppu::read_reg(uint16_t adr)
         lcdc_, stat_, scy_, scx_, ly_, lyc_, 0x00, // ff46 is DMA transfer
         bgp_, obp0_, obp1_, wy_, wx_
     }};
+    if (!(lcdc_ & 0x80))
+        return 0; // always return 0 when LCD is off
     if (adr > 0xff39 && adr < 0xff4c && adr != 0xff46)
         return regs[adr-0xff40];
     else
@@ -160,16 +165,16 @@ void Ppu::render_framebuffer()
 }
 */
 
-Tile_data Ppu::get_tile(uint16_t i)
+Texture Ppu::get_tile(uint16_t i)
 {
-    Tile_data td {};
+    Texture tex {8,8};
     uint16_t tile_base = 0x8000;
     std::array<Color, 4> pal
     {{
-        {255, 255, 255, 255},
-        {255, 192, 102, 192},
-        {255, 96, 96, 96},
-        {255, 0, 0, 0}
+        {255, 255, 255},
+        {192, 102, 192},
+        {96, 96, 96},
+        {0, 0, 0}
     }};
     for (uint8_t byte = 0; byte < 16; byte += 2)
     {
@@ -179,14 +184,14 @@ Tile_data Ppu::get_tile(uint16_t i)
         {
             bool hi_bit = hi_byte & 1 << (7-px);
             bool lo_bit = lo_byte & 1 << (7-px);
-            uint32_t c = pal[static_cast<uint8_t>(hi_bit << 1 | lo_bit)].argb();
-            td.pixels[byte/2+px] = c;
+            Color c = pal[static_cast<uint8_t>(hi_bit << 1 | lo_bit)];
+            tex.set_pixel(byte/2+px, c);
         }
     }
-    return td;
+    return tex;
 }
 
-Frame_data Ppu::get_layer(Layer l)
+Texture Ppu::get_layer(Layer l)
 {
     uint16_t tilemap;
     if (l == Layer::Background)
@@ -195,7 +200,7 @@ Frame_data Ppu::get_layer(Layer l)
         tilemap = ((lcdc_ & (1 << 6)) ? 0x9c00 : 0x9800);
     else if (l == Layer::Sprite)
         return get_sprite_layer();
-    Frame_data fd {};
+    Texture tex {256, 256};
     Palette pal {get_bg_palette()};
     // tile data offset in VRAM
     uint16_t tile_base = (lcdc_ & (1 << 4) ? 0x8000 : 0x9000);
@@ -225,17 +230,17 @@ Frame_data Ppu::get_layer(Layer l)
             {
                 bool hi_bit = hi_byte & 1 << (7-p);
                 bool lo_bit = lo_byte & 1 << (7-p);
-                uint32_t px = pal[static_cast<uint8_t>(hi_bit << 1 | lo_bit)].argb();
-                fd.pixels[i++] = px;
+                Color px = pal[static_cast<uint8_t>(hi_bit << 1 | lo_bit)];
+                tex.set_pixel(i++, px);
             }
         }
     }
-    return fd;
+    return tex;
 }
 
-Frame_data Ppu::get_sprite_layer()
+Texture Ppu::get_sprite_layer()
 {
-    return Frame_data {};
+    return Texture {256,256};
 }
 
 std::array<uint8_t, 32*32> Ppu::get_raw_background()
@@ -249,23 +254,19 @@ std::array<uint8_t, 32*32> Ppu::get_raw_background()
 
 void Ppu::render_scanline()
 {
-    Line_data ld {};
-    if (!(lcdc_ & 1)) // bg/window enable
+    Texture tex {160, 1};
+    if (lcdc_ & 1) // bg/window enable
     {
-        ld = { {}, {}, ly_ };
-    }
-    else
-    {
-        render_layer_line(ld, Layer::Background);
+        render_layer_line(tex, Layer::Background);
         if (lcdc_ & 1 << 5) // window display enable
-            render_layer_line(ld, Layer::Window);
+            render_layer_line(tex, Layer::Window);
     }
     if (lcdc_ & 1 << 1) // OBJ display enable
-        render_layer_line(ld, Layer::Sprite);
-    renderer_->draw_scanline(ld);
+        render_layer_line(tex, Layer::Sprite);
+    renderer_->draw_texture(tex, 0, ly_);
 }
 
-void Ppu::render_layer_line(Line_data &ld, Layer l)
+void Ppu::render_layer_line(Texture &tex, Layer l)
 {
     // tile maps used for bg/window
     uint16_t tile_map = 0;
@@ -284,7 +285,7 @@ void Ppu::render_layer_line(Line_data &ld, Layer l)
     }
     else if (l == Layer::Sprite)
     {
-        render_sprite_line(ld);
+        render_sprite_line(tex);
         return;
     }
     Palette pal {get_bg_palette()};
@@ -317,15 +318,14 @@ void Ppu::render_layer_line(Line_data &ld, Layer l)
         // most significant bits of both bytes represent color of first pixel
         bool hi_bit = (high_byte & 1 << (7-px_offset));
         bool lo_bit = (low_byte & 1 << (7-px_offset));
-        uint8_t px = static_cast<uint8_t>(hi_bit << 1 | lo_bit);
-        ld.pixels[x_px] = pal[px].argb();
-        ld.bg_px_index[x_px] = px;
+        uint8_t px_i = static_cast<uint8_t>(hi_bit << 1 | lo_bit);
+        tex.set_pixel(x_px, pal[px_i]);
+        tex.set_pixel_index(x_px, px_i);
     }
-    ld.line = ly_;
-    renderer_->draw_scanline(ld);
+    renderer_->draw_texture(tex, 0, ly_);
 }
 
-void Ppu::render_sprite_line(Line_data &ld)
+void Ppu::render_sprite_line(Texture &tex)
 {
     const uint16_t tile_data = 0x8000;
     // 0=8x8, 1=8x16
@@ -363,14 +363,14 @@ void Ppu::render_sprite_line(Line_data &ld)
             uint8_t x = s.x-8 + px;
             bool on_screen = (x < 168 && x > 0);
             // only draw pixel if on screen and if priority is 0 or priority is 1 and bg pixel is 0
-            if (on_screen && (!priority || (priority && ld.bg_px_index[x] == 0)))
+            if (on_screen && (!priority || (priority && tex.pixel_index(x) == 0)))
             {
                 bool x_flip = s.attr & 1 << 5;
                 bool hi_bit = (high_byte & 1 << (x_flip ? px : 7-px));
                 bool lo_bit = (low_byte & 1 << (x_flip ? px : 7-px));
                 uint8_t p = static_cast<uint8_t>(hi_bit << 1 | lo_bit);
                 if (p != 0) // only draw if not transparent
-                    ld.pixels[x] = pal[p].argb(); // draw
+                    tex.set_pixel(x, pal[p]);
             }
         }
         ++sprites_drawn;
@@ -387,10 +387,10 @@ Palette Ppu::get_bg_palette()
     Palette pal {};
     std::array<Color, 4> shades
     {{
-        {255, 255, 255, 255},
-        {255, 192, 192, 192},
-        {255, 96, 96, 96},
-        {255, 0, 0, 0}
+        {255, 255, 255},
+        {192, 192, 192},
+        {96, 96, 96},
+        {0, 0, 0}
     }};
     for (uint8_t i {0}; i < 4; ++i)
         pal[i] = shades[((bgp_ >> i*2) & 3)];
@@ -402,10 +402,10 @@ Palette Ppu::get_sprite_palette(bool alt_pal)
     Palette pal {};
     std::array<Color, 4> shades
     {{
-        {0, 255, 255, 255},
-        {255, 192, 192, 192},
-        {255, 96, 96, 96},
-        {255, 0, 0, 0}
+        {255, 255, 255},
+        {192, 192, 192},
+        {96, 96, 96},
+        {0, 0, 0}
     }};
     uint8_t obp = alt_pal ? obp1_ : obp0_;
     for (uint8_t i {1}; i < 4; ++i)
@@ -463,7 +463,7 @@ void Ppu::hblank()
     if (clock_ >= 204)
     {
         clock_ -= 204;
-        ++ly_;
+        increment_ly();
         if (ly_ == 144)
         {
             // enter vblank
@@ -493,7 +493,7 @@ void Ppu::vblank()
     if (clock_ >= 456)
     {
         clock_ -= 456;
-        ++ly_;
+        increment_ly();
         if (ly_ > 153)
         {
             // restart scanning modes
