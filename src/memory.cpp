@@ -23,46 +23,46 @@ uint8_t Memory::read(uint16_t adr) const
     if (!cart_) // no cartridge inserted
         return 0xff;
 
-	uint8_t b;
-	
-	if (adr < 0x8000) // ROM bank accessing
-	{
-		b = cart_.value().read(adr); // MBC on cartridge
-	}
-	else if (adr < 0xa000) // VRAM accessing
-	{
+    uint8_t b;
+
+    if (adr < 0x8000) // ROM bank accessing
+    {
+        b = cart_.value().read(adr); // MBC on cartridge
+    }
+    else if (adr < 0xa000) // VRAM accessing
+    {
         uint16_t a = adr - 0x8000; // adjusted for placement in memory map
         b = vram_.read(0, a);
-	}
-	else if (adr < 0xc000) // external RAM accessing
-	{
-		b = cart_.value().read(adr); // MBC on cartridge
-	}
-	else if (adr < 0xd000) // WRAM bank 0 access
-	{
-		b = wram_.read(0, adr-0xc000);
-	}
-	else if (adr < 0xe000) // WRAM bank 1-7 accessing (CGB)
-	{
+    }
+    else if (adr < 0xc000) // external RAM accessing
+    {
+        b = cart_.value().read(adr); // MBC on cartridge
+    }
+    else if (adr < 0xd000) // WRAM bank 0 access
+    {
+        b = wram_.read(0, adr-0xc000);
+    }
+    else if (adr < 0xe000) // WRAM bank 1-7 accessing (CGB)
+    {
         uint16_t a = adr - 0xd000; // adjust
         b = wram_.read(1, a);
-	}
-	else if (adr < 0xfe00) // echo RAM
-	{
-		return read(adr - 0x2000);  // echo ram of 0xc000-0xddff
-	}
-	else if (adr < 0xfea0) // OAM accessing
-	{
-		b = oam_[adr - 0xfe00];
-	}
-	else if (adr < 0xff00) // undefined
-	{
-		// on a real gameboy these addresses don't point to any memory so 
-		// reading from it is undefined!
-		b = 0xff;
-	}
-	else if (adr < 0xff80) // IO accessing
-	{
+    }
+    else if (adr < 0xfe00) // echo RAM
+    {
+        return read(adr - 0x2000);  // echo ram of 0xc000-0xddff
+    }
+    else if (adr < 0xfea0) // OAM accessing
+    {
+        b = oam_[adr - 0xfe00];
+    }
+    else if (adr < 0xff00) // undefined
+    {
+        // on a real gameboy these addresses don't point to any memory so
+        // reading from it is undefined!
+        b = 0xff;
+    }
+    else if (adr < 0xff80) // IO accessing
+    {
         if (adr == 0xff00)
             b = joypad_.read_reg();
         else if (adr > 0xff03 && adr < 0xff08) // timer registers
@@ -71,16 +71,16 @@ uint8_t Memory::read(uint16_t adr) const
             b = ppu_.read_reg(adr);
         else
             b = io_[adr - 0xff00];
-	}
-	else if (adr < 0xffff) // High RAM accessing
-	{
-		b = hram_[adr - 0xff80];
-	}
-	else // adr == 0xffff, interrupt enable register
-	{
-		b = ie_;
-	}
-	return b;
+    }
+    else if (adr < 0xffff) // High RAM accessing
+    {
+        b = hram_[adr - 0xff80];
+    }
+    else // adr == 0xffff, interrupt enable register
+    {
+        b = ie_;
+    }
+    return b;
 }
 
 //QTextStream &qStdOut()
