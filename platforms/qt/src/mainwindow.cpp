@@ -12,7 +12,7 @@ MainWindow::MainWindow(QWidget *parent)
 {
     system.set_renderer(renderer_);
     createActions();
-    // display->setScaledContents(true);
+    display->setScaledContents(true);
     setCentralWidget(display);
     connect(renderer_, SIGNAL(present_screen()), this, SLOT(update_display()));
 }
