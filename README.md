@@ -8,7 +8,7 @@ Use `make` to build a CLI version of the emulator on Windows or Linux.
 
 [Install Qt](https://doc.qt.io/qt-5/gettingstarted.html) and load the project file located under platforms/qt/gameboy/gameboy.pro with Qt Creator to build a GUI version of the emulator.
 
-## Progress
+## Accuracy
 
 blaarg's CPU tests can be found [here.](https://github.com/retrio/gb-test-roms)
 
