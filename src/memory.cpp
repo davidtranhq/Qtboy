@@ -23,46 +23,46 @@ uint8_t Memory::read(uint16_t adr) const
     if (!cart_) // no cartridge inserted
         return 0xff;
 
-	uint8_t b;
-	
-	if (adr < 0x8000) // ROM bank accessing
-	{
-		b = cart_.value().read(adr); // MBC on cartridge
-	}
-	else if (adr < 0xa000) // VRAM accessing
-	{
+    uint8_t b;
+
+    if (adr < 0x8000) // ROM bank accessing
+    {
+        b = cart_->read(adr); // MBC on cartridge
+    }
+    else if (adr < 0xa000) // VRAM accessing
+    {
         uint16_t a = adr - 0x8000; // adjusted for placement in memory map
-        b = vram_.read(0, a);
-	}
-	else if (adr < 0xc000) // external RAM accessing
-	{
-		b = cart_.value().read(adr); // MBC on cartridge
-	}
-	else if (adr < 0xd000) // WRAM bank 0 access
-	{
-		b = wram_.read(0, adr-0xc000);
-	}
-	else if (adr < 0xe000) // WRAM bank 1-7 accessing (CGB)
-	{
+        b = vram_[a];
+    }
+    else if (adr < 0xc000) // external RAM accessing
+    {
+        b = cart_->read(adr); // MBC on cartridge
+    }
+    else if (adr < 0xd000) // WRAM bank 0 access
+    {
+        b = wram0_[adr-0xc000];
+    }
+    else if (adr < 0xe000) // WRAM bank 1-7 accessing (CGB)
+    {
         uint16_t a = adr - 0xd000; // adjust
-        b = wram_.read(1, a);
-	}
-	else if (adr < 0xfe00) // echo RAM
-	{
-		return read(adr - 0x2000);  // echo ram of 0xc000-0xddff
-	}
-	else if (adr < 0xfea0) // OAM accessing
-	{
-		b = oam_[adr - 0xfe00];
-	}
-	else if (adr < 0xff00) // undefined
-	{
-		// on a real gameboy these addresses don't point to any memory so 
-		// reading from it is undefined!
-		b = 0xff;
-	}
-	else if (adr < 0xff80) // IO accessing
-	{
+        b = wram1_[a];
+    }
+    else if (adr < 0xfe00) // echo RAM
+    {
+        return read(adr - 0x2000);  // echo ram of 0xc000-0xddff
+    }
+    else if (adr < 0xfea0) // OAM accessing
+    {
+        b = oam_[adr - 0xfe00];
+    }
+    else if (adr < 0xff00) // undefined
+    {
+        // on a real gameboy these addresses don't point to any memory so
+        // reading from it is undefined!
+        b = 0xff;
+    }
+    else if (adr < 0xff80) // IO accessing
+    {
         if (adr == 0xff00)
             b = joypad_.read_reg();
         else if (adr > 0xff03 && adr < 0xff08) // timer registers
@@ -71,16 +71,16 @@ uint8_t Memory::read(uint16_t adr) const
             b = ppu_.read_reg(adr);
         else
             b = io_[adr - 0xff00];
-	}
-	else if (adr < 0xffff) // High RAM accessing
-	{
-		b = hram_[adr - 0xff80];
-	}
-	else // adr == 0xffff, interrupt enable register
-	{
-		b = ie_;
-	}
-	return b;
+    }
+    else if (adr < 0xffff) // High RAM accessing
+    {
+        b = hram_[adr - 0xff80];
+    }
+    else // adr == 0xffff, interrupt enable register
+    {
+        b = ie_;
+    }
+    return b;
 }
 
 //QTextStream &qStdOut()
@@ -100,25 +100,24 @@ void Memory::write(uint8_t b, uint16_t adr)
         std::cout << static_cast<char>(read(0xff01));
 	if (adr < 0x8000) // enabling flags (dependant on MBC)
 	{
-		cart_.value().write(b, adr);
+        cart_->write(b, adr);
 	}
 	else if (adr < 0xa000) // VRAM accessing
 	{
 		uint16_t a = adr - 0x8000; // adjusted for placement in memory map
-        vram_.write(b, 0, a);
+        vram_[a] = b;
 	}
 	else if (adr < 0xc000) // RAM bank access
     {
-		cart_.value().write(b, adr); // MBC on cartridge
+        cart_->write(b, adr); // MBC on cartridge
     }
     else if (adr < 0xd000) // write to WRAM bank 0
     {
-        wram_.write(b, 0, adr-0xc000);
+        wram0_[adr-0xc000] = b;
     }
     else if (adr < 0xe000) // write to WRAM bank 1
     {
-        wram_.write(b, 1, adr-0xd000);
-
+        wram1_[adr-0xd000] = b;
     }
     else if (adr < 0xfe00) // echo RAM
     {
@@ -158,14 +157,15 @@ void Memory::write(uint8_t b, uint16_t adr)
 
 void Memory::load_cartridge(std::istream &is)
 {
-    cart_.emplace(is);
+    cart_ = std::make_unique<Cartridge>(is);
 	set_ram_size();
 }
 
 void Memory::reset()
 {
-    vram_.reset();
-    wram_.reset();
+    vram_ = {};
+    wram0_ = {};
+    wram1_ = {};
     oam_ = {};
     io_ = {};
     hram_ = {};
@@ -175,12 +175,12 @@ void Memory::reset()
 
 std::vector<uint8_t> Memory::dump_rom() const
 {
-    return (cart_ ? cart_.value().dump_rom() : std::vector<uint8_t> {});
+    return (cart_ ? cart_->dump_rom() : std::vector<uint8_t> {});
 }
 
-std::map<std::string, Memory_range> Memory::dump() const
+std::unordered_map<std::string, Memory_range> Memory::dump() const
 {
-    std::map<std::string, Memory_range> out;
+    std::unordered_map<std::string, Memory_range> out;
     if (!cart_) // no cartridge loaded
     {
         out["ROM0"] = Memory_range {"ROM0", std::vector<uint8_t>(0x4000)};
@@ -189,13 +189,16 @@ std::map<std::string, Memory_range> Memory::dump() const
     else // cartridge dependant memory locations
     {
         std::map<std::string, Memory_range>
-                cart {cart_.value().dump()};
+                cart {cart_->dump()};
         // concatenate memory map recieved from cartridge to output
         out.insert(cart.begin(), cart.end());
     }
-    out["WRM0"] = {"WRM0", wram_.dump(0)};
-    out["VRMX"] = {"VRM0", vram_.dump(0)};
-    out["WRMX"] = {"WRM1", wram_.dump(1)};
+    std::vector<uint8_t> wrm0 {wram0_.begin(), wram0_.end()};
+    std::vector<uint8_t> wrm1 {wram1_.begin(), wram1_.end()};
+    std::vector<uint8_t> vrm0 {vram_.begin(), vram_.end()};
+    out["WRM0"] = {"WRM0", wrm0};
+    out["VRMX"] = {"VRM0", vrm0};
+    out["WRMX"] = {"WRM1", wrm1};
     std::vector<uint8_t> oam(oam_.begin(), oam_.end());
     std::vector<uint8_t> io(io_.begin(), io_.end());
     std::vector<uint8_t> hram(hram_.begin(), hram_.end());
@@ -213,10 +216,7 @@ bool Memory::was_written()
 }
 
 void Memory::set_ram_size()
-{
-    vram_.resize(1); // DMG has 1 bank of VRAM
-    wram_.resize(2); // DMG has 2 banks of WRAM
-}
+{}
 
 void Memory::init_io()
 {

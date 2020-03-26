@@ -29,7 +29,7 @@ class Memory
     void reset();
 
     std::vector<uint8_t> dump_rom() const;
-    std::map<std::string, Memory_range> dump() const;
+    std::unordered_map<std::string, Memory_range> dump() const;
     bool was_written();
 
     private:
@@ -38,9 +38,9 @@ class Memory
     void dma_transfer(uint8_t b);
 
     private:
-    std::optional<Cartridge> cart_ {std::nullopt};
-    Video_ram vram_ {}; // 8KB x 2
-    Work_ram wram_ {};
+    std::unique_ptr<Cartridge> cart_ {nullptr};
+    std::array<uint8_t, 0x2000> vram_;
+    std::array<uint8_t, 0x1000> wram0_, wram1_;
     std::array<uint8_t, 0xa0> oam_ {};
     std::array<uint8_t, 0x80> io_ {};
     std::array<uint8_t, 0x7f> hram_ {};
