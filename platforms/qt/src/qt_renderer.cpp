@@ -4,23 +4,38 @@
 
 Qt_renderer::Qt_renderer(int w, int h, QObject *parent)
     : QObject {parent},
-      img_ {w, h, QImage::Format_ARGB32}
+      w_ {w}, h_ {h}, buf_(4*w*h)
 {}
 
-void Qt_renderer::draw_tile(gameboy::Tile_data td, size_t x, size_t y)
+void Qt_renderer::draw_texture(const gameboy::Texture &t, int x_pos, int y_pos)
 {
-    for (uint16_t p {0}; p < td.pixels.size(); ++p)
-        img_.setPixel(x+(p%8), y+(p >> 3), td.pixels[p]);
+    const unsigned int w {t.width()};
+    const unsigned int h {t.height()};
+    for (size_t i = 0; i < w*h; ++i)
+    {
+        gameboy::Color c = t.pixel(i);
+        size_t j = y_pos*w_+i;
+        buf_[4*j] = c.r;
+        buf_[4*j+1] = c.g;
+        buf_[4*j+2] = c.b;
+    }
+
+    /*
+    for (size_t y = 0; y < h; ++y)
+    {
+        for (size_t x = 0; x < w; ++x)
+        {
+            size_t i = y*w+x;
+            gameboy::Color c = t.pixel(i);
+            buf_[4*((y+y_pos)*w+x)] = c.r;
+            buf_[4*((y+y_pos)*w+x)+1] = c.g;
+            buf_[4*((y+y_pos)*w+x)+2] = c.b;
+        }
+    }
+    */
 }
 
-void Qt_renderer::draw_scanline(gameboy::Line_data ld)
+QImage Qt_renderer::image() const
 {
-    for (uint16_t p {0}; p < ld.pixels.size(); ++p)
-        img_.setPixel(p, ld.line, ld.pixels[p]);
-}
-
-void Qt_renderer::draw_framebuffer(gameboy::Frame_data fd)
-{
-    for (size_t p {0}; p < fd.pixels.size(); ++p)
-        img_.setPixel(p%256, p>>8, fd.pixels[p]);
+    return QImage(buf_.data(), w_, h_, QImage::Format_RGB32);
 }

@@ -11,7 +11,7 @@ Background_tab::Background_tab(gameboy::System *s)
       bg_ {new QLabel}
 {
     auto background = debugger_.dump_background();
-    renderer_->draw_framebuffer(background);
+    renderer_->draw_texture(background);
     bg_->setScaledContents(true);
     bg_->setPixmap(QPixmap::fromImage(renderer_->image()));
     QVBoxLayout *layout = new QVBoxLayout;

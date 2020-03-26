@@ -6,7 +6,7 @@
 #include <bitset>
 #include <vector>
 
-#include "graphics.h"
+#include "graphics.hpp"
 
 namespace gameboy
 {
@@ -33,10 +33,10 @@ class Ppu
 
     void set_renderer(Renderer *r);
     void render_framebuffer();
-    Tile_data get_tile(uint16_t i);
+    Texture get_tile(uint16_t i);
     std::array<Sprite, 40> get_sprites();
-    Frame_data get_layer(Layer);
-    Frame_data get_sprite_layer();
+    Texture get_layer(Layer);
+    Texture get_sprite_layer();
     std::array<uint8_t, 32*32> get_raw_background();
     void render_sprites();
 
@@ -44,8 +44,8 @@ class Ppu
     std::function<uint8_t(uint16_t)> read;
     std::function<void(uint8_t, uint16_t)> write;
     void render_scanline();
-    void render_layer_line(Line_data &ld, Layer l);
-    void render_sprite_line(Line_data &ld);
+    void render_layer_line(Texture &ld, Layer l);
+    void render_sprite_line(Texture &ld);
     Palette get_bg_palette();
     Palette get_sprite_palette(bool alt_pal);
     void load_sprites();
