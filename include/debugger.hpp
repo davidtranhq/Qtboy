@@ -35,7 +35,7 @@ class Debugger
     size_t steps() const;
     bool paused() const;
     std::vector<uint8_t> dump_memory() const;
-    std::map<std::string, Memory_range> dump_mapped_memory() const;
+    std::unordered_map<std::string, Memory_range> dump_mapped_memory() const;
     std::string dump_formatted_memory(Dump_format d = Dump_format::Hex) const;
     bool memory_changed() const;
     std::vector<uint8_t> dump_rom() const noexcept;

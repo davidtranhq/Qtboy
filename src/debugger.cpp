@@ -160,16 +160,16 @@ bool Debugger::paused() const
 
 std::vector<uint8_t> Debugger::dump_memory() const
 {
-    std::map<std::string, Memory_range> mem {dump_mapped_memory()};
+    std::unordered_map<std::string, Memory_range> mem {dump_mapped_memory()};
     std::vector<uint8_t> out {};
     for (const std::string &r : Memory_range_names)
         out.insert(out.end(), mem[r].data.begin(), mem[r].data.end());
     return out;
 }
 
-std::map<std::string, Memory_range> Debugger::dump_mapped_memory() const
+std::unordered_map<std::string, Memory_range> Debugger::dump_mapped_memory() const
 {
-    std::map<std::string, Memory_range> out {system_->memory_.dump()};
+    std::unordered_map<std::string, Memory_range> out {system_->memory_.dump()};
     std::vector<uint8_t> echo_ram {out["WRM0"].data};
     echo_ram.insert(echo_ram.end(), out["WRMX"].data.begin(), out["WRMX"].data.begin() + 0x0e00);
     out["ECHO"] = {"ECHO", echo_ram};
@@ -179,7 +179,7 @@ std::map<std::string, Memory_range> Debugger::dump_mapped_memory() const
 
 std::string Debugger::dump_formatted_memory(Dump_format d) const
 {
-    static std::map<std::string, Memory_range> mem {dump_mapped_memory()};
+    static std::unordered_map<std::string, Memory_range> mem {dump_mapped_memory()};
     if (memory_changed())
         mem = dump_mapped_memory();
     std::ostringstream dump {};
