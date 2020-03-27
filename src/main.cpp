@@ -45,8 +45,8 @@ int main(int argc, char *argv[])
 			d.step();
 		auto finish = std::chrono::high_resolution_clock::now();
 		auto duration = std::chrono::duration_cast<std::chrono::microseconds>(finish-start);
-		std::cout << "Took " << i << " CPU steps. (" << s.cycles() << " cycles )\n";
-				  << "Took " << duration.count() << " microseconds ( " s.cycles/
+		std::cout << "Took " << i << " CPU steps\n"
+				  << "in " << duration.count() << " microseconds "
 				  << '(' << duration.count()/1000000 << " s).\n";
 	}
 	else
