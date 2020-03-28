@@ -27,7 +27,8 @@ class System
     void pause();
     void run_concurrently();
     void reset();
-    size_t step(size_t n);
+    size_t step(size_t n); // take n CPU steps
+    size_t execute(size_t cyc); // run for cyc cycles
     void press(Joypad::Input);
     void release(Joypad::Input);
     size_t cycles() { return cpu_.cycles(); }

@@ -28,7 +28,7 @@ System::System(Renderer *r)
     for (;;)
     {
         auto start = std::chrono::high_resolution_clock::now();
-        size_t cycles = step(1); // arbitrary number to keep sleep times higher bc nanosecond precision is unreliable
+        size_t cycles = execute(70224); // number of cycles in one frame
         auto finish = std::chrono::high_resolution_clock::now();
         double expected = NANOSECONDS_PER_CYCLE * cycles;
         auto duration = duration_cast<nanoseconds>(finish-start).count();
@@ -65,6 +65,14 @@ size_t System::step(size_t n)
         ppu_.step(cycles_passed);
         timer_.update(cycles_passed);
     }
+    return cycles_passed;
+}
+
+size_t System::execute(size_t cyc)
+{
+    size_t cycles_passed = 0;
+    while (cycles_passed < cyc)
+        cycles_passed += step(1);
     return cycles_passed;
 }
 
