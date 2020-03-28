@@ -361,7 +361,7 @@ void Ppu::render_sprite_line(Texture &tex)
         for (uint8_t px = 0; px < 8; ++px)
         {
             uint8_t x = s.x-8 + px;
-            bool on_screen = (x < 168 && x > 0);
+            bool on_screen = (x < 160 && x > 0);
             // only draw pixel if on screen and if priority is 0 or priority is 1 and bg pixel is 0
             if (on_screen && (!priority || (priority && tex.pixel_index(x) == 0)))
             {

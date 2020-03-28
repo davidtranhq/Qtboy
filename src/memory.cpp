@@ -9,7 +9,7 @@
 
 namespace gameboy
 {
-	
+
 Memory::Memory(Ppu &p, Timer &t, Joypad &j)
     : ppu_ {p},
       timer_ {t},
@@ -98,16 +98,16 @@ void Memory::write(uint8_t b, uint16_t adr)
     if (adr == 0xff02 && b == 0x81)
         // qStdOut() << static_cast<char>(read(0xff01));
         std::cout << static_cast<char>(read(0xff01));
-	if (adr < 0x8000) // enabling flags (dependant on MBC)
-	{
+    if (adr < 0x8000) // enabling flags (dependant on MBC)
+    {
         cart_->write(b, adr);
-	}
-	else if (adr < 0xa000) // VRAM accessing
-	{
-		uint16_t a = adr - 0x8000; // adjusted for placement in memory map
+    }
+    else if (adr < 0xa000) // VRAM accessing
+    {
+        uint16_t a = adr - 0x8000; // adjusted for placement in memory map
         vram_[a] = b;
-	}
-	else if (adr < 0xc000) // RAM bank access
+    }
+    else if (adr < 0xc000) // RAM bank access
     {
         cart_->write(b, adr); // MBC on cartridge
     }
@@ -158,7 +158,7 @@ void Memory::write(uint8_t b, uint16_t adr)
 void Memory::load_cartridge(std::istream &is)
 {
     cart_ = std::make_unique<Cartridge>(is);
-	set_ram_size();
+    set_ram_size();
 }
 
 void Memory::reset()

@@ -4,10 +4,15 @@
 #include <sstream>
 #include <vector>
 #include <map>
+#include <thread>
+#include <chrono>
 
 #include "system.hpp"
 #include "exception.hpp"
 #include "disassembler.hpp"
+
+using std::chrono::duration_cast;
+using std::chrono::nanoseconds;
 
 namespace gameboy
 {
@@ -18,8 +23,29 @@ System::System(Renderer *r)
 
 // system control
 
-void System::run()
-{}
+[[ noreturn ]] void System::run()
+{
+    for (;;)
+    {
+        auto start = std::chrono::high_resolution_clock::now();
+        size_t cycles = step(1); // arbitrary number to keep sleep times higher bc nanosecond precision is unreliable
+        auto finish = std::chrono::high_resolution_clock::now();
+        double expected = NANOSECONDS_PER_CYCLE * cycles;
+        auto duration = duration_cast<nanoseconds>(finish-start).count();
+        if (duration < expected)
+        {
+            auto t = std::chrono::duration<double, std::nano>(expected-duration);
+            std::this_thread::sleep_for(t);
+        }
+    }
+}
+
+void System::run_concurrently()
+{
+    auto run_fn = [this]{ this->run(); };
+    std::thread t(run_fn);
+    t.detach();
+}
 
 void System::reset()
 {
@@ -28,16 +54,18 @@ void System::reset()
     ppu_.reset();
 }
 
-void System::step(size_t n)
+size_t System::step(size_t n)
 {
+    size_t cycles_passed = 0;
     for (size_t i {0}; i < n; ++i)
     {
         size_t old_cycles {cpu_.cycles()};
         cpu_.step();
-        size_t cycles_passed {cpu_.cycles() - old_cycles};
+        cycles_passed += (cpu_.cycles() - old_cycles);
         ppu_.step(cycles_passed);
         timer_.update(cycles_passed);
     }
+    return cycles_passed;
 }
 
 void System::press(Joypad::Input i)

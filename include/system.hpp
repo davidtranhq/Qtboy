@@ -23,9 +23,11 @@ class System
     explicit System(Renderer *r = nullptr);
 
     // system control
-    void run();
+    void run [[ noreturn ]] ();
+    void pause();
+    void run_concurrently();
     void reset();
-    void step(size_t n);
+    size_t step(size_t n);
     void press(Joypad::Input);
     void release(Joypad::Input);
     size_t cycles() { return cpu_.cycles(); }
@@ -39,10 +41,11 @@ class System
     friend class Debugger;
 
 	private:
-	// callbacks to interface other components with memory
+    // callbacks to interface other components with memory
 	uint8_t memory_read(uint16_t adr);
 	void memory_write(uint8_t b, uint16_t adr);
-    // components
+
+    private:
 	Processor cpu_ 
 	{
 		[this](uint16_t adr){ return this->memory_read(adr); }, 
@@ -69,6 +72,7 @@ class System
     // the renderer is an interface to facilitate the implementation of other
     // libraries for different platforms
     std::unique_ptr<Renderer> renderer_;
+    static constexpr double NANOSECONDS_PER_CYCLE {1000000000/4194304};
 };
 	
 }
