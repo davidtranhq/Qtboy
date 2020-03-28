@@ -22,11 +22,7 @@ void MainWindow::loadRom(const QString &fileName)
 {
     system.reset();
     system.load_cartridge(fileName.toStdString());
-    for (;;)
-    {
-        QCoreApplication::processEvents();
-        system.step(1);
-    }
+    system.run_concurrently();
 }
 
 void MainWindow::keyPressEvent(QKeyEvent *event)
