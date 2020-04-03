@@ -6,7 +6,7 @@
 #include <bitset>
 #include <vector>
 
-#include "graphics.hpp"
+#include "graphic_types.hpp"
 
 namespace gameboy
 {

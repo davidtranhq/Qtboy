@@ -64,6 +64,7 @@ size_t System::step(size_t n)
         cycles_passed += (cpu_.cycles() - old_cycles);
         ppu_.step(cycles_passed);
         timer_.update(cycles_passed);
+        apu_.tick(cycles_passed);
     }
     return cycles_passed;
 }
@@ -106,6 +107,11 @@ void System::set_renderer(Renderer *r)
 {
     renderer_.reset(r);
     ppu_.set_renderer(r);
+}
+
+void System::set_speaker(Speaker *s)
+{
+    apu_.set_speaker(s);
 }
 
 // system debug

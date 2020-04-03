@@ -3,6 +3,7 @@
 #include "ppu.hpp"
 #include "joypad.h"
 #include "exception.hpp"
+#include "apu.hpp"
 
 #include <cstdint>
 // #include <QDebug>
@@ -10,10 +11,11 @@
 namespace gameboy
 {
 
-Memory::Memory(Ppu &p, Timer &t, Joypad &j)
+Memory::Memory(Ppu &p, Timer &t, Joypad &j, Apu &a)
     : ppu_ {p},
       timer_ {t},
-      joypad_ {j}
+      joypad_ {j},
+      apu_ {a}
 {
     init_io();
 }
@@ -67,7 +69,9 @@ uint8_t Memory::read(uint16_t adr) const
             b = joypad_.read_reg();
         else if (adr > 0xff03 && adr < 0xff08) // timer registers
             b = timer_.read(adr);
-        else if (adr > 0xff39 && adr < 0xff4c && adr != 0xff46) // ppu registers
+        else if (adr > 0xff0f && adr < 0xff3f) // APU registers
+            b = apu_.read_reg(adr);
+        else if (adr > 0xff3f && adr < 0xff4c && adr != 0xff46) // ppu registers
             b = ppu_.read_reg(adr);
         else
             b = io_[adr - 0xff00];
@@ -95,9 +99,9 @@ void Memory::write(uint8_t b, uint16_t adr)
     if (!cart_) // no cartridge inserted
         return;
     was_written_ = true;
-    if (adr == 0xff02 && b == 0x81)
+    //if (adr == 0xff02 && b == 0x81)
         // qStdOut() << static_cast<char>(read(0xff01));
-        std::cout << static_cast<char>(read(0xff01));
+       // std::cout << static_cast<char>(read(0xff01));
     if (adr < 0x8000) // enabling flags (dependant on MBC)
     {
         cart_->write(b, adr);
@@ -138,6 +142,8 @@ void Memory::write(uint8_t b, uint16_t adr)
             joypad_.write_reg(b);
         else if (adr > 0xff03 && adr < 0xff08) // timer registers
             timer_.write(b, adr);
+        else if (adr > 0xff0f && adr < 0xff3f) // APU registers
+            apu_.write_reg(b, adr);
         else if (adr > 0xff3f && adr < 0xff4c && adr != 0xff46) // PPU registers
             ppu_.write_reg(b, adr);
         else if (adr == 0xff46) // DMA

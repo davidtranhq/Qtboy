@@ -3,14 +3,17 @@
 #include "disassemblerwindow.h"
 #include "debuggerwindow.h"
 #include "vram_window.h"
-
+#include "qt_speaker.h"
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow {parent},
       renderer_ {new Qt_renderer(160, 144)},
+      speaker_ {new Qt_speaker},
       display {new QLabel}
 {
+
     system.set_renderer(renderer_);
+    system.set_speaker(speaker_);
     createActions();
     display->setScaledContents(true);
     setCentralWidget(display);

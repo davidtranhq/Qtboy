@@ -12,6 +12,8 @@
 #include "debug_types.hpp"
 #include "timer.hpp"
 #include "joypad.h"
+#include "apu.hpp"
+#include "speaker.hpp"
 
 namespace gameboy
 {
@@ -37,9 +39,12 @@ class System
     void load_cartridge(std::istream &is);
     bool load_cartridge(const std::string &path);
     void set_renderer(Renderer *r);
+    void set_speaker(Speaker *s);
 
     // system debug
     friend class Debugger;
+
+    static constexpr double NANOSECONDS_PER_CYCLE {1000000000/4194304};
 
 	private:
     // callbacks to interface other components with memory
@@ -66,14 +71,14 @@ class System
     {
         cpu_
     };
+    Apu apu_ {};
     Memory memory_
     {
-        ppu_, timer_, joypad_
+        ppu_, timer_, joypad_, apu_
     };
     // the renderer is an interface to facilitate the implementation of other
     // libraries for different platforms
     std::unique_ptr<Renderer> renderer_;
-    static constexpr double NANOSECONDS_PER_CYCLE {1000000000/4194304};
 };
 	
 }

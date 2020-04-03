@@ -1,4 +1,4 @@
-#include "graphics.hpp"
+#include "graphic_types.hpp"
 
 using namespace gameboy;
 

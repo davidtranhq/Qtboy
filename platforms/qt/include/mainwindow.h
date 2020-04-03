@@ -3,6 +3,7 @@
 
 #include "system.hpp"
 #include "qt_renderer.h"
+#include "qt_speaker.h"
 
 #include <QMainWindow>
 #include <chrono>
@@ -43,6 +44,7 @@ private:
 
     gameboy::System system;
     Qt_renderer *renderer_ {nullptr};
+    Qt_speaker *speaker_ {nullptr};
     QLabel *display;
     QString curRom;
 

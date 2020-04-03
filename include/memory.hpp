@@ -15,13 +15,14 @@ namespace gameboy
 class Timer;
 class Ppu;
 class Joypad;
+class Apu;
 
 class Memory
 {
     static constexpr auto RAM_BANK_SIZE = 0x2000; // 8 KB
     public:
 
-    explicit Memory(Ppu &p, Timer &t, Joypad &j);
+    explicit Memory(Ppu &p, Timer &t, Joypad &j, Apu &a);
 
     uint8_t read(uint16_t adr) const;
     void write(uint8_t b, uint16_t adr);
@@ -47,6 +48,7 @@ class Memory
     Ppu &ppu_; // to access hardware registers
     Timer &timer_; // to access hardware registers
     Joypad &joypad_; // to access hardware registers
+    Apu &apu_; // access hardware registers
     uint8_t ie_ {};
     bool was_written_ {false};
 

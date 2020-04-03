@@ -2,7 +2,7 @@
 #define QT_RENDERER_H
 
 #include "renderer.hpp"
-#include "graphics.hpp"
+#include "graphic_types.hpp"
 #include <QObject>
 #include <QImage>
 
