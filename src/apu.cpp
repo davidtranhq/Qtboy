@@ -9,7 +9,7 @@ using namespace gameboy;
 void Apu::reset()
 {
     square1_ = {};
-    audio_ = Raw_audio<uint8_t>();
+    audio_ = Raw_audio<uint8_t>(2048);
     volume_ = 0x77;
     output_ = 0xf3;
     enable_ = 0xf1;
@@ -17,10 +17,10 @@ void Apu::reset()
 
 void Apu::tick(size_t cycles)
 {
+    if (audio_.size() >= SAMPLE_SIZE)
+        speaker_->push_samples(audio_);
     square1_.tick(cycles);
     audio_.push(square1_.volume());
-    if (audio_.size() > SAMPLE_SIZE)
-        speaker_->push_samples(audio_);
 }
 
 uint8_t Apu::read_reg(uint16_t adr)

@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <istream>
 #include <map>
+#include <thread>
 
 #include "processor.hpp"
 #include "memory.hpp"
@@ -22,12 +23,12 @@ class System
 {
     public:
 
-    explicit System(Renderer *r = nullptr);
+    explicit System();
 
     // system control
     void run [[ noreturn ]] ();
     void pause();
-    void run_concurrently();
+    void run_concurrently(std::thread &);
     void reset();
     size_t step(size_t n); // take n CPU steps
     size_t execute(size_t cyc); // run for cyc cycles
@@ -76,9 +77,6 @@ class System
     {
         ppu_, timer_, joypad_, apu_
     };
-    // the renderer is an interface to facilitate the implementation of other
-    // libraries for different platforms
-    std::unique_ptr<Renderer> renderer_;
 };
 	
 }

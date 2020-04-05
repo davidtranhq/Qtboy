@@ -11,6 +11,7 @@ void Qt_renderer::draw_texture(const gameboy::Texture &t, int x_pos, int y_pos)
 {
     const unsigned int w {t.width()};
     const unsigned int h {t.height()};
+    buf_mutex_.lock();
     for (size_t i = 0; i < w*h; ++i)
     {
         gameboy::Color c = t.pixel(i);
@@ -19,7 +20,7 @@ void Qt_renderer::draw_texture(const gameboy::Texture &t, int x_pos, int y_pos)
         buf_[4*j+1] = c.g;
         buf_[4*j+2] = c.b;
     }
-
+    buf_mutex_.unlock();
     /*
     for (size_t y = 0; y < h; ++y)
     {
@@ -37,5 +38,8 @@ void Qt_renderer::draw_texture(const gameboy::Texture &t, int x_pos, int y_pos)
 
 QImage Qt_renderer::image() const
 {
-    return QImage(buf_.data(), w_, h_, QImage::Format_RGB32);
+    buf_mutex_.lock();
+    QImage img(buf_.data(), w_, h_, QImage::Format_RGB32);
+    buf_mutex_.unlock();
+    return img;
 }

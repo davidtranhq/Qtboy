@@ -17,8 +17,7 @@ using std::chrono::nanoseconds;
 namespace gameboy
 {
 
-System::System(Renderer *r)
-    : renderer_ {r}
+System::System()
 {}
 
 // system control
@@ -40,11 +39,11 @@ System::System(Renderer *r)
     }
 }
 
-void System::run_concurrently()
+void System::run_concurrently(std::thread &t2)
 {
     auto run_fn = [this]{ this->run(); };
-    std::thread t(run_fn);
-    t.detach();
+    std::thread t1(run_fn);
+    t2 = std::move(t1);
 }
 
 void System::reset()
@@ -105,7 +104,6 @@ bool System::load_cartridge(const std::string &path)
 
 void System::set_renderer(Renderer *r)
 {
-    renderer_.reset(r);
     ppu_.set_renderer(r);
 }
 

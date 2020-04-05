@@ -25,7 +25,7 @@ void MainWindow::loadRom(const QString &fileName)
 {
     system.reset();
     system.load_cartridge(fileName.toStdString());
-    system.run_concurrently();
+    system.run_concurrently(emu_thread_);
 }
 
 void MainWindow::keyPressEvent(QKeyEvent *event)
