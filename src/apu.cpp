@@ -13,14 +13,23 @@ void Apu::reset()
     volume_ = 0x77;
     output_ = 0xf3;
     enable_ = 0xf1;
+    downsample_cnt_ = DOWNSAMPLE_FREQ;
 }
 
 void Apu::tick(size_t cycles)
 {
-    if (audio_.size() >= SAMPLE_SIZE)
-        speaker_->push_samples(audio_);
-    square1_.tick(cycles);
-    audio_.push(square1_.volume());
+    while (cycles-- > 0)
+    {
+        square1_.tick(1);
+        // take a sample only once ever DOWNSAMPLE_FREQ cycles
+        if (--downsample_cnt_<= 0)
+        {
+            downsample_cnt_ = DOWNSAMPLE_FREQ;
+            audio_.push(square1_.volume());
+            if (audio_.size() >= SAMPLE_SIZE)
+                speaker_->push_samples(audio_);
+        }
+    }
 }
 
 uint8_t Apu::read_reg(uint16_t adr)

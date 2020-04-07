@@ -16,7 +16,7 @@ class Qt_speaker : public QObject, public gameboy::Speaker
     public:
     explicit Qt_speaker();
 
-    void push_samples(gameboy::Raw_audio<uint8_t> a) override;
+    void push_samples(gameboy::Raw_audio<uint8_t> &a) override;
 
     private:
     QAudioOutput *output_ {nullptr};

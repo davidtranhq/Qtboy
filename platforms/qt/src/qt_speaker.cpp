@@ -9,7 +9,7 @@
 Qt_speaker::Qt_speaker()
 {
     QAudioFormat fmt;
-    fmt.setSampleRate(4410);
+    fmt.setSampleRate(44100);
     fmt.setChannelCount(1);
     fmt.setSampleSize(sizeof(uint8_t)*8);
     fmt.setCodec("audio/pcm");
@@ -26,7 +26,7 @@ Qt_speaker::Qt_speaker()
 
 }
 
-void Qt_speaker::push_samples(gameboy::Raw_audio<uint8_t> a)
+void Qt_speaker::push_samples(gameboy::Raw_audio<uint8_t> &a)
 {
     device_->write(reinterpret_cast<const char *>(a.data()), a.size());
     a.reset();

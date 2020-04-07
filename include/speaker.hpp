@@ -9,7 +9,7 @@ namespace gameboy
 class Speaker
 {
     public:
-    virtual void push_samples(Raw_audio<uint8_t> a) = 0;
+    virtual void push_samples(Raw_audio<uint8_t> &a) = 0;
 };
 
 }
