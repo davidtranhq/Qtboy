@@ -9,7 +9,7 @@ using namespace gameboy;
 void Apu::reset()
 {
     square1_ = {};
-    audio_ = Raw_audio<uint8_t>(2048);
+    audio_ = Raw_audio<uint8_t>(SAMPLE_SIZE);
     volume_ = 0x77;
     output_ = 0xf3;
     enable_ = 0xf1;
@@ -20,12 +20,33 @@ void Apu::tick(size_t cycles)
 {
     while (cycles-- > 0)
     {
+        if (--frame_sequence_cnt <= 0)
+        {
+            frame_sequence_cnt = 8192;
+            switch (frame_sequencer_)
+            {
+                case 2:
+                case 0:
+                case 4:
+                case 6:
+                    square1_.length_tick();
+                    break;
+                case 7:
+                    square1_.envelope_tick();
+                    break;
+            }
+            ++frame_sequencer_;
+            if (frame_sequencer_ >= 8)
+            {
+                frame_sequencer_ = 0;
+            }
+        }
         square1_.tick(1);
         // take a sample only once ever DOWNSAMPLE_FREQ cycles
         if (--downsample_cnt_<= 0)
         {
             downsample_cnt_ = DOWNSAMPLE_FREQ;
-            audio_.push(square1_.volume());
+            audio_.push(square1_.output());
             if (audio_.size() >= SAMPLE_SIZE)
                 speaker_->push_samples(audio_);
         }

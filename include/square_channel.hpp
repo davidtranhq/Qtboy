@@ -13,7 +13,7 @@ class Square_channel
     void tick(size_t cycles);
     uint8_t read_reg(uint16_t adr);
     void write_reg(uint8_t b, uint16_t adr);
-    uint8_t volume();
+    uint8_t output();
     void length_tick();
     void envelope_tick();
 
@@ -30,6 +30,7 @@ class Square_channel
     uint16_t timer_ {freq()};
     uint16_t length_timer_ {0};
     uint16_t envelope_timer_ {0};
+    bool envelope_running_ {false}, envelope_add_ {true};
     bool enabled_ {false};
     static constexpr std::array<std::array<bool, 8>, 4> DUTY_PATTERNS
     {{
