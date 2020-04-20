@@ -88,7 +88,7 @@ uint8_t Square_channel::output()
 
 uint16_t Square_channel::freq()
 {
-    uint16_t f = static_cast<uint16_t>((ff19_ & 3) << 8 | ff18_);
+    uint16_t f = static_cast<uint16_t>((ff19_ & 7) << 8 | ff18_);
     return (2048-f)*4;
 }
 
