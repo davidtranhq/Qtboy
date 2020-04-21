@@ -1,0 +1,4 @@
+#ifndef WAVE_CHANNEL_HPP
+#define WAVE_CHANNEL_HPP
+
+#endif // WAVE_CHANNEL_HPP
