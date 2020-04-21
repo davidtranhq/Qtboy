@@ -22,6 +22,11 @@ Qt_speaker::Qt_speaker()
         return;
     }
     output_ = new QAudioOutput(fmt, nullptr);
+    output_->setNotifyInterval(15);
+    output_->setBufferSize(44100);
+    connect(output_, SIGNAL(notify()), this, SLOT(output_notify()));
+    connect(output_, SIGNAL(stateChanged(QAudio::State)),
+            this, SLOT(output_state_changed(QAudio::State)));
     device_ = output_->start();
 
 }
@@ -31,3 +36,9 @@ void Qt_speaker::push_samples(gameboy::Raw_audio<uint8_t> &a)
     device_->write(reinterpret_cast<const char *>(a.data()), a.size());
     a.reset();
 }
+
+void Qt_speaker::output_notify()
+{}
+
+void Qt_speaker::output_state_changed(const QAudio::State &)
+{}
