@@ -1,0 +1,4 @@
+#ifndef NOISE_CHANNEL_HPP
+#define NOISE_CHANNEL_HPP
+
+#endif // NOISE_CHANNEL_HPP
