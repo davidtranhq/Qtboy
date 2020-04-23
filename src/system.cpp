@@ -22,9 +22,12 @@ System::System()
 
 // system control
 
-[[ noreturn ]] void System::run()
+void System::run()
 {
-    for (;;)
+    // prevent when another is running
+    const std::lock_guard<std::mutex> lock(run_mutex_);
+    running_ = true;
+    while (running_)
     {
         auto start = std::chrono::high_resolution_clock::now();
         size_t cycles = execute(70224); // number of cycles in one frame
@@ -42,6 +45,8 @@ System::System()
 void System::run_concurrently(std::thread &t2)
 {
     auto run_fn = [this]{ this->run(); };
+    if (running_)
+        running_ = false;
     std::thread t1(run_fn);
     t2 = std::move(t1);
 }
@@ -51,6 +56,7 @@ void System::reset()
     memory_.reset();
     cpu_.reset();
     ppu_.reset();
+    apu_.reset();
 }
 
 size_t System::step(size_t n)

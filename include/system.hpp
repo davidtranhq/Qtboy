@@ -4,6 +4,8 @@
 #include <istream>
 #include <map>
 #include <thread>
+#include <mutex>
+#include <atomic>
 
 #include "processor.hpp"
 #include "memory.hpp"
@@ -26,7 +28,7 @@ class System
     explicit System();
 
     // system control
-    void run [[ noreturn ]] ();
+    void run();
     void pause();
     void run_concurrently(std::thread &);
     void reset();
@@ -64,19 +66,12 @@ class System
         [this](uint8_t b, uint16_t adr){ this->memory_write(b, adr); },
         cpu_
     };
-    Timer timer_
-    {
-        cpu_
-    };
-    Joypad joypad_
-    {
-        cpu_
-    };
+    Timer timer_ {cpu_};
+    Joypad joypad_{cpu_};
     Apu apu_ {};
-    Memory memory_
-    {
-        ppu_, timer_, joypad_, apu_
-    };
+    Memory memory_{ ppu_, timer_, joypad_, apu_};
+    std::atomic<bool> running_ {false};
+    std::mutex run_mutex_;
 };
 	
 }

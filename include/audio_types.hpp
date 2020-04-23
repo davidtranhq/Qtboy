@@ -17,6 +17,7 @@ class Raw_audio
     Raw_audio(size_t buffer_size);
 
     void push(sample_type);
+    sample_type pop(size_t);
     void reset() { samples_.clear(); }
     size_t size() const;
     sample_type *data();

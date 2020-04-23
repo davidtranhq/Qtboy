@@ -25,6 +25,7 @@ SOURCES += \
     ../../../src/joypad.cpp \
     ../../../src/mbc1.cpp \
     ../../../src/memory.cpp \
+    ../../../src/noise_channel.cpp \
     ../../../src/ppu.cpp \
     ../../../src/processor.cpp \
     ../../../src/ram.cpp \
@@ -32,6 +33,7 @@ SOURCES += \
     ../../../src/square_channel.cpp \
     ../../../src/system.cpp \
     ../../../src/timer.cpp \
+    ../../../src/wave_channel.cpp \
     ../src/background_tab.cpp \
     ../src/debuggerwindow.cpp \
     ../src/disassemblerwindow.cpp \
@@ -59,6 +61,7 @@ HEADERS += \
     ../../../include/joypad.h \
     ../../../include/memory.hpp \
     ../../../include/memory_bank_controller.hpp \
+    ../../../include/noise_channel.hpp \
     ../../../include/ppu.hpp \
     ../../../include/processor.hpp \
     ../../../include/ram.hpp \
@@ -69,6 +72,7 @@ HEADERS += \
     ../../../include/square_channel.hpp \
     ../../../include/system.hpp \
     ../../../include/timer.hpp \
+    ../../../include/wave_channel.hpp \
     ../include/background_tab.h \
     ../include/debuggerwindow.h \
     ../include/disassemblerwindow.h \

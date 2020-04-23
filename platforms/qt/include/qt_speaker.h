@@ -21,10 +21,10 @@ class Qt_speaker : public QObject, public gameboy::Speaker
     void push_samples(gameboy::Raw_audio<uint8_t> &a) override;
 
     private slots:
-    void output_notify();
     void output_state_changed(const QAudio::State &);
 
     private:
+    bool initial_buffer_ {true};
     QAudioOutput *output_ {nullptr};
     QIODevice *device_ {nullptr};
 };
