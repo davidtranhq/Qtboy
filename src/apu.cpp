@@ -3,6 +3,7 @@
 #include "speaker.hpp"
 
 #include <vector>
+#include <cmath>
 
 using namespace gameboy;
 
@@ -60,7 +61,10 @@ void Apu::tick(size_t cycles)
             downsample_cnt_ = DOWNSAMPLE_FREQ;
             uint16_t mix = square1_.output() + square2_.output()
                     + wave_.output() + noise_.output();
-            audio_.push(mix/4);
+            // normalize audio
+            if (mix > 0xff)
+                mix /= 4;
+            audio_.push(mix);
             if (audio_.size() >= SAMPLE_SIZE)
                 speaker_->push_samples(audio_);
         }
