@@ -1,7 +1,7 @@
 TEMPLATE = app
 TARGET = QtBoy
 
-CONFIG += c++17
+CONFIG += c++17 O3
 QT = gui core multimedia
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets

@@ -21,6 +21,7 @@ Qt_speaker::Qt_speaker()
         return;
     }
     output_ = new QAudioOutput(fmt, nullptr);
+    output_->setBufferSize(44100);
     //connect(output_, SIGNAL(stateChanged(QAudio::State)),
             //this, SLOT(output_state_changed(QAudio::State)));
     device_ = output_->start();

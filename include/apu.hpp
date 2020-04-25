@@ -31,7 +31,7 @@ class Apu
     // clockfreq/samplingrate
     // 4.93MHz/44100
     static constexpr uint8_t DOWNSAMPLE_FREQ {95};
-    static constexpr size_t SAMPLE_SIZE {4096};
+    static constexpr size_t SAMPLE_SIZE {2048};
 
     Speaker *speaker_ {nullptr};
     Square_channel square1_ {};
