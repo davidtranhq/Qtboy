@@ -1,4 +1,4 @@
-#include "joypad.h"
+#include "joypad.hpp"
 #include "processor.hpp"
 
 using gameboy::Joypad;
@@ -78,4 +78,12 @@ void Joypad::write_reg(uint8_t b)
     select_button_ = (b & 1 << 4);
     select_direction_ = (b & 1 << 5);
     // clear button/direction if either are unselected
+}
+
+void Joypad::reset()
+{
+    directions_ = 0;
+    buttons_ = 0;
+    select_button_ = 0;
+    select_direction_ = 0;
 }

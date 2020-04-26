@@ -1,7 +1,7 @@
 #include "memory.hpp"
 #include "timer.hpp"
 #include "ppu.hpp"
-#include "joypad.h"
+#include "joypad.hpp"
 #include "exception.hpp"
 #include "apu.hpp"
 

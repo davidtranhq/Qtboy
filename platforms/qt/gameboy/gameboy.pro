@@ -32,6 +32,7 @@ SOURCES += \
     ../../../src/rom.cpp \
     ../../../src/square_channel.cpp \
     ../../../src/system.cpp \
+    ../../../src/thread_safe_system.cpp \
     ../../../src/timer.cpp \
     ../../../src/wave_channel.cpp \
     ../src/background_tab.cpp \
@@ -58,7 +59,7 @@ HEADERS += \
     ../../../include/exception.hpp \
     ../../../include/graphic_types.hpp \
     ../../../include/instruction_info.hpp \
-    ../../../include/joypad.h \
+    ../../../include/joypad.hpp \
     ../../../include/memory.hpp \
     ../../../include/memory_bank_controller.hpp \
     ../../../include/noise_channel.hpp \
@@ -71,6 +72,7 @@ HEADERS += \
     ../../../include/speaker.hpp \
     ../../../include/square_channel.hpp \
     ../../../include/system.hpp \
+    ../../../include/thread_safe_system.hpp \
     ../../../include/timer.hpp \
     ../../../include/wave_channel.hpp \
     ../include/background_tab.h \

@@ -14,7 +14,7 @@
 #include "renderer.hpp"
 #include "debug_types.hpp"
 #include "timer.hpp"
-#include "joypad.h"
+#include "joypad.hpp"
 #include "apu.hpp"
 #include "speaker.hpp"
 
@@ -30,7 +30,7 @@ class System
     // system control
     void run();
     void pause();
-    void run_concurrently(std::thread &);
+    void run_concurrently();
     void reset();
     size_t step(size_t n); // take n CPU steps
     size_t execute(size_t cyc); // run for cyc cycles
@@ -71,7 +71,8 @@ class System
     Apu apu_ {};
     Memory memory_{ ppu_, timer_, joypad_, apu_};
     std::atomic<bool> running_ {false};
-    std::mutex run_mutex_;
+    std::thread thread_ {};
 };
-	
+
+
 }

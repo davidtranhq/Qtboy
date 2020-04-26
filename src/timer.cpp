@@ -9,16 +9,20 @@ Timer::Timer(Processor &p)
 
 void Timer::update(size_t cycles)
 {
-    size_t ticks = cycles*4;
-    div_ += ticks;
-    const uint16_t freq[] = {1024, 16, 64, 256};
-    // bit 2 is enable bit
-    // bit 0-1 determine update frequency
-    if ((tac_ & 4) && (div_ % freq[tac_ & 3] == 0))
+    ticks_ += cycles;
+    if (ticks_ >= 0xff)
     {
-        ++tima_;
-        if (tima_ == 0) // overflow
-            tima_overflow();
+        ticks_ -= 0xff;
+        ++div_;
+        const uint16_t freq[] = {1, 16, 4, 1};
+        // bit 2 is enable bit
+        // bit 0-1 determine update frequency
+        if ((tac_ & 4) && (div_ % freq[tac_ & 3] == 0))
+        {
+            ++tima_;
+            if (tima_ == 0) // overflow
+                tima_overflow();
+        }
     }
 
 }
@@ -67,4 +71,13 @@ void Timer::write(uint8_t b, uint16_t adr)
             tac_ = b;
             break;
     }
+}
+
+void Timer::reset()
+{
+    ticks_ = 0;
+    tima_ = 0;
+    tma_ = 0;
+    tac_ = 0;
+    div_ = 0;
 }

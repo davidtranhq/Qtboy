@@ -23,14 +23,15 @@ class Joypad
     void release(Input);
     uint8_t read_reg();
     void write_reg(uint8_t b);
+    void reset();
 
     private:
     void update_button(Input, bool pressed);
 
     private:
-    uint8_t directions_;
-    uint8_t buttons_;
-    bool select_button_, select_direction_;
+    uint8_t directions_ {0};
+    uint8_t buttons_ {0};
+    bool select_button_ {0}, select_direction_ {0};
     Processor &cpu_;
 };
 

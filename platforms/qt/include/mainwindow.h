@@ -43,7 +43,6 @@ private:
     void createActions();
 
     gameboy::System system;
-    std::thread emu_thread_ {};
     Qt_renderer *renderer_ {nullptr};
     Qt_speaker *speaker_ {nullptr};
     QLabel *display;

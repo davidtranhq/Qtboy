@@ -24,8 +24,6 @@ System::System()
 
 void System::run()
 {
-    // prevent when another is running
-    const std::lock_guard<std::mutex> lock(run_mutex_);
     running_ = true;
     while (running_)
     {
@@ -42,21 +40,25 @@ void System::run()
     }
 }
 
-void System::run_concurrently(std::thread &t2)
+void System::run_concurrently()
 {
     auto run_fn = [this]{ this->run(); };
     if (running_)
         running_ = false;
-    std::thread t1(run_fn);
-    t2 = std::move(t1);
+    thread_ = std::thread(run_fn);
 }
 
 void System::reset()
 {
+    running_ = false;
+    if (thread_.joinable())
+        thread_.join();
     memory_.reset();
     cpu_.reset();
     ppu_.reset();
     apu_.reset();
+    timer_.reset();
+    joypad_.reset();
 }
 
 size_t System::step(size_t n)
