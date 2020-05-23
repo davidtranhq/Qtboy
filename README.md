@@ -20,6 +20,13 @@ instr_timing|:x:
 mem_timing|:x:
 oam_bug|:x:
 
+## Features
+
+* Full audio support
+* No MBC and MBC1 support
+* Debugger (including stepping, running, pausing, and tracing)
+* VRAM Viewer (background, window, and sprite tiles)
+* Disassembler
 
 ## Screenshots
 
@@ -29,7 +36,7 @@ oam_bug|:x:
 
 ### CLI
 
-<img src = "docs/preview/cli_preview.png">
+![](docs/preview/cli_preview.png")
 
 
 

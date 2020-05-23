@@ -6,6 +6,7 @@
 Tile_tab::Tile_tab(gameboy::System *s)
     : debugger_ {s}
 {
+    /*
     auto tileset = debugger_.dump_raw_tileset();
     std::array<Tile, 384> tiles {};
     uint16_t i = 0;
@@ -27,4 +28,5 @@ Tile_tab::Tile_tab(gameboy::System *s)
         layout->addWidget(label, i>>4, i%16);
         ++i;
     }
+    */
 }

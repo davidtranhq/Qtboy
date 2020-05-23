@@ -226,34 +226,29 @@ void Debugger_window::update_labels()
 
 void Debugger_window::update_viewers()
 {
-    if (debugger_.memory_changed())
-    {
-        int scroll = memory_->verticalScrollBar()->value();
-        memory_->setPlainText(QString::fromStdString(debugger_.dump_formatted_memory()));
-        memory_->verticalScrollBar()->setValue(scroll);
+    int scroll = memory_->verticalScrollBar()->value();
+    memory_->setPlainText(QString::fromStdString(debugger_.dump_formatted_memory()));
+    memory_->verticalScrollBar()->setValue(scroll);
 
-        int scroll2 = rom_->verticalScrollBar()->value();
-        rom_->setPlainText(QString::fromStdString(disassembler_.hex_dump(debugger_.dump_memory())));
-        rom_->verticalScrollBar()->setValue(scroll2);
+    int scroll2 = rom_->verticalScrollBar()->value();
+    rom_->setPlainText(QString::fromStdString(disassembler_.hex_dump(debugger_.dump_memory())));
+    rom_->verticalScrollBar()->setValue(scroll2);
 
-        int scroll3 = stack_->verticalScrollBar()->value();
-        stack_->setPlainText(QString::fromStdString(debugger_.dump_formatted_memory(gameboy::Dump_format::Stack)));
-        stack_->verticalScrollBar()->setValue(scroll3);
-    }
+    int scroll3 = stack_->verticalScrollBar()->value();
+    stack_->setPlainText(QString::fromStdString(debugger_.dump_formatted_memory(gameboy::Dump_format::Stack)));
+    stack_->verticalScrollBar()->setValue(scroll3);
     highlight_byte();
     highlight_stack();
 }
 
 void Debugger_window::run()
 {
-    while (!debugger_.paused())
-    {
-        QCoreApplication::processEvents();
-        debugger_.step(1);
-        update_labels();
-        if (enable_viewer_update_->isChecked())
-            update_viewers();
-    }
+    /*
+    update_labels();
+    if (enable_viewer_update_->isChecked())
+        update_viewers();
+    */
+    debugger_.run();
 }
 
 void Debugger_window::step()

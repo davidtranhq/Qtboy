@@ -6,6 +6,7 @@
 Sprite_tab::Sprite_tab(gameboy::System *s)
     : debugger_ {s}
 {
+    /*
     auto tileset = debugger_.dump_raw_tileset();
     std::array<Tile, 384> tiles {};
     uint16_t i = 0;
@@ -29,4 +30,5 @@ Sprite_tab::Sprite_tab(gameboy::System *s)
         layout->addWidget(y, 5, 0);
         ++i;
     }
+    */
 }

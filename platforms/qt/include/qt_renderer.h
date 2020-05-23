@@ -2,9 +2,10 @@
 #define QT_RENDERER_H
 
 #include "renderer.hpp"
-#include "graphics.hpp"
+#include "graphic_types.hpp"
 #include <QObject>
 #include <QImage>
+#include <mutex>
 
 class Qt_renderer : public QObject, public gameboy::Renderer
 {
@@ -21,6 +22,7 @@ class Qt_renderer : public QObject, public gameboy::Renderer
     void present_screen() override;
 
     private:
+    mutable std::mutex buf_mutex_;
     int w_, h_;
     std::vector<uint8_t> buf_;
 };

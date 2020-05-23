@@ -165,7 +165,7 @@ void Ppu::render_framebuffer()
 }
 */
 
-Texture Ppu::get_tile(uint16_t i)
+Texture Ppu::get_tile(uint16_t i) const
 {
     Texture tex {8,8};
     uint16_t tile_base = 0x8000;
@@ -191,9 +191,9 @@ Texture Ppu::get_tile(uint16_t i)
     return tex;
 }
 
-Texture Ppu::get_layer(Layer l)
+Texture Ppu::get_layer(Layer l) const
 {
-    uint16_t tilemap;
+    uint16_t tilemap {0x9800};
     if (l == Layer::Background)
         tilemap = ((lcdc_ & (1 << 3)) ? 0x9c00 : 0x9800);
     else if (l == Layer::Window)
@@ -238,7 +238,7 @@ Texture Ppu::get_layer(Layer l)
     return tex;
 }
 
-Texture Ppu::get_sprite_layer()
+Texture Ppu::get_sprite_layer() const
 {
     return Texture {256,256};
 }
@@ -377,12 +377,12 @@ void Ppu::render_sprite_line(Texture &tex)
     }
 }
 
-std::array<Sprite, 40> Ppu::get_sprites()
+std::array<Sprite, 40> Ppu::get_sprites() const
 {
     return sprites_;
 }
 
-Palette Ppu::get_bg_palette()
+Palette Ppu::get_bg_palette() const
 {
     Palette pal {};
     std::array<Color, 4> shades

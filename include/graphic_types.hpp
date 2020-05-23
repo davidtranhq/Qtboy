@@ -19,7 +19,7 @@ using Palette = std::array<Color, 4>;
 class Texture
 {
     public:
-    Texture(unsigned w, unsigned h);
+    Texture(unsigned w = 1, unsigned h = 1);
 
     void set_pixel(size_t i, Color c);
     Color pixel(size_t i) const;
