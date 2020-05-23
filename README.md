@@ -36,7 +36,4 @@ oam_bug|:x:
 
 ### CLI
 
-![](docs/preview/cli_preview.png")
-
-
-
+![Screenshot](docs/preview/cli_preview.png)
