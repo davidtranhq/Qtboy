@@ -17,6 +17,12 @@ struct Memory_range
     std::vector<uint8_t> data;
 };
 
+struct Memory_byte
+{
+    uint16_t adr;
+    uint8_t val;
+};
+
 enum class Dump_format
 {
     Hex, Stack
