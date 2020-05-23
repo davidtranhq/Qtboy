@@ -33,14 +33,14 @@ void Cartridge::init_mbc()
 		case 0x05:
 		case 0x06:
 			mbc_ = std::make_unique<Mbc2>(rom_, ram_);
-			break;
+            break;
 		case 0x0f:
 		case 0x10:
 		case 0x11:
 		case 0x12:
 		case 0x13:
-			mbc_ = std::make_unique<Mbc3>(rom_, ram_);
-			break;
+            mbc_ = std::make_unique<Mbc3>(&rom_, &ram_);
+            break;
 		case 0x19:
 		case 0x1a:
 		case 0x1b:
