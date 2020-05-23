@@ -24,6 +24,7 @@ SOURCES += \
 #    ../../../src/main.cpp \
     ../../../src/joypad.cpp \
     ../../../src/mbc1.cpp \
+    ../../../src/mbc3.cpp \
     ../../../src/memory.cpp \
     ../../../src/noise_channel.cpp \
     ../../../src/ppu.cpp \
