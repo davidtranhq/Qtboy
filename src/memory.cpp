@@ -97,11 +97,27 @@ uint8_t Memory::read(uint16_t adr) const
 void Memory::write(uint8_t b, uint16_t adr)
 {
     if (!cart_) // no cartridge inserted
+    {
         return;
-    was_written_ = true;
-    //if (adr == 0xff02 && b == 0x81)
-        // qStdOut() << static_cast<char>(read(0xff01));
-       // std::cout << static_cast<char>(read(0xff01));
+    }
+
+    if (adr == 0xff02 && b == 0x81)
+            // qStdOut() << static_cast<char>(read(0xff01));
+            std::cout << static_cast<char>(read(0xff01));
+    // don't include ROM in memory logging b/c it shouldn't change
+    // don't include echo RAM (WRAM log will handle it)
+    // don't include unused portion
+    if (logging_ &&
+        ! ((adr < 0x8000) // ROM
+        || (adr > 0xdfff && adr < 0xfe00) // echo RAM
+        || (adr > 0xfe9f && adr < 0xff00)))
+    {
+        Memory_byte mb {};
+        mb.adr = adr;
+        mb.val = b;
+        log_.push_back(mb);
+    }
+
     if (adr < 0x8000) // enabling flags (dependant on MBC)
     {
         cart_->write(b, adr);
@@ -177,6 +193,8 @@ void Memory::reset()
     hram_ = {};
     ie_ = 0;
     init_io();
+    logging_ = false;
+    log_.clear();
 }
 
 std::vector<uint8_t> Memory::dump_rom() const
@@ -214,10 +232,16 @@ std::unordered_map<std::string, Memory_range> Memory::dump() const
     return out;
 }
 
-bool Memory::was_written()
+void Memory::enable_logging(bool b)
 {
-    bool out = was_written_;
-    was_written_ = false;
+    logging_ = b;
+}
+
+std::vector<Memory_byte> Memory::log()
+{
+    // clear after returning because log represents only the latest changes
+    auto out {std::move(log_)};
+    log_.clear();
     return out;
 }
 
