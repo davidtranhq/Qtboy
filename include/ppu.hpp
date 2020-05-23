@@ -33,10 +33,10 @@ class Ppu
 
     void set_renderer(Renderer *r);
     void render_framebuffer();
-    Texture get_tile(uint16_t i);
-    std::array<Sprite, 40> get_sprites();
-    Texture get_layer(Layer);
-    Texture get_sprite_layer();
+    Texture get_tile(uint16_t i) const;
+    std::array<Sprite, 40> get_sprites() const;
+    Texture get_layer(Layer) const;
+    Texture get_sprite_layer() const;
     std::array<uint8_t, 32*32> get_raw_background();
     void render_sprites();
 
@@ -46,7 +46,7 @@ class Ppu
     void render_scanline();
     void render_layer_line(Texture &ld, Layer l);
     void render_sprite_line(Texture &ld);
-    Palette get_bg_palette();
+    Palette get_bg_palette() const;
     Palette get_sprite_palette(bool alt_pal);
     void load_sprites();
     void oam_scan(); // mode 2
