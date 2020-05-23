@@ -18,6 +18,7 @@ class Thread_safe_system
     System system_ {};
     std::mutex mutex_;
     std::atomic<bool> running_ {false};
+    std::thread thread_;
 };
 
 }
