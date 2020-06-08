@@ -16,6 +16,7 @@ MainWindow::MainWindow(QWidget *parent)
     system.set_speaker(speaker_);
     createActions();
     display->setScaledContents(true);
+    display->setMinimumSize(160, 144);
     setCentralWidget(display);
     connect(renderer_, SIGNAL(present_screen()), this, SLOT(update_display()));
 }
@@ -125,8 +126,10 @@ void MainWindow::about()
 void MainWindow::update_display()
 {
     QImage img {renderer_->image()};
-    display->setPixmap(QPixmap::fromImage(img));
+    display->setPixmap(QPixmap::fromImage(img).scaled(
+                           centralWidget()->width(), centralWidget()->height()));
 }
+
 
 void MainWindow::createActions()
 {
