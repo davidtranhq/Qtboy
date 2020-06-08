@@ -1,32 +1,23 @@
 #include "tile_tab.h"
-#include "tile.h"
-
+#include "qt_renderer.h"
 #include <QGridLayout>
 
 Tile_tab::Tile_tab(gameboy::System *s)
-    : debugger_ {s}
+    : debugger_ {s},
+      renderer_ {new Qt_renderer(128, 192)},
+      bg_ {new QLabel}
 {
-    /*
-    auto tileset = debugger_.dump_raw_tileset();
-    std::array<Tile, 384> tiles {};
-    uint16_t i = 0;
-    for (auto t : tileset)
+    std::array<gameboy::Texture, 384> tiles(debugger_.dump_tileset());
+    for (int i = 0; i < tiles.size(); ++i)
     {
-        tiles[i].load(t);
-        ++i;
+        int x = (i%16) * 8; // 16 tiles per row, 8 pixels per tile
+        int y = (i>>4) * 8; // 24 tiles per column, 8 pixels per tile
+        renderer_->draw_texture(tiles[i], x, y);
     }
-    QGridLayout *layout = new QGridLayout;
-    layout->setContentsMargins(0,0,0,0);
-    layout->setSpacing(0);
+    renderer_->draw_texture(tiles[0]);
+    bg_->setScaledContents(true);
+    bg_->setPixmap(QPixmap::fromImage(renderer_->image()));
+    QVBoxLayout *layout = new QVBoxLayout;
+    layout->addWidget(bg_);
     setLayout(layout);
-    i = 0;
-    for (auto t : tiles)
-    {
-        QLabel *label = new QLabel;
-        label->setPixmap(QPixmap::fromImage(t.image()));
-        label->setScaledContents(true);
-        layout->addWidget(label, i>>4, i%16);
-        ++i;
-    }
-    */
 }

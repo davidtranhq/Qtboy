@@ -18,7 +18,7 @@ Debugger::Debugger(System *s)
                             __FILE__, __LINE__};
     system_->pause();
     system_->set_step_callback([this]{ return this->step_callback(); });
-    memory_map_ = system_->dump_memory();
+    memory_map_ = dump_mapped_memory();
 }
 
 void Debugger::run()
@@ -232,6 +232,7 @@ std::vector<uint8_t> Debugger::dump_memory() const
 
 std::unordered_map<std::string, Memory_range> Debugger::dump_mapped_memory() const
 {
+    memory_map_ = system_->dump_memory();
     // create echo ram of 0xc00-0xdff  (WRM0 and WRMX)
     std::vector<uint8_t> echo_ram {memory_map_["WRM0"].data};
     echo_ram.insert(echo_ram.end(), memory_map_["WRMX"].data.begin(),
@@ -330,7 +331,7 @@ Texture Debugger::dump_window()
 }
 
 
-std::array<Sprite, 40> Debugger::dump_sprites()
+std::array<Texture, 40> Debugger::dump_sprites()
 {
     return system_->dump_sprites();
 }

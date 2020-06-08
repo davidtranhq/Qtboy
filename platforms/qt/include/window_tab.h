@@ -1,5 +1,5 @@
-#ifndef TILE_TAB_H
-#define TILE_TAB_H
+#ifndef WINDOW_TAB_H
+#define WINDOW_TAB_H
 
 #include <QWidget>
 #include <QLabel>
@@ -9,18 +9,16 @@
 
 class Qt_renderer;
 
-class Tile_tab : public QWidget
+class Window_tab : public QWidget
 {
     Q_OBJECT
     public:
-    explicit Tile_tab(gameboy::System *s);
+    explicit Window_tab(gameboy::System *s);
 
     private:
     gameboy::Debugger debugger_;
     Qt_renderer *renderer_;
     QLabel *bg_;
-
-
 };
 
-#endif // TILE_TAB_H
+#endif // WINDOW_TAB_H

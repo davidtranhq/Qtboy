@@ -1,34 +1,24 @@
 #include "sprite_tab.h"
-#include "tile.h"
+#include "qt_renderer.h"
 
 #include <QGridLayout>
 
 Sprite_tab::Sprite_tab(gameboy::System *s)
-    : debugger_ {s}
+    : debugger_ {s},
+      renderer_ {new Qt_renderer(8, 8)},
+      bg_ {new QLabel}
 {
-    /*
-    auto tileset = debugger_.dump_raw_tileset();
-    std::array<Tile, 384> tiles {};
-    uint16_t i = 0;
-    for (auto t : tileset)
-    {
-        tiles[i].load(t);
-        ++i;
-    }
     auto sprites = debugger_.dump_sprites();
     QGridLayout *layout = new QGridLayout;
-    setLayout(layout);
-    i = 0;
-    for (auto s : sprites)
+    int i = 0;
+    for (const gameboy::Texture &t : sprites)
     {
         QLabel *label = new QLabel;
-        label->setPixmap(QPixmap::fromImage(tiles[s.tile].image()));
+        renderer_->draw_texture(t);
         label->setScaledContents(true);
+        label->setPixmap(QPixmap::fromImage(renderer_->image()));
         layout->addWidget(label, i/10, i%10);
-        QLabel *y = new QLabel;
-        y->setText(QString::number(s.y));
-        layout->addWidget(y, 5, 0);
         ++i;
     }
-    */
+    setLayout(layout);
 }

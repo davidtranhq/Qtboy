@@ -7,15 +7,17 @@ Qt_renderer::Qt_renderer(int w, int h, QObject *parent)
       w_ {w}, h_ {h}, buf_(4*w*h)
 {}
 
-void Qt_renderer::draw_texture(const gameboy::Texture &t, int x_pos, int y_pos)
+void Qt_renderer::draw_texture(const gameboy::Texture &t, int x_off, int y_off)
 {
     const unsigned int w {t.width()};
     const unsigned int h {t.height()};
     buf_mutex_.lock();
-    for (size_t i = 0; i < w*h; ++i)
+    for (unsigned int i = 0; i < w*h; ++i)
     {
         gameboy::Color c = t.pixel(i);
-        size_t j = y_pos*w_+i;
+        int x = x_off + i % w;
+        int y = y_off + i / w;
+        int j = y*w_+x;
         buf_[4*j] = c.r;
         buf_[4*j+1] = c.g;
         buf_[4*j+2] = c.b;

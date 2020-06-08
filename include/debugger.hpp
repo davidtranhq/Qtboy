@@ -45,7 +45,7 @@ class Debugger
     std::array<Texture, 384> dump_tileset();
     Texture dump_background();
     Texture dump_window();
-    std::array<Sprite, 40> dump_sprites();
+    std::array<Texture, 40> dump_sprites();
 
     std::string hex_dump() const;
     Assembly disassemble_op() const; // disassemble next instruction
