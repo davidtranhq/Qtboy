@@ -1,0 +1,14 @@
+fix audio DC offset (make sure your DAC maps 0 to -1 and 15 to 1, and add the capacitor too)
+fix frontend rendering (random lines)
+options:
+	anti-aliasing
+	custom palettes
+	control remapping
+		speedup
+	controller support
+	autosave frequency
+file:
+	savestates
+help:
+	link to github project
+	submit a bug report
