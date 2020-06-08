@@ -51,6 +51,8 @@ void Processor::reset()
     stpd_ = false;
     hltd_ = false;
     ime_ = false;
+    ei_set_ = false;
+    di_set_ = false;
     halt_bug_ = false;
 }
 
@@ -92,9 +94,9 @@ bool Processor::execute_interrupt(Interrupt i)
 	pc_.hi = 0;
     pc_.lo = 0x40 + i*8;
     ime_ = false;
-    uint8_t int_flag {read(0xff0f)};
-    CLEAR_BIT(int_flag, i);
-    write(int_flag, 0xff0f);
+   //  uint8_t int_flag {read(0xff0f)};
+   // CLEAR_BIT(int_flag, i);
+    write(0, 0xff0f); // clear IF
     return true;
 
 }
@@ -130,15 +132,20 @@ void Processor::step()
     if (check_interrupt())
         return;
     uint8_t op {read(PC)};
+    if (ei_set_) // EI was called last cycle
+    {
+        ei_set_ = false;
+        ime_ = true;
+    }
+    else if (di_set_) // DI was called last cycle
+    {
+        di_set_ = false;
+        ime_ = false;
+    }
     if (hltd_)
     {
         cycles_ += 4; // assume NOP when CPU is halted
         return;
-    }
-    if (halt_bug_)
-    {
-        --PC;
-        halt_bug_ = false;
     }
 	switch (op)
 	{	
@@ -744,7 +751,15 @@ void Processor::step()
         control_op_ = false;
     else
         pc_ += instructions[op].length;
-    cycles_ += (use_alt_cycles) ? instructions[op].alt_cycles : instructions[op].cycles;
+    if (halt_bug_)
+    {
+        --PC;
+        halt_bug_ = false;
+    }
+    else
+    {
+        cycles_ += (use_alt_cycles) ? instructions[op].alt_cycles : instructions[op].cycles;
+    }
     use_alt_cycles = false;
 	return;
 }

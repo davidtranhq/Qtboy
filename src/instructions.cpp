@@ -19,6 +19,19 @@ inline bool half_check_16(const uint16_t a, const uint16_t b, const uint16_t res
     return ((a ^ b ^ res) & 0x1000);
 }
 
+void Processor::ei()
+{
+    // EI takes effect the next cycle
+    ei_set_ = true;
+}
+
+void Processor::di()
+{
+    // DI takes effect the next cycle
+    di_set_ = false;
+}
+
+
 void Processor::halt()
 {
     if (ime_)

@@ -62,6 +62,8 @@ class Processor
     bool control_op_ {false};
     bool use_alt_cycles {false};
     bool ime_ {false};
+    bool ei_set_ {false}, di_set_ {false}; // for tracking when EI and DI are
+        // called, since they don't take effect until the next instruction
     bool halt_bug_ {false};
 
 	std::function<uint8_t(uint16_t)> read;
@@ -79,8 +81,8 @@ class Processor
     void nop() const {}
 	void stop() { stpd_ = true; }
     void halt();
-    void di() { ime_ = false; }
-    void ei() { ime_ = true; }
+    void di();
+    void ei();
 	// jump and calls
 	void jr(bool, const int8_t);
 	void ret(bool);
