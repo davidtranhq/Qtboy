@@ -3,6 +3,7 @@ TARGET = QtBoy
 
 CONFIG += c++17 O3
 QT = gui core multimedia
+LIBS += -lstdc++fs # remove if std::filesystem isn't experimental
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -24,7 +25,9 @@ SOURCES += \
 #    ../../../src/main.cpp \
     ../../../src/joypad.cpp \
     ../../../src/mbc1.cpp \
+    ../../../src/mbc2.cpp \
     ../../../src/mbc3.cpp \
+    ../../../src/mbc5.cpp \
     ../../../src/memory.cpp \
     ../../../src/noise_channel.cpp \
     ../../../src/ppu.cpp \
@@ -48,7 +51,8 @@ SOURCES += \
     ../src/sprite_tab.cpp \
     ../src/tile.cpp \
     ../src/tile_tab.cpp \
-    ../src/vram_window.cpp
+    ../src/vram_window.cpp \
+    ../src/window_tab.cpp
 
 HEADERS += \
     ../../../include/apu.hpp \
@@ -88,4 +92,5 @@ HEADERS += \
     ../include/tile.h \
     ../include/tile_tab.h \
     ../include/vram_window.h \ \
-    #../lib/sdl2-64/include/SDL.h
+ \    #../lib/sdl2-64/include/SDL.h
+    ../include/window_tab.h
