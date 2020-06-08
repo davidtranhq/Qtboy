@@ -26,13 +26,16 @@ class Memory
 
     uint8_t read(uint16_t adr) const;
     void write(uint8_t b, uint16_t adr);
-    void load_cartridge(std::istream &is);
+    std::string load_cartridge(std::istream &is);
     void reset();
 
     std::vector<uint8_t> dump_rom() const;
     std::unordered_map<std::string, Memory_range> dump() const;
     void enable_logging(bool); // internally logs memory values that change
     std::vector<Memory_byte> log(); // get latest memory changes
+    std::vector<uint8_t> dump_sram() const;
+    bool sram_changed() const;
+    bool load_save(const std::string &path);
 
     private:
     void set_ram_size();
@@ -52,7 +55,10 @@ class Memory
     Joypad &joypad_; // to access hardware registers
     Apu &apu_; // access hardware registers
     uint8_t ie_ {};
-    bool logging_ {false};
+    mutable bool sram_written_ {false};
+
+    // for debugger purposes
+    bool logging_ {true};
     std::vector<Memory_byte> log_; // changed memory values
 
 };

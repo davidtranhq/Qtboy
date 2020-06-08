@@ -6,6 +6,7 @@
 #include <map>
 #include <thread>
 #include <chrono>
+#include <experimental/filesystem>
 
 #include "system.hpp"
 #include "exception.hpp"
@@ -13,12 +14,20 @@
 
 using std::chrono::duration_cast;
 using std::chrono::nanoseconds;
+namespace fs = std::experimental::filesystem;
 
 namespace gameboy
 {
 
 System::System()
 {}
+
+System::~System()
+{
+    std::vector<uint8_t> sram(memory_.dump_sram());
+    if (!sram.empty())
+        write_save(sram);
+}
 
 // system control
 
@@ -28,7 +37,9 @@ void System::run()
     while (running_)
     {
         auto start = std::chrono::high_resolution_clock::now();
+        // run for one frame
         size_t cycles = execute(70224); // number of cycles in one frame
+        // save SRAM to seperate file if changes were made
         auto finish = std::chrono::high_resolution_clock::now();
         double expected = NANOSECONDS_PER_CYCLE * cycles;
         auto duration = duration_cast<nanoseconds>(finish-start).count();
@@ -66,6 +77,7 @@ void System::reset()
     timer_.reset();
     joypad_.reset();
     step_callback_ = {};
+    rom_title_ = {};
 }
 
 size_t System::step(size_t n)
@@ -108,18 +120,16 @@ void System::release(Joypad::Input i)
 
 // system setup
 
-void System::load_cartridge(std::istream &is)
-{
-    const std::lock_guard<std::mutex> lock(mutex_);
-	memory_.load_cartridge(is);
-}
-
 bool System::load_cartridge(const std::string &path)
 {
 	std::ifstream rom {path, std::ios::binary};
 	if (!rom.good())
         return false;
-	memory_.load_cartridge(rom);
+    rom_title_ = fs::path(path).stem().string();
+    memory_.load_cartridge(rom);
+    bool res = memory_.load_save(save_dir_ + "/" + rom_title_ + ".sav");
+    if (res)
+        std::cout << "Loaded save file.";
     return true;
 }
 
@@ -188,7 +198,7 @@ Texture System::dump_window() const
     return ppu_.get_layer(Ppu::Layer::Window);
 }
 
-std::array<Sprite, 40> System::dump_sprites() const
+std::array<Texture, 40> System::dump_sprites() const
 {
     const std::lock_guard<std::mutex> lock(mutex_);
     return ppu_.get_sprites();
@@ -204,6 +214,13 @@ uint8_t System::memory_read(uint16_t adr)
 void System::memory_write(uint8_t b, uint16_t adr)
 {
 	memory_.write(b, adr);
+}
+
+void System::write_save(const std::vector<uint8_t> &sram)
+{
+    const std::string path(save_dir_ + '/' + rom_title_ + ".sav");
+    std::ofstream f(path, std::ios::binary);
+    f.write(reinterpret_cast<const char *>(sram.data()), sram.size());
 }
 
 }

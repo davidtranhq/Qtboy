@@ -25,7 +25,7 @@ uint8_t Memory::read(uint16_t adr) const
     if (!cart_) // no cartridge inserted
         return 0xff;
 
-    uint8_t b;
+    uint8_t b {0xff};
 
     if (adr < 0x8000) // ROM bank accessing
     {
@@ -33,6 +33,14 @@ uint8_t Memory::read(uint16_t adr) const
     }
     else if (adr < 0xa000) // VRAM accessing
     {
+        // VRAM accesible when PPU disabled or mode isn't 3
+        /*
+        if (!ppu_.enabled() || ppu_.mode() != 3)
+        {
+            uint16_t a = adr - 0x8000; // adjusted for placement in memory map
+            b = vram_[a];
+        }
+        */
         uint16_t a = adr - 0x8000; // adjusted for placement in memory map
         b = vram_[a];
     }
@@ -55,7 +63,8 @@ uint8_t Memory::read(uint16_t adr) const
     }
     else if (adr < 0xfea0) // OAM accessing
     {
-        b = oam_[adr - 0xfe00];
+        //if (!ppu_.enabled() || ppu_.mode() < 2)
+            b = oam_[adr - 0xfe00];
     }
     else if (adr < 0xff00) // undefined
     {
@@ -80,7 +89,7 @@ uint8_t Memory::read(uint16_t adr) const
     {
         b = hram_[adr - 0xff80];
     }
-    else // adr == 0xffff, interrupt enable register
+    else if (adr == 0xffff)// adr == 0xffff, interrupt enable register
     {
         b = ie_;
     }
@@ -124,12 +133,21 @@ void Memory::write(uint8_t b, uint16_t adr)
     }
     else if (adr < 0xa000) // VRAM accessing
     {
-        uint16_t a = adr - 0x8000; // adjusted for placement in memory map
-        vram_[a] = b;
+        // VRAM only accessible if PPU is enabled and PPU mode isn't 3
+
+        if (!ppu_.enabled() || ppu_.mode() != 3)
+        {
+            uint16_t a = adr - 0x8000; // adjusted for placement in memory map
+            vram_[a] = b;
+        }
+
+        //uint16_t a = adr - 0x8000;
+        //vram_[a] = b;
     }
     else if (adr < 0xc000) // RAM bank access
     {
         cart_->write(b, adr); // MBC on cartridge
+        sram_written_ = true;
     }
     else if (adr < 0xd000) // write to WRAM bank 0
     {
@@ -145,7 +163,12 @@ void Memory::write(uint8_t b, uint16_t adr)
     }
     else if (adr < 0xfea0) // OAM accessing
     {
-        oam_[adr - 0xfe00] = b;
+        // OAM only accessible if PPU is enabled and PPU mode is 0 or 1
+
+        if (!ppu_.enabled() || ppu_.mode() < 2)
+            oam_[adr - 0xfe00] = b;
+
+        //oam_[adr-0xfe00] = b;
     }
     else if (adr < 0xff00) // undefined
     {
@@ -170,17 +193,18 @@ void Memory::write(uint8_t b, uint16_t adr)
     {
         hram_[adr - 0xff80] = b;
     }
-    else // adr == 0xffff, interrupt enable register
+    else if (adr == 0xffff) // adr == 0xffff, interrupt enable register
     {
         ie_ = b;
     }
 }
 
 
-void Memory::load_cartridge(std::istream &is)
+std::string Memory::load_cartridge(std::istream &is)
 {
     cart_ = std::make_unique<Cartridge>(is);
     set_ram_size();
+    return cart_->title();
 }
 
 void Memory::reset()
@@ -243,6 +267,28 @@ std::vector<Memory_byte> Memory::log()
     auto out {std::move(log_)};
     log_.clear();
     return out;
+}
+
+std::vector<uint8_t> Memory::dump_sram() const
+{
+    sram_written_ = false;
+    if (cart_)
+        return cart_->dump_ram();
+    else
+        throw std::runtime_error("Unable to dump SRAM: no cartridge is inserted");
+}
+
+bool Memory::sram_changed() const
+{
+    return sram_written_;
+}
+
+bool Memory::load_save(const std::string &path)
+{
+    if (cart_)
+        return cart_->load_save(path);
+    else
+        throw std::runtime_error("Unable to load save: no cartridge is inserted");
 }
 
 void Memory::set_ram_size()

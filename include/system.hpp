@@ -27,6 +27,7 @@ class System
     public:
 
     explicit System();
+    ~System();
 
     // system control
     void run_concurrently();
@@ -39,7 +40,6 @@ class System
     size_t cycles() { return cpu_.cycles(); }
 
     // system setup
-    void load_cartridge(std::istream &is);
     bool load_cartridge(const std::string &path);
     void set_renderer(Renderer *r);
     void set_speaker(Speaker *s);
@@ -52,7 +52,7 @@ class System
     std::array<Texture, 384> dump_tileset() const;
     Texture dump_background() const;
     Texture dump_window() const;
-    std::array<Sprite, 40> dump_sprites() const;
+    std::array<Texture, 40> dump_sprites() const;
     void set_step_callback(std::function<void()>); // callback before every step
                                                    // useful for logging
     uint8_t memory_read(uint16_t adr);
@@ -61,6 +61,7 @@ class System
 
     private:
     void run();
+    void write_save(const std::vector<uint8_t> &sram);
 
     private:
 	Processor cpu_ 
@@ -77,7 +78,9 @@ class System
     Timer timer_ {cpu_};
     Joypad joypad_ {cpu_};
     Apu apu_ {};
-    Memory memory_{ ppu_, timer_, joypad_, apu_};
+    Memory memory_ { ppu_, timer_, joypad_, apu_};
+    std::string rom_title_ {};
+    std::string save_dir_ {"saves"};
     std::function<void()> step_callback_ {};
     std::atomic<bool> running_ {false};
     std::thread thread_ {};

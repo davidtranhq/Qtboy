@@ -27,10 +27,12 @@ class Cartridge
 
 	uint8_t read(uint16_t adr) const;
     void write(uint8_t b, uint16_t adr);
+    bool load_save(const std::string &path);
     std::map<std::string, Memory_range> dump() const;
     std::vector<uint8_t> dump_rom() const;
     std::vector<uint8_t> dump_ram() const;
     bool is_cgb() const;
+    std::string title() const;
 	
 	private:
     Rom rom_;
@@ -38,6 +40,7 @@ class Cartridge
 
     std::unique_ptr<Memory_bank_controller> mbc_ {nullptr};
     std::string title_ {};
+    bool has_battery_ {false};
 
 	void init_mbc();
 	void init_info();

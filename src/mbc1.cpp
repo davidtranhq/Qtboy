@@ -14,18 +14,22 @@ Mbc1::Mbc1(Rom *rom, std::optional<External_ram> *ram)
 uint8_t Mbc1::read(uint16_t adr) const
 {
 	uint8_t b {0xff};
-	if (adr < 0x4000)
-	{
+    if (adr < 0x4000)
+    {
         b = rom_->read(0, adr);
 	}
 	else if (adr < 0x8000)
 	{
         b = rom_->read(rom_bank_, adr - 0x4000);
 	}
+    else if (adr < 0xa000)
+    {
+        // nothing defined here
+    }
 	else if (adr < 0xc000)
     {
         if (ram_ && ram_enable_)
-            b = ram_->value().read(ram_bank_, adr - 0xc000);
+            b = ram_->value().read(ram_bank_, adr - 0xa000);
         else
             b = 0xff;
     }
@@ -74,6 +78,16 @@ void Mbc1::write(uint8_t b, uint16_t adr)
         if (ram_ && ram_enable_)
             ram_->value().write(b, ram_bank_, adr - 0xa000);
     }
+}
+
+void Mbc1::load_sram(const std::vector<uint8_t> &sram)
+{
+    ram_->value().load(sram);
+}
+
+std::vector<uint8_t> Mbc1::dump_ram() const
+{
+    return ram_->value().dump();
 }
 
 void Mbc1::adjust_rom_bank()

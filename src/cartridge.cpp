@@ -3,6 +3,8 @@
 #include <stdexcept>
 #include <tuple>
 #include <cstdint>
+#include <sys/stat.h> // stat()
+#include <fstream>
 
 #include "rom.hpp"
 #include "ram.hpp"
@@ -14,42 +16,47 @@ Cartridge::Cartridge(std::istream &is)
 	: rom_ {is}
 {
 	init_mbc();
-	init_ram();
-	init_info();
+    init_info();
+    init_ram();
 }
 
 void Cartridge::init_mbc()
 {
 	switch (rom_.read(0, 0x147))
 	{
+        case 0x09:
+            has_battery_ = true;
+        case 0x08:
 		case 0x00: 
 			break; // no MBC
-		case 0x01:
-		case 0x02:
         case 0x03:
+            has_battery_ = true;
+		case 0x01:
+        case 0x02:
             mbc_ = std::make_unique<Mbc1>(&rom_, &ram_);
             break;
-		/*
-		case 0x05:
-		case 0x06:
-			mbc_ = std::make_unique<Mbc2>(rom_, ram_);
+        case 0x06:
+            has_battery_ = true;
+        case 0x05:
+            mbc_ = std::make_unique<Mbc2>(&rom_);
             break;
 		case 0x0f:
 		case 0x10:
+        case 0x13:
+            has_battery_ = true;
 		case 0x11:
-		case 0x12:
-		case 0x13:
+        case 0x12:
             mbc_ = std::make_unique<Mbc3>(&rom_, &ram_);
             break;
+        case 0x1b:
+        case 0x1e:
+            has_battery_ = true;
 		case 0x19:
-		case 0x1a:
-		case 0x1b:
+        case 0x1a:
 		case 0x1c:
-		case 0x1d:
-		case 0x1e:
-			mbc_ = std::make_unique<Mbc5>(rom_, ram_);
-			break;
-		*/
+        case 0x1d:
+            mbc_ = std::make_unique<Mbc5>(&rom_, &ram_);
+            break;
 		default:
 			throw std::runtime_error {"Unimplemented memory bank controller\n"};
 	}
@@ -63,6 +70,7 @@ void Cartridge::init_info()
 
 void Cartridge::init_ram()
 {
+    int banks = 0;
     switch (rom_.read(0, 0x149))
 	{
 		default:
@@ -70,22 +78,22 @@ void Cartridge::init_ram()
 			break; // no ram
 		case 0x01:
 		case 0x02:
-            ram_ = {};
-            ram_->resize(1); // 1 bank of 8KB RAM
+            ram_ = External_ram(1); // ERAM with 1 bank
+            banks = 1;
 			break;
 		case 0x03:
-            ram_ = {};
-            ram_->resize(4);
-			break;
+            ram_ = External_ram(4); // 4 banks
+            banks = 4;
+            break;
 		case 0x04:
-            ram_ = {};
-            ram_->resize(16);
-			break;
+            ram_ = External_ram(16); // 16 banks
+            banks = 16;
+            break;
 		case 0x05:
-            ram_ = {};
-            ram_->resize(8);
-			break;
-	}
+            ram_ = External_ram(8); // 8 banks
+            banks = 8;
+            break;
+    }
 }
 	
 uint8_t Cartridge::read(uint16_t adr) const
@@ -108,6 +116,25 @@ void Cartridge::write(uint8_t b, uint16_t adr)
 {
     if (mbc_)
         mbc_->write(b, adr);
+}
+
+bool Cartridge::load_save(const std::string &path)
+{
+    if (!has_battery_)
+        return false;
+    // check if a save file exists and load it into SRAM
+    std::ifstream sav(path, std::ios::binary);
+    if (sav)
+    {
+        sav.seekg(0, std::ios::end);
+        size_t len = sav.tellg();
+        sav.seekg(0, std::ios::beg);
+        std::vector<uint8_t> sram(len);
+        sav.read(reinterpret_cast<char *>(sram.data()), len);
+        mbc_->load_sram(sram);
+        return true;
+    }
+    return false;
 }
 
 std::map<std::string, Memory_range> Cartridge::dump() const
@@ -137,14 +164,21 @@ std::vector<uint8_t> Cartridge::dump_rom() const
 
 std::vector<uint8_t> Cartridge::dump_ram() const
 {
-    if (ram_)
-        return ram_->dump();
-    return {};
+    // return empty if no battery RAM
+    if (!has_battery_ )
+        return {};
+    if (mbc_)
+        return mbc_->dump_ram();
 }
 	
 bool Cartridge::is_cgb() const
 {
 	return rom_.read(0, 0x143) & 0x80; // upper bit
 }	
+
+std::string Cartridge::title() const
+{
+    return title_;
+}
 
 }
