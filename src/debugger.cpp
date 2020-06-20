@@ -23,6 +23,11 @@ Debugger::Debugger(System *s)
 
 void Debugger::run()
 {
+    system_->run();
+}
+
+void Debugger::run_concurrently()
+{
     system_->run_concurrently();
 }
 
@@ -271,7 +276,7 @@ std::string Debugger::dump_formatted_memory(Dump_format d) const
                     for (unsigned short k {0}; k < 16; ++k)
                     {
                         const uint8_t c {v[j+k]};
-                        if (c < 32 || c > 126) // non-printable ASCII
+                        if (c < 32 || c == 127) // non-printable ASCII
                             line += '.';
                         else
                             line += static_cast<char>(c);
@@ -315,17 +320,38 @@ Cpu_values Debugger::dump_cpu() const noexcept
     return system_->dump_cpu();
 }
 
-std::array<Texture, 384> Debugger::dump_tileset()
+Ppu::Dump Debugger::dump_ppu() const noexcept
 {
-    return system_->dump_tileset();
+    return system_->dump_ppu();
 }
 
-Texture Debugger::dump_background()
+std::array<Palette, 8> Debugger::dump_bg_palettes() const
+{
+    return system_->dump_bg_palettes();
+}
+
+std::array<Palette, 8> Debugger::dump_sprite_palettes() const
+{
+    return system_->dump_sprite_palettes();
+}
+
+std::array<Texture, 384> Debugger::dump_tileset(uint8_t bank)
+{
+    return system_->dump_tileset(bank);
+}
+
+Texture Debugger::dump_framebuffer(bool with_bg, bool with_win,
+                                   bool with_sprites) const
+{
+    return system_->dump_framebuffer(with_bg, with_win, with_sprites);
+}
+
+Texture Debugger::dump_background() const
 {
     return system_->dump_background();
 }
 
-Texture Debugger::dump_window()
+Texture Debugger::dump_window() const
 {
     return system_->dump_window();
 }

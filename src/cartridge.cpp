@@ -70,7 +70,6 @@ void Cartridge::init_info()
 
 void Cartridge::init_ram()
 {
-    int banks = 0;
     switch (rom_.read(0, 0x149))
 	{
 		default:
@@ -79,19 +78,15 @@ void Cartridge::init_ram()
 		case 0x01:
 		case 0x02:
             ram_ = External_ram(1); // ERAM with 1 bank
-            banks = 1;
 			break;
 		case 0x03:
             ram_ = External_ram(4); // 4 banks
-            banks = 4;
             break;
 		case 0x04:
             ram_ = External_ram(16); // 16 banks
-            banks = 16;
             break;
 		case 0x05:
             ram_ = External_ram(8); // 8 banks
-            banks = 8;
             break;
     }
 }
@@ -131,7 +126,10 @@ bool Cartridge::load_save(const std::string &path)
         sav.seekg(0, std::ios::beg);
         std::vector<uint8_t> sram(len);
         sav.read(reinterpret_cast<char *>(sram.data()), len);
-        mbc_->load_sram(sram);
+        if (mbc_)
+            mbc_->load_sram(sram);
+        else
+            ram_->load(sram);
         return true;
     }
     return false;
@@ -169,6 +167,8 @@ std::vector<uint8_t> Cartridge::dump_ram() const
         return {};
     if (mbc_)
         return mbc_->dump_ram();
+    else
+        return ram_->dump();
 }
 	
 bool Cartridge::is_cgb() const

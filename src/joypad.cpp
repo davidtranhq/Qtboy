@@ -23,8 +23,8 @@ void Joypad::release(Input i)
 
 void Joypad::update_button(Input i, bool pressed)
 {
-    uint8_t old_buttons_ {buttons_};
-    uint8_t old_directions_ {directions_};
+    // uint8_t old_buttons_ {buttons_};
+    // uint8_t old_directions_ {directions_};
     switch (i)
     {
         case Input::A:

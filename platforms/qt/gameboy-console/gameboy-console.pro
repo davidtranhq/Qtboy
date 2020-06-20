@@ -22,20 +22,29 @@ SOURCES += \
     ../../../src/timer.cpp
 
 HEADERS += \
+    ../../../include/apu.hpp \
+    ../../../include/audio_types.hpp \
     ../../../include/cartridge.hpp \
     ../../../include/debug_types.hpp \
     ../../../include/debugger.hpp \
     ../../../include/disassembler.hpp \
     ../../../include/exception.hpp \
+    ../../../include/graphic_types.hpp \
     ../../../include/instruction_info.hpp \
+    ../../../include/joypad.hpp \
     ../../../include/json_opcodes.hpp \
     ../../../include/memory.hpp \
     ../../../include/memory_bank_controller.hpp \
+    ../../../include/noise_channel.hpp \
     ../../../include/ppu.hpp \
     ../../../include/processor.hpp \
     ../../../include/ram.hpp \
     ../../../include/register_pair.hpp \
     ../../../include/renderer.hpp \
     ../../../include/rom.hpp \
+    ../../../include/speaker.hpp \
+    ../../../include/square_channel.hpp \
     ../../../include/system.hpp \
-    ../../../include/timer.hpp
+    ../../../include/thread_safe_system.hpp \
+    ../../../include/timer.hpp \
+    ../../../include/wave_channel.hpp

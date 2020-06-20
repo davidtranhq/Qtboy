@@ -24,7 +24,8 @@ class Debugger
     explicit Debugger(System *);
 
     void run();
-    void run_until_break(); // if only I could name it continue...
+    void run_concurrently();
+    void run_until_break();
     void pause();
     void step(size_t n = 1);
     void reset();
@@ -42,9 +43,14 @@ class Debugger
     std::string dump_formatted_memory(Dump_format d = Dump_format::Hex) const;
     std::vector<uint8_t> dump_rom() const noexcept;
     Cpu_values dump_cpu() const noexcept;
-    std::array<Texture, 384> dump_tileset();
-    Texture dump_background();
-    Texture dump_window();
+    Ppu::Dump dump_ppu() const noexcept;
+    std::array<Palette, 8> dump_bg_palettes() const;
+    std::array<Palette, 8> dump_sprite_palettes() const;
+    std::array<Texture, 384> dump_tileset(uint8_t bank);
+    Texture dump_framebuffer(bool with_bg = true, bool with_win = true,
+                             bool with_sprites = true) const;
+    Texture dump_background() const;
+    Texture dump_window() const;
     std::array<Texture, 40> dump_sprites();
 
     std::string hex_dump() const;

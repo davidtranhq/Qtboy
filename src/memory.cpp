@@ -1,3 +1,4 @@
+#include "processor.hpp"
 #include "memory.hpp"
 #include "timer.hpp"
 #include "ppu.hpp"
@@ -11,13 +12,19 @@
 namespace gameboy
 {
 
-Memory::Memory(Ppu &p, Timer &t, Joypad &j, Apu &a)
-    : ppu_ {p},
+Memory::Memory(Processor &c, Ppu &p, Timer &t, Joypad &j, Apu &a)
+    : cpu_ {c},
+      ppu_ {p},
       timer_ {t},
       joypad_ {j},
       apu_ {a}
 {
     init_io();
+}
+
+void Memory::enable_cgb(bool is_cgb)
+{
+    cgb_mode_ = is_cgb;
 }
 
 uint8_t Memory::read(uint16_t adr) const
@@ -34,15 +41,22 @@ uint8_t Memory::read(uint16_t adr) const
     else if (adr < 0xa000) // VRAM accessing
     {
         // VRAM accesible when PPU disabled or mode isn't 3
-        /*
         if (!ppu_.enabled() || ppu_.mode() != 3)
         {
             uint16_t a = adr - 0x8000; // adjusted for placement in memory map
-            b = vram_[a];
+            // CGB can access banks 0-1
+            if (cgb_mode_)
+            {
+                // get VRAM bank specified in bit 0 of 0xff4f
+                uint8_t bank = io_[0x4f] & 1;
+                b = vram_.read(bank, a);
+            }
+            // DMG can only access bank 0
+            else
+            {
+                b = vram_.read(0, a);
+            }
         }
-        */
-        uint16_t a = adr - 0x8000; // adjusted for placement in memory map
-        b = vram_[a];
     }
     else if (adr < 0xc000) // external RAM accessing
     {
@@ -50,12 +64,22 @@ uint8_t Memory::read(uint16_t adr) const
     }
     else if (adr < 0xd000) // WRAM bank 0 access
     {
-        b = wram0_[adr-0xc000];
+        b = wram_.read(0, adr-0xc000);
     }
     else if (adr < 0xe000) // WRAM bank 1-7 accessing (CGB)
     {
         uint16_t a = adr - 0xd000; // adjust
-        b = wram1_[a];
+        if (cgb_mode_) // WRAM banks 1-7 are accessible in CGB mode
+        {
+            uint8_t bank = io_[0x70] & 7;
+            if (bank == 0)
+                bank = 1;
+            b = wram_.read(bank, a);
+        }
+        else // only bank 1 is accessible in DMG
+        {
+            b = wram_.read(1, a);
+        }
     }
     else if (adr < 0xfe00) // echo RAM
     {
@@ -65,6 +89,8 @@ uint8_t Memory::read(uint16_t adr) const
     {
         //if (!ppu_.enabled() || ppu_.mode() < 2)
             b = oam_[adr - 0xfe00];
+       // else
+            //b = 0xff;
     }
     else if (adr < 0xff00) // undefined
     {
@@ -82,8 +108,56 @@ uint8_t Memory::read(uint16_t adr) const
             b = apu_.read_reg(adr);
         else if (adr > 0xff3f && adr < 0xff4c && adr != 0xff46) // ppu registers
             b = ppu_.read_reg(adr);
-        else
+        else if (cgb_mode_ && adr >= 0xff68 && adr <= 0xff6b) // CGB PPU regs
+            b = ppu_.read_reg(adr);
+        else // misc. IO register
+        {
             b = io_[adr - 0xff00];
+            // special cases when reading from IO registers
+            switch (adr)
+            {
+                case 0xff4d: // key1 (GBC only: sped switch)
+                {
+                    if (cgb_mode_)
+                        b |= 0x7e; // only bits 0 and 7 are read, other bits=1
+                    else
+                        b = 0xff;
+                } break;
+                case 0xff4f: // vbk
+                {
+                    if (cgb_mode_)
+                    {
+                        b &= 1;
+                        b |= 0xfe;
+                    }
+                    else
+                    {
+                        b = 0xfe;
+                    }
+                } break;
+                // HDMA addresses always return 0xff when read
+                case 0xff51: b = hdma_src_ >> 8; break;  // hdma1
+                case 0xff52: b = hdma_src_ & 0xff; break; // hdma2
+                case 0xff53: b = hdma_dest_ >> 8; break; // hdma3
+                case 0xff54: b = hdma_dest_ & 0xff; break; // hdma4
+                case 0xff55:// hdma5
+                {
+                    if (!cgb_mode_)
+                        b = 0xff;
+                    else
+                        b = static_cast<uint8_t>(
+                                    (hdma_len_ & 0x7f)
+                                | ((hdma_active_ ? 0 : 1) << 7));
+                } break;
+                case 0xff70: // svbk
+                {
+                    if (cgb_mode_) // upper 5 bits always read 1 in CGB
+                        b |= 0xf8;
+                    else // always FF in DMG
+                        b = 0xff;
+                } break;
+            }
+        }
     }
     else if (adr < 0xffff) // High RAM accessing
     {
@@ -95,13 +169,6 @@ uint8_t Memory::read(uint16_t adr) const
     }
     return b;
 }
-
-//QTextStream &qStdOut()
-//{
-//    static QTextStream ts (stdout);
-//    ts.flush();
-//    return ts;
-//}
 
 void Memory::write(uint8_t b, uint16_t adr)
 {
@@ -138,11 +205,19 @@ void Memory::write(uint8_t b, uint16_t adr)
         if (!ppu_.enabled() || ppu_.mode() != 3)
         {
             uint16_t a = adr - 0x8000; // adjusted for placement in memory map
-            vram_[a] = b;
+            // CGB can access banks 0-1
+            if (cgb_mode_)
+            {
+                // get VRAM bank specified in bit 0 of 0xff4f
+                uint8_t bank = io_[0x4f] & 1;
+                vram_.write(b, bank, a);
+            }
+            // DMG can only access bank 0
+            else
+            {
+                vram_.write(b, 0, a);
+            }
         }
-
-        //uint16_t a = adr - 0x8000;
-        //vram_[a] = b;
     }
     else if (adr < 0xc000) // RAM bank access
     {
@@ -151,11 +226,22 @@ void Memory::write(uint8_t b, uint16_t adr)
     }
     else if (adr < 0xd000) // write to WRAM bank 0
     {
-        wram0_[adr-0xc000] = b;
+        wram_.write(b, 0, adr-0xc000);
     }
-    else if (adr < 0xe000) // write to WRAM bank 1
+    else if (adr < 0xe000) // write to WRAM bank 1-n
     {
-        wram1_[adr-0xd000] = b;
+        uint16_t a = adr - 0xd000; // adjust
+        if (cgb_mode_) // WRAM banks 1-7 are accessible in CGB mode
+        {
+            uint8_t bank = io_[0x70] & 7;
+            if (bank == 0)
+                bank = 1;
+            wram_.write(b, bank, a);
+        }
+        else // only bank 1 is accessible in DMG
+        {
+            wram_.write(b, 1, a);
+        }
     }
     else if (adr < 0xfe00) // echo RAM
     {
@@ -164,11 +250,8 @@ void Memory::write(uint8_t b, uint16_t adr)
     else if (adr < 0xfea0) // OAM accessing
     {
         // OAM only accessible if PPU is enabled and PPU mode is 0 or 1
-
         if (!ppu_.enabled() || ppu_.mode() < 2)
             oam_[adr - 0xfe00] = b;
-
-        //oam_[adr-0xfe00] = b;
     }
     else if (adr < 0xff00) // undefined
     {
@@ -185,8 +268,65 @@ void Memory::write(uint8_t b, uint16_t adr)
             apu_.write_reg(b, adr);
         else if (adr > 0xff3f && adr < 0xff4c && adr != 0xff46) // PPU registers
             ppu_.write_reg(b, adr);
+        else if (cgb_mode_ && adr >= 0xff68 && adr <= 0xff6b) // CGB PPU regs
+            ppu_.write_reg(b, adr);
         else if (adr == 0xff46) // DMA
-            dma_transfer(b);
+            oam_dma_transfer(b);
+        // misc. IO registers
+        if (cgb_mode_)
+        {
+            switch (adr)
+            {
+                case 0xff4d:// CGB speed switch
+                {
+                    // bit 0 prepares speed switch
+                    if (b & 1)
+                    {
+                        cpu_.toggle_double_speed();
+                        // bit 0 cleared immediately after switching
+                    }
+                    // only bit 0 is writable
+                    b &= ~1;
+                    // bit 7 tells the current mode (1=double)
+                    b &= ~0x80;
+                    b |= static_cast<uint8_t>(cpu_.double_speed()) << 7;
+                } break;
+                case 0xff4f:
+                {
+                    // VRAM bank select: only bit 1 is writable
+                    b &= 1;
+                    b |= 0xfe;
+                } break;
+                case 0xff51: // HDMA src hi
+                {
+                    hdma_src_ = static_cast<uint16_t>(
+                                (hdma_src_ & 0xff) | (b << 8));
+                } break;
+                case 0xff52: // HDMA src lo (ignore lo 4 bits)
+                {
+                    b &= 0xf0;
+                    hdma_src_ = (hdma_src_ & 0xff00) | b;
+                } break;
+                case 0xff53: // HDMA dst hi (upper 3 bits ignored), bit 7 always 1
+                {
+                    b &= 0x1f;
+                    hdma_dest_ = static_cast<uint16_t>(
+                                (hdma_dest_ & 0xff) | ((b | 0x80) << 8));
+                } break;
+                case 0xff54: // HDMA dst lo (lower 4 bits ignored)
+                {
+                    b &= 0xf0;
+                    hdma_dest_ = (hdma_dest_ & 0xff00) | b;
+                } break;
+                case 0xff55: vram_dma_transfer(b); return; // hdma transfer
+                case 0xff70:
+                {
+                     // WRAM bank select: only banks 01-07 are adressable
+                    b &= 7;
+                    b |= 0xf8;
+                } break;
+            }
+        }
         io_[adr - 0xff00] = b;
     }
     else if (adr < 0xffff) // High RAM accessing
@@ -200,18 +340,32 @@ void Memory::write(uint8_t b, uint16_t adr)
 }
 
 
-std::string Memory::load_cartridge(std::istream &is)
+uint8_t Memory::vram_read(uint8_t bank, uint16_t a) const
+{
+    if (a < 0x8000 || a > 0x9fff)
+        return 0xff; // not in range of VRAM
+    return vram_.read(bank, a-0x8000);
+}
+
+void Memory::vram_write(uint8_t b, uint8_t bank, uint16_t a)
+{
+    if (a < 0x8000 || a > 0x9fff)
+        return; // not in range of VRAM
+    vram_.write(b, bank, a-0x8000);
+}
+
+
+Cartridge *Memory::load_cartridge(std::istream &is)
 {
     cart_ = std::make_unique<Cartridge>(is);
     set_ram_size();
-    return cart_->title();
+    return cart_.get();
 }
 
 void Memory::reset()
 {
-    vram_ = {};
-    wram0_ = {};
-    wram1_ = {};
+    vram_.reset();
+    wram_.reset();
     oam_ = {};
     io_ = {};
     hram_ = {};
@@ -219,6 +373,11 @@ void Memory::reset()
     init_io();
     logging_ = false;
     log_.clear();
+    cgb_mode_ = false;
+    hdma_active_ = false;
+    hdma_src_ = 0;
+    hdma_dest_ = 0;
+    hdma_len_ = 0xff;
 }
 
 std::vector<uint8_t> Memory::dump_rom() const
@@ -241,12 +400,16 @@ std::unordered_map<std::string, Memory_range> Memory::dump() const
         // concatenate memory map recieved from cartridge to output
         out.insert(cart.begin(), cart.end());
     }
-    std::vector<uint8_t> wrm0 {wram0_.begin(), wram0_.end()};
-    std::vector<uint8_t> wrm1 {wram1_.begin(), wram1_.end()};
-    std::vector<uint8_t> vrm0 {vram_.begin(), vram_.end()};
+    uint8_t wram_bank = io_[0x70] & 7,
+            vram_bank = io_[0x4f] & 1;
+    if (wram_bank == 0)
+        wram_bank = 1;
+    std::vector<uint8_t> wrm0 {wram_.dump(0)};
+    std::vector<uint8_t> wrm1 {wram_.dump(wram_bank)};
+    std::vector<uint8_t> vrm0 {vram_.dump(vram_bank)};
     out["WRM0"] = {"WRM0", wrm0};
-    out["VRMX"] = {"VRM0", vrm0};
-    out["WRMX"] = {"WRM1", wrm1};
+    out["VRMX"] = {"VRM" + std::to_string(vram_bank), vrm0};
+    out["WRMX"] = {"WRM" + std::to_string(wram_bank), wrm1};
     std::vector<uint8_t> oam(oam_.begin(), oam_.end());
     std::vector<uint8_t> io(io_.begin(), io_.end());
     std::vector<uint8_t> hram(hram_.begin(), hram_.end());
@@ -331,14 +494,77 @@ void Memory::init_io()
     io_[0xFF] = 0x00;   // IE
 }
 
-void Memory::dma_transfer(uint8_t b)
+void Memory::oam_dma_transfer(uint8_t b)
 {
     if (b > 0xf1) // only defined for range between 00-f1
         throw Bad_memory("Attempted to write value outside 00-f1"
                          "to DMA register (ff46)\n", __FILE__, __LINE__);
     // copy from XX00-XX9f to oam (fe00-fe9f), where XXh = b
     for (uint8_t i {0}; i < oam_.size(); ++i)
-        oam_[i] = read(b << 8 | i);
+        oam_[i] = read(static_cast<uint16_t>(b << 8 | i));
+}
+
+void Memory::vram_dma_transfer(uint8_t b)
+{
+    hdma_len_ = b & 0x7f;
+    // bit 7 is 0: GDMA (instant)
+    if ((b & 0x80) == 0)
+    {
+        // if HDMA isn't active, do a GDMA
+        if (!hdma_active_)
+            general_dma();
+        // if HDMA is active, stop it
+        else
+        {
+            hdma_active_ = false;
+        }
+    }
+    // bit 7 is 1: HDMA
+    else
+    {
+        hdma_active_ = true;
+    }
+}
+
+void Memory::general_dma()
+{
+    // copy everything all at once
+    for (uint16_t i = 0; i < (hdma_len_ & 0x7f); ++i)
+        dma_copy();
+    // ff55 reads 0xff when finished
+    hdma_len_ = 0xff;
+    hdma_active_ = false;
+}
+
+// called by PPU during HBLANK, transfer 10h bytes of data
+void Memory::hblank_dma()
+{
+    // only run if active and cpu isn't halted
+    if (hdma_active_ && !cpu_.halted())
+    {
+        // end if no more  bytes to copy
+        if ((hdma_len_ & 0x7f) == 0)
+            hdma_active_ = false;
+        dma_copy();
+        --hdma_len_;
+    }
+
+}
+
+void Memory::dma_copy()
+{
+    // HDMA src in e000-ffff maps to a000-bfff
+    uint16_t src = (hdma_src_ >= 0xe000) ? hdma_src_-0x4000 : hdma_src_;
+    uint16_t dst = hdma_dest_;
+    for (uint8_t i = 0; i < 0x10; ++i)
+    {
+        if (src < 0x8000 || src > 0x9fff)
+            write( read(src), dst );
+        ++src;
+        ++dst;
+    }
+    hdma_src_ += 0x10;
+    hdma_dest_ += 0x10;
 }
 
 }

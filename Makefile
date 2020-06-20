@@ -3,7 +3,7 @@ WARNINGS = -Wfatal-errors -Wall -Wextra -Wpedantic -Wconversion -Wshadow
 CXX_FLAGS = -g -std=c++17
 
 # Final binary
-BIN = gameboy
+BIN = qtboy
 
 # Put all auto generated stuff to this build dir.
 BUILD_DIR = build

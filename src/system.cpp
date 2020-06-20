@@ -6,7 +6,6 @@
 #include <map>
 #include <thread>
 #include <chrono>
-#include <experimental/filesystem>
 
 #include "system.hpp"
 #include "exception.hpp"
@@ -14,7 +13,6 @@
 
 using std::chrono::duration_cast;
 using std::chrono::nanoseconds;
-namespace fs = std::experimental::filesystem;
 
 namespace gameboy
 {
@@ -39,10 +37,14 @@ void System::run()
         auto start = std::chrono::high_resolution_clock::now();
         // run for one frame
         size_t cycles = execute(70224); // number of cycles in one frame
-        // save SRAM to seperate file if changes were made
         auto finish = std::chrono::high_resolution_clock::now();
         double expected = NANOSECONDS_PER_CYCLE * cycles;
         auto duration = duration_cast<nanoseconds>(finish-start).count();
+        // don't framelimit if throttle is 0
+        if (throttle_ <= 0.0)
+            continue;
+        else
+            expected /= throttle_;
         if (duration < expected)
         {
             auto t = std::chrono::duration<double, std::nano>(expected-duration);
@@ -78,6 +80,7 @@ void System::reset()
     joypad_.reset();
     step_callback_ = {};
     rom_title_ = {};
+    cgb_mode_ = !force_dmg;
 }
 
 size_t System::step(size_t n)
@@ -118,18 +121,32 @@ void System::release(Joypad::Input i)
     joypad_.release(i);
 }
 
+void System::set_throttle(double d)
+{
+    throttle_ = d;
+}
+
 // system setup
+
+// returns the filename without the last extension
+static std::string stem(const std::string &path)
+{
+    // name is in between last '/' (directory) and '.' (file extension)
+    auto const start = path.find_last_of('/');
+    auto const end = path.find_last_of('.');
+    return path.substr(start+1, end-(start+1));
+}
 
 bool System::load_cartridge(const std::string &path)
 {
 	std::ifstream rom {path, std::ios::binary};
 	if (!rom.good())
         return false;
-    rom_title_ = fs::path(path).stem().string();
-    memory_.load_cartridge(rom);
-    bool res = memory_.load_save(save_dir_ + "/" + rom_title_ + ".sav");
-    if (res)
-        std::cout << "Loaded save file.";
+    rom_title_ = stem(path);
+    cgb_mode_ = (memory_.load_cartridge(rom)->is_cgb() && !force_dmg);
+    ppu_.enable_cgb(cgb_mode_);
+    memory_.enable_cgb(cgb_mode_);
+    memory_.load_save(save_dir + "/" + rom_title_ + ".sav");
     return true;
 }
 
@@ -177,13 +194,44 @@ Cpu_values System::dump_cpu() const
     return cpu_.dump();
 }
 
-std::array<Texture, 384> System::dump_tileset() const
+Ppu::Dump System::dump_ppu() const
+{
+    const std::lock_guard<std::mutex> lock(mutex_);
+    return ppu_.dump_values();
+}
+
+std::array<Palette, 8> System::dump_bg_palettes() const
+{
+    std::array<Palette, 8> pals {};
+    const std::lock_guard<std::mutex> lock(mutex_);
+    for (uint8_t i = 0; i < 8; ++i)
+        pals[i] = ppu_.get_bg_palette(i);
+    return pals;
+}
+
+std::array<Palette, 8> System::dump_sprite_palettes() const
+{
+    std::array<Palette, 8> pals {};
+    const std::lock_guard<std::mutex> lock(mutex_);
+    for (uint8_t i = 0; i < 8; ++i)
+        pals[i] = ppu_.get_sprite_palette(i);
+    return pals;
+}
+
+std::array<Texture, 384> System::dump_tileset(uint8_t bank) const
 {
     std::array<Texture, 384> set {};
     const std::lock_guard<std::mutex> lock(mutex_);
     for (uint16_t i = 0; i < 384; ++i)
-        set[i] = ppu_.get_tile(i);
+        set[i] = ppu_.get_tile(bank, i);
     return set;
+}
+
+Texture System::dump_framebuffer(bool with_bg, bool with_win,
+                                 bool with_sprites) const
+{
+    const std::lock_guard<std::mutex> lock(mutex_);
+    return ppu_.get_framebuffer(with_bg, with_win, with_sprites);
 }
 
 Texture System::dump_background() const
@@ -218,7 +266,7 @@ void System::memory_write(uint8_t b, uint16_t adr)
 
 void System::write_save(const std::vector<uint8_t> &sram)
 {
-    const std::string path(save_dir_ + '/' + rom_title_ + ".sav");
+    const std::string path(save_dir + '/' + rom_title_ + ".sav");
     std::ofstream f(path, std::ios::binary);
     f.write(reinterpret_cast<const char *>(sram.data()), sram.size());
 }

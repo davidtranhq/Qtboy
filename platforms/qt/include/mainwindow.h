@@ -17,6 +17,26 @@ QT_END_NAMESPACE
 
 class DisassemblerWindow;
 class DebuggerWindow;
+class CustomPaletteWindow;
+
+struct Preferences
+{
+    bool antialiasing;
+    bool force_dmg;
+};
+
+struct Controls
+{
+    Qt::Key a {Qt::Key_A},
+            b {Qt::Key_B},
+            up {Qt::Key_Up},
+            down {Qt::Key_Down},
+            left {Qt::Key_Left},
+            right {Qt::Key_Right},
+            select {Qt::Key_Shift},
+            start {Qt::Key_Return},
+            turbo {Qt::Key_Space};
+};
 
 class MainWindow : public QMainWindow
 {
@@ -31,11 +51,16 @@ protected:
     void keyReleaseEvent(QKeyEvent *);
 
 private slots:
+    // file menu
     void openRom();
     void showDisassembler();
     void showDebugger();
     void showVramViewer();
     void about();
+    // options menu
+    void toggleAntiAlias(bool);
+    void toggleForceDmg(bool);
+    void openCustomPaletteWindow();
 
     void update_display();
 
@@ -47,6 +72,8 @@ private:
     Qt_speaker *speaker_ {nullptr};
     QLabel *display;
     QString curRom;
+    Preferences prefs_;
+    Controls controls_;
 
 };
 

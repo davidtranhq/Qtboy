@@ -248,7 +248,7 @@ void Debugger_window::run()
     if (enable_viewer_update_->isChecked())
         update_viewers();
     */
-    debugger_.run();
+    debugger_.run_concurrently();
 }
 
 void Debugger_window::step()

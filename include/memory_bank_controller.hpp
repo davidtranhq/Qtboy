@@ -20,7 +20,7 @@ class Memory_bank_controller
     virtual uint8_t ram_bank() const { return 0; }
     // for MBCs with built-in RAM (MBC2)
     virtual std::vector<uint8_t> dump_ram() const { return {}; }
-    virtual void load_sram(const std::vector<uint8_t> &sram) { return; }
+    virtual void load_sram(const std::vector<uint8_t> &) { return; }
     virtual ~Memory_bank_controller() = default;
 };
 
