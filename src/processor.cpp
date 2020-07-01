@@ -787,7 +787,7 @@ void Processor::step()
     return;
 }
 
-Cpu_values Processor::dump() const noexcept
+Cpu_dump Processor::dump() const noexcept
 {
     return {af_, bc_, de_, hl_, sp_, pc_, cycles_, ime_,
             {read(pc_), read(pc_+1), read(pc_+2)}};

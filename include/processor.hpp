@@ -30,7 +30,7 @@ class Processor
               std::function<void(uint8_t, uint16_t)> wr);
     void step();
     void reset(bool force_dmg = false);
-    Cpu_values dump() const noexcept;
+    Cpu_dump dump() const noexcept;
     void request_interrupt(Interrupt i);
     void toggle_double_speed();
 
