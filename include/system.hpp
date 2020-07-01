@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <istream>
 #include <map>
+#include <optional>
 #include <thread>
 #include <mutex>
 #include <atomic>
@@ -18,6 +19,7 @@
 #include "apu.hpp"
 #include "speaker.hpp"
 #include "debugger.hpp"
+#include "reusable_thread.hpp"
 
 namespace gameboy
 {
@@ -30,8 +32,7 @@ class System
     ~System();
 
     // system control
-    void run(); // run in single thread
-    void run_concurrently(); // run multithreaded
+    void run_concurrently();
     void pause();
     void reset();
     size_t step(size_t n); // take n CPU steps
@@ -40,7 +41,9 @@ class System
     void release(Joypad::Input);
     size_t cycles() const { return cpu_.cycles(); }
     bool is_cgb() const { return cgb_mode_; }
+    bool is_running();
     void set_throttle(double factor);
+    void set_debug(bool b);
 
     // system setup
     bool load_cartridge(const std::string &path);
@@ -48,10 +51,12 @@ class System
     void set_speaker(Speaker *s);
 
     // system debug
+    void set_debug_callback(std::function<void()>); // callback before every step
+                                                   // useful for logging
     std::unordered_map<std::string, Memory_range> dump_memory() const;
     std::vector<Memory_byte> dump_memory_log();
     std::vector<uint8_t> dump_rom() const;
-    Cpu_values dump_cpu() const;
+    Cpu_dump dump_cpu() const;
     Ppu::Dump dump_ppu() const;
     std::array<Palette, 8> dump_bg_palettes() const;
     std::array<Palette, 8> dump_sprite_palettes() const;
@@ -61,8 +66,6 @@ class System
     Texture dump_background() const;
     Texture dump_window() const;
     std::array<Texture, 40> dump_sprites() const;
-    void set_step_callback(std::function<void()>); // callback before every step
-                                                   // useful for logging
     uint8_t memory_read(uint16_t adr);
     void memory_write(uint8_t b, uint16_t adr);
     static constexpr double NANOSECONDS_PER_CYCLE {1000000000/4194304};
@@ -73,9 +76,15 @@ class System
     bool force_dmg {false};
 
     private:
+    void update_debugger();
     void write_save(const std::vector<uint8_t> &sram);
+    void run();
 
     private:
+    Reusable_thread emu_thread_ { [this]{run();} };
+    std::function<void()> debug_callback_;
+    std::atomic<bool> emu_running_ {false};
+    mutable std::mutex mutex_;
 	Processor cpu_ 
 	{
 		[this](uint16_t adr){ return this->memory_read(adr); }, 
@@ -92,11 +101,8 @@ class System
     Memory memory_ { cpu_, ppu_, timer_, joypad_, apu_};
     std::string rom_title_ {};
     bool cgb_mode_ {!force_dmg};
-    std::function<void()> step_callback_ {};
-    std::atomic<bool> running_ {false};
     std::atomic<double> throttle_ {1.0};
-    std::thread thread_ {};
-    mutable std::mutex mutex_;
+    bool debugging_ {false};
 };
 
 

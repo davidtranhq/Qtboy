@@ -20,7 +20,7 @@ DisassemblerWindow::DisassemblerWindow(QWidget *parent, gameboy::System *s)
     textArea->setFont(font);
     textArea->setReadOnly(true);
     textArea->setWordWrapMode(QTextOption::NoWrap);
-    textArea->setPlainText(QString::fromStdString(dsmblr.hex_dump(debugger.dump_rom())));
+    textArea->setPlainText(QString::fromStdString(dsmblr.pretty_disassemble(debugger.dump_rom())));
 
     goToLayout->addWidget(goToPrompt);
     goToLayout->addWidget(goToButton);

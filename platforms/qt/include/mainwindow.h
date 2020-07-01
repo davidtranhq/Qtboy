@@ -67,7 +67,8 @@ private slots:
 private:
     void createActions();
 
-    gameboy::System system;
+    gameboy::System system_;
+    gameboy::Debugger debugger_ {&system_};
     Qt_renderer *renderer_ {nullptr};
     Qt_speaker *speaker_ {nullptr};
     QLabel *display;

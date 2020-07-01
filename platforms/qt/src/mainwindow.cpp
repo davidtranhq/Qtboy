@@ -11,8 +11,8 @@ MainWindow::MainWindow(QWidget *parent)
       speaker_ {new Qt_speaker},
       display {new QLabel}
 {
-    system.set_renderer(renderer_);
-    system.set_speaker(speaker_);
+    system_.set_renderer(renderer_);
+    system_.set_speaker(speaker_);
     createActions();
     display->setScaledContents(true);
     display->setMinimumSize(160, 144);
@@ -23,9 +23,9 @@ MainWindow::MainWindow(QWidget *parent)
 
 void MainWindow::loadRom(const QString &fileName)
 {
-    system.reset();
-    system.load_cartridge(fileName.toStdString());
-    system.run_concurrently();
+    system_.reset();
+    system_.load_cartridge(fileName.toStdString());
+    system_.run_concurrently();
 }
 
 void MainWindow::keyPressEvent(QKeyEvent *event)
@@ -33,23 +33,23 @@ void MainWindow::keyPressEvent(QKeyEvent *event)
     auto controls = controls_;
     auto key = event->key();
     if (key == controls_.b)
-        system.press(gameboy::Joypad::Input::B);
+        system_.press(gameboy::Joypad::Input::B);
     else if (key == controls.a)
-        system.press(gameboy::Joypad::Input::A);
+        system_.press(gameboy::Joypad::Input::A);
     else if (key == controls.up)
-        system.press(gameboy::Joypad::Input::Up);
+        system_.press(gameboy::Joypad::Input::Up);
     else if (key == controls.down)
-        system.press(gameboy::Joypad::Input::Down);
+        system_.press(gameboy::Joypad::Input::Down);
     else if (key == controls.left)
-        system.press(gameboy::Joypad::Input::Left);
+        system_.press(gameboy::Joypad::Input::Left);
     else if (key == controls.right)
-        system.press(gameboy::Joypad::Input::Right);
+        system_.press(gameboy::Joypad::Input::Right);
     else if (key == controls.select)
-        system.press(gameboy::Joypad::Input::Select);
+        system_.press(gameboy::Joypad::Input::Select);
     else if (key == controls.start)
-        system.press(gameboy::Joypad::Input::Start);
+        system_.press(gameboy::Joypad::Input::Start);
     else if (key == controls.turbo)
-        system.set_throttle(0.0);
+        system_.set_throttle(0.0);
 }
 
 void MainWindow::keyReleaseEvent(QKeyEvent *event)
@@ -57,23 +57,23 @@ void MainWindow::keyReleaseEvent(QKeyEvent *event)
     auto controls = controls_;
     auto key = event->key();
     if (key == controls_.b)
-        system.release(gameboy::Joypad::Input::B);
+        system_.release(gameboy::Joypad::Input::B);
     else if (key == controls.a)
-        system.release(gameboy::Joypad::Input::A);
+        system_.release(gameboy::Joypad::Input::A);
     else if (key == controls.up)
-        system.release(gameboy::Joypad::Input::Up);
+        system_.release(gameboy::Joypad::Input::Up);
     else if (key == controls.down)
-        system.release(gameboy::Joypad::Input::Down);
+        system_.release(gameboy::Joypad::Input::Down);
     else if (key == controls.left)
-        system.release(gameboy::Joypad::Input::Left);
+        system_.release(gameboy::Joypad::Input::Left);
     else if (key == controls.right)
-        system.release(gameboy::Joypad::Input::Right);
+        system_.release(gameboy::Joypad::Input::Right);
     else if (key == controls.select)
-        system.release(gameboy::Joypad::Input::Select);
+        system_.release(gameboy::Joypad::Input::Select);
     else if (key == controls.start)
-        system.release(gameboy::Joypad::Input::Start);
+        system_.release(gameboy::Joypad::Input::Start);
     else if (key == controls.turbo)
-        system.set_throttle(1.0);
+        system_.set_throttle(1.0);
 }
 
 void MainWindow::openRom()
@@ -85,19 +85,19 @@ void MainWindow::openRom()
 
 void MainWindow::showDisassembler()
 {
-    auto disassembler = new DisassemblerWindow(this, &system);
+    auto disassembler = new DisassemblerWindow(this, &system_);
     disassembler->show();
 }
 
 void MainWindow::showDebugger()
 {
-    auto debugger = new Debugger_window(this, &system);
-    debugger->show();
+    auto *debug_window = new Debugger_window(this, &debugger_);
+    debug_window->show();
 }
 
 void MainWindow::showVramViewer()
 {
-    auto vram_viewer = new Vram_window(&system);
+    auto *vram_viewer = new Vram_window(&system_);
     vram_viewer->show();
 }
 
@@ -116,7 +116,7 @@ void MainWindow::toggleAntiAlias(bool b)
 void MainWindow::toggleForceDmg(bool b)
 {
     prefs_.force_dmg = b;
-    system.force_dmg = b;
+    system_.force_dmg = b;
 }
 
 void MainWindow::openCustomPaletteWindow()
