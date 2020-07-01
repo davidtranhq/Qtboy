@@ -13,15 +13,15 @@ class Disassembler
 {
 	public:
 	explicit Disassembler();
-	
-    std::string hex_dump(const std::vector<uint8_t> &ops) const;
-    std::vector<Assembly> disassemble(const std::vector<uint8_t> &ops) const;
-    Assembly disassemble_op(const std::array<uint8_t, 3> &ops, uint16_t adr) const;
+
+    static std::string pretty_disassemble(const std::vector<uint8_t> &ops);
+    static std::vector<Assembly> disassemble(const std::vector<uint8_t> &ops);
+    static Assembly disassemble_op(const std::array<uint8_t, 3> &ops, size_t adr);
 
     private:
     class Hex;
-    void parse_operand(std::ostream &, const std::array<uint8_t, 3> &,
-                       const std::string &, uint16_t adr) const;
+    static std::string parse_operand(const std::array<uint8_t, 3> &next_ops,
+                       const std::string &operand, size_t adr);
 };
 	
 }
