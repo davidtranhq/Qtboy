@@ -76,3 +76,5 @@ Thumbs.db
 *.dll
 *.exe
 
+releases/QtBoy-v0.1.0-alpha-win64.7z
+releases/QtBoy-v0.1.0-alpha-win64/saves/pokemon_gold.sav
