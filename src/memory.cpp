@@ -390,12 +390,14 @@ std::unordered_map<std::string, Memory_range> Memory::dump() const
     std::unordered_map<std::string, Memory_range> out;
     if (!cart_) // no cartridge loaded
     {
+        // create dummy memory regions of cartridge ROM and RAM
         out["ROM0"] = Memory_range {"ROM0", std::vector<uint8_t>(0x4000)};
         out["ROMX"] = Memory_range {"ROM1", std::vector<uint8_t>(0x4000)};
+        out["RAMX"] = Memory_range {"RAM0", std::vector<uint8_t>(0x2000)};
     }
     else // cartridge dependant memory locations
     {
-        std::map<std::string, Memory_range>
+        std::unordered_map<std::string, Memory_range>
                 cart {cart_->dump()};
         // concatenate memory map recieved from cartridge to output
         out.insert(cart.begin(), cart.end());
@@ -413,9 +415,21 @@ std::unordered_map<std::string, Memory_range> Memory::dump() const
     std::vector<uint8_t> oam(oam_.begin(), oam_.end());
     std::vector<uint8_t> io(io_.begin(), io_.end());
     std::vector<uint8_t> hram(hram_.begin(), hram_.end());
+    hram.push_back(ie_);
     out["OAM"] = {"OAM", oam};
     out["IO"] = {"IO", io};
     out["HRAM"] = {"HRAM", hram};
+
+    // create echo ram of 0xc00-0xdff  (WRM0 and WRMX)
+    std::vector<uint8_t> echo_ram = wrm0;
+    echo_ram.insert(echo_ram.end(), wrm1.begin(),
+                    wrm1.begin() + 0x0e00);
+
+    // add extra areas to the memory map
+    out["ECHO"] = {"ECHO", echo_ram};
+    out["XXXX"] = {"UNUS", std::vector<uint8_t>(0x60)};
+
+
     return out;
 }
 
