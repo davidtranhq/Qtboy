@@ -135,9 +135,9 @@ bool Cartridge::load_save(const std::string &path)
     return false;
 }
 
-std::map<std::string, Memory_range> Cartridge::dump() const
+std::unordered_map<std::string, Memory_range> Cartridge::dump() const
 {
-    std::map<std::string, Memory_range> out {};
+    std::unordered_map<std::string, Memory_range> out {};
     // external ram on cartridge is optional
     if (ram_) // external ram exists
     {
