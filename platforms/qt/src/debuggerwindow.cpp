@@ -41,7 +41,7 @@ Debugger_window::Debugger_window(QWidget *parent, gameboy::Debugger *d)
     debug_thread_.start();
 }
 
-Debugger_window::~Debugger_window()
+void Debugger_window::closeEvent(QCloseEvent *event)
 {
     debugger_->enable_debug(false);
     // resume emulator when window is closed
@@ -148,7 +148,6 @@ void Debugger_window::update_info(const gameboy::Cpu_dump &dump,
     // higlight selected lines
     rom_viewer_->highlight_lines();
     stack_viewer_->highlight_lines();
-    QCoreApplication::processEvents();
 }
 
 void Debugger_window::run_no_break()
