@@ -3,15 +3,11 @@ TARGET = QtBoy
 
 CONFIG += c++17 O3
 QT = gui core multimedia
-LIBS += -lstdc++fs # remove if std::filesystem isn't experimental
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
-#LIBS += -L ../lib/sdl2-64/lib -lSDL2
-
 INCLUDEPATH += ../../../include \
                ../include \
-               #../lib/sdl2-64/include
 
 SOURCES += \
     ../../../src/apu.cpp \
@@ -33,21 +29,25 @@ SOURCES += \
     ../../../src/ppu.cpp \
     ../../../src/processor.cpp \
     ../../../src/ram.cpp \
+    ../../../src/reusable_thread.cpp \
     ../../../src/rom.cpp \
     ../../../src/square_channel.cpp \
     ../../../src/system.cpp \
     ../../../src/thread_safe_system.cpp \
     ../../../src/timer.cpp \
     ../../../src/wave_channel.cpp \
-    ../src/background_tab.cpp \
+    ../src/breakpoint_window.cpp \
+    ../src/debugger_thread.cpp \
     ../src/debuggerwindow.cpp \
     ../src/disassemblerwindow.cpp \
+    ../src/frame_buffer_tab.cpp \
     ../src/main.cpp \
     ../src/mainwindow.cpp \
+    ../src/memory_viewer.cpp \
     ../src/memoryviewer.cpp \
+    ../src/palette_tab.cpp \
     ../src/qt_renderer.cpp \
     ../src/qt_speaker.cpp \
-#    ../src/sdl_speaker.cpp \
     ../src/sprite_tab.cpp \
     ../src/tile.cpp \
     ../src/tile_tab.cpp \
@@ -73,6 +73,7 @@ HEADERS += \
     ../../../include/ram.hpp \
     ../../../include/register_pair.hpp \
     ../../../include/renderer.hpp \
+    ../../../include/reusable_thread.hpp \
     ../../../include/rom.hpp \
     ../../../include/speaker.hpp \
     ../../../include/square_channel.hpp \
@@ -80,10 +81,14 @@ HEADERS += \
     ../../../include/thread_safe_system.hpp \
     ../../../include/timer.hpp \
     ../../../include/wave_channel.hpp \
-    ../include/background_tab.h \
+    ../include/breakpoint_window.h \
+    ../include/custom_palette_window.h \
+    ../include/debugger_thread.h \
     ../include/debuggerwindow.h \
     ../include/disassemblerwindow.h \
+    ../include/frame_buffer_tab.h \
     ../include/mainwindow.h \
+    ../include/memory_viewer.h \
     ../include/memoryviewer.h \
     ../include/qt_renderer.h \
     ../include/qt_speaker.h \
@@ -91,6 +96,7 @@ HEADERS += \
     ../include/sprite_tab.h \
     ../include/tile.h \
     ../include/tile_tab.h \
-    ../include/vram_window.h \ \
- \    #../lib/sdl2-64/include/SDL.h
-    ../include/window_tab.h
+    ../include/vram_window.h \
+    ../include/window_tab.h \
+    ../include/palette_tab.h
+

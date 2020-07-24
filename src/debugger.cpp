@@ -16,18 +16,58 @@ Debugger::Debugger(System *s)
     if (!system_)
         throw Bad_debugger {"Could not attach system to debugger",
                             __FILE__, __LINE__};
-    system_->pause();
-    system_->set_step_callback([this]{ return this->step_callback(); });
-    memory_map_ = dump_mapped_memory();
+    // call update() every step
+    system_->set_debug_callback([this]{ update(); });
+    // initial load of memory
+    memory_map_ = system_->dump_memory();
 }
 
-void Debugger::run()
+Debugger::~Debugger()
 {
-    system_->run_concurrently();
+    // set empty debug callback function
+    system_->set_debug_callback( std::function<void(void)>() );
+    system_->set_debug(false);
+    run_no_break();
+}
+
+void Debugger::enable_debug(bool b)
+{
+    system_->set_debug(b);
+}
+
+void Debugger::update()
+{
+    std::lock_guard<std::mutex> lock(update_mutex_);
+    updated_ = true;
+    if (logging_)
+        write_log();
+    if (breaking_ && at_breakpoint())
+        pause();
+}
+
+bool Debugger::was_updated()
+{
+    std::lock_guard<std::mutex> lock(update_mutex_);
+    bool b = updated_;
+    updated_ = false;
+    return b;
 }
 
 void Debugger::run_until_break()
 {
+    breaking_ = true;
+    system_->run_concurrently();
+}
+
+void Debugger::run_no_break()
+{
+    breaking_ = false;
+    system_->run_concurrently();
+}
+
+bool Debugger::running()
+{
+    return system_->is_running();
 }
 
 void Debugger::pause()
@@ -53,16 +93,25 @@ void Debugger::reset()
 void Debugger::add_breakpoint(uint16_t adr)
 {
     breaks_[adr] = true;
+    std::lock_guard<std::mutex> lock(update_mutex_);
+    updated_ = true;
 }
 
 void Debugger::delete_breakpoint(uint16_t adr)
 {
     breaks_[adr] = false;
+    std::lock_guard<std::mutex> lock(update_mutex_);
+    updated_ = true;
+}
+
+const std::unordered_map<uint16_t, bool> &Debugger::breakpoints() const
+{
+    return breaks_;
 }
 
 void Debugger::enable_logging(bool b)
 {
-    log_ = b;
+    logging_ = b;
 }
 
 bool Debugger::set_log_file(const std::string &path)
@@ -86,7 +135,7 @@ void Debugger::write_log()
 std::string Debugger::log()
 {
     std::ostringstream out {};
-    Cpu_values dump {system_->dump_cpu()};
+    Cpu_dump dump {system_->dump_cpu()};
     Assembly as {disassembler_.disassemble_op(dump.next_ops, dump.pc)};
     uint8_t a = dump.af >> 8;
     uint8_t f = dump.af & 0xff;
@@ -132,7 +181,7 @@ std::string Debugger::log()
             << static_cast<int>(x) << ' ';
     std::string ins {as.code};
     for (auto &c : ins)
-        c = std::tolower(c);
+        c = static_cast<char>(std::tolower(c));
     out << std::left << std::setfill(' ') << std::setw(10) << ops.str() // bytes
         << std::setw(20) << ins; // instruction
 
@@ -146,9 +195,11 @@ size_t Debugger::steps() const
 
 void Debugger::update_memory_cache() const
 {
+    // check to see if any changes to memory have been made
     std::vector<Memory_byte> mem_log {system_->dump_memory_log()};
     if (!mem_log.empty())
     {
+        std::cout << "updating memory";
         // changes have been made, update only the changed bytes
         for (Memory_byte mb : mem_log)
         {
@@ -218,11 +269,14 @@ void Debugger::update_memory_cache() const
             }
         }
     }
+    // otherwise, no changes have been made so don't do anything
 }
 
 std::vector<uint8_t> Debugger::dump_memory() const
 {
-    update_memory_cache();
+    // check if changes to memory have been made and update accordingly
+    memory_map_ = system_->dump_memory();
+    // concatenate memory map into a series of bytes
     std::vector<uint8_t> out {};
     for (const std::string &r : Memory_range_names)
         out.insert(out.end(), memory_map_[r].data.begin(),
@@ -230,27 +284,14 @@ std::vector<uint8_t> Debugger::dump_memory() const
     return out;
 }
 
-std::unordered_map<std::string, Memory_range> Debugger::dump_mapped_memory() const
-{
-    memory_map_ = system_->dump_memory();
-    // create echo ram of 0xc00-0xdff  (WRM0 and WRMX)
-    std::vector<uint8_t> echo_ram {memory_map_["WRM0"].data};
-    echo_ram.insert(echo_ram.end(), memory_map_["WRMX"].data.begin(),
-                    memory_map_["WRMX"].data.begin() + 0x0e00);
-
-    // add extra areas to the memory map
-    memory_map_["ECHO"] = {"ECHO", echo_ram};
-    memory_map_["XXXX"] = {"UNUS", std::vector<uint8_t>(0x60)};
-    return memory_map_;
-}
 
 std::string Debugger::dump_formatted_memory(Dump_format d) const
 {
-    update_memory_cache();
+    memory_map_ = system_->dump_memory();
     std::ostringstream dump {};
     std::ostringstream out {};
     out << std::hex << std::setfill('0');
-    size_t i {0};
+    uint16_t adr = 0;
     switch (d)
     {
         case Dump_format::Hex:
@@ -259,19 +300,19 @@ std::string Debugger::dump_formatted_memory(Dump_format d) const
             {
                 const std::vector<uint8_t> &v {memory_map_[r].data};
                 // rows + data
-                for (size_t j {0}; j < v.size(); j += 16, i += 16)
+                for (size_t j {0}; j < v.size(); j += 16, adr += 16)
                 {
                     // row marker
                     out << std::setfill(' ') << std::setw(4)
                         << memory_map_[r].name << ':'
                         << std::setw(4) << std::setfill('0') << std::hex
-                        << i << ' ';
+                        << adr << ' ';
                     // line of 16 bytes
                     std::string line;
                     for (unsigned short k {0}; k < 16; ++k)
                     {
                         const uint8_t c {v[j+k]};
-                        if (c < 32 || c > 126) // non-printable ASCII
+                        if (c < 32 || c == 127) // non-printable ASCII
                             line += '.';
                         else
                             line += static_cast<char>(c);
@@ -284,19 +325,27 @@ std::string Debugger::dump_formatted_memory(Dump_format d) const
         } break;
         case Dump_format::Stack:
         {
-            i = 0xfffe;
-            for (auto n {Memory_range_names.rbegin()};
-                 n != Memory_range_names.rend();
-                 ++n)
+            adr = 0xffff;
+            // iterate backwards through memory ranges (first entry is HRAM)
+            for (auto i_name {Memory_range_names.rbegin()};
+                 i_name < Memory_range_names.rend();
+                 ++i_name)
             {
-                const std::vector<uint8_t> &v {memory_map_[*n].data};
-                for (auto j {v.rbegin()}; j != v.rend(); ++j, --i)
+                // get vector of bytes associated with this memory range
+                const std::vector<uint8_t> &v {memory_map_[*i_name].data};
+                // iterate backwards through memory (start with hi addresses)
+                for (auto i_byte = v.rbegin();
+                     i_byte < v.rend();
+                     ++i_byte, --adr)
                 {
+                    std::string label = (adr == 0xffff)
+                            ? "IME"
+                            : memory_map_[*i_name].name;
                     out << std::setfill(' ') << std::setw(4)
-                        << memory_map_[*n].name << ':'
+                        << label << ':'
                         << std::setw(4) << std::setfill('0') << std::hex
-                        << i << ' '
-                        << std::setw(2) << static_cast<int>(*j)
+                        << adr << ' '
+                        << std::setw(2) << static_cast<int>(*i_byte)
                         << '\n';
                 }
             }
@@ -310,22 +359,43 @@ std::vector<uint8_t> Debugger::dump_rom() const noexcept
     return system_->dump_rom();
 }
 
-Cpu_values Debugger::dump_cpu() const noexcept
+Cpu_dump Debugger::dump_cpu() const noexcept
 {
     return system_->dump_cpu();
 }
 
-std::array<Texture, 384> Debugger::dump_tileset()
+Ppu::Dump Debugger::dump_ppu() const noexcept
 {
-    return system_->dump_tileset();
+    return system_->dump_ppu();
 }
 
-Texture Debugger::dump_background()
+std::array<Palette, 8> Debugger::dump_bg_palettes() const
+{
+    return system_->dump_bg_palettes();
+}
+
+std::array<Palette, 8> Debugger::dump_sprite_palettes() const
+{
+    return system_->dump_sprite_palettes();
+}
+
+std::array<Texture, 384> Debugger::dump_tileset(uint8_t bank)
+{
+    return system_->dump_tileset(bank);
+}
+
+Texture Debugger::dump_framebuffer(bool with_bg, bool with_win,
+                                   bool with_sprites) const
+{
+    return system_->dump_framebuffer(with_bg, with_win, with_sprites);
+}
+
+Texture Debugger::dump_background() const
 {
     return system_->dump_background();
 }
 
-Texture Debugger::dump_window()
+Texture Debugger::dump_window() const
 {
     return system_->dump_window();
 }
@@ -336,131 +406,22 @@ std::array<Texture, 40> Debugger::dump_sprites()
     return system_->dump_sprites();
 }
 
-std::string Debugger::hex_dump() const
-{
-    const std::vector<uint8_t> &ops {dump_memory()};
-    uint8_t len {0};
-    std::ostringstream out {};
-    for (uint32_t pc {0}; pc < ops.size(); pc += len)
-    {
-        Instruction ins {instructions[ops[pc]]};
-        len = ins.length;
-        std::ostringstream bytes {};
-        for (uint8_t i {0}; i < ins.length; ++i) // opcodes
-            bytes << std::setfill('0') << ' ' << std::hex
-                  << std::setw(2) << static_cast<int>(ops[pc+i]);
-        const std::string operand1 {ins.operand1.empty() ? "" : ins.operand1};
-        const std::string operand2 {ins.operand2.empty() ? "" : ins.operand2};
-        out << std::setfill('0') << std::setw(4) << std::hex << std::right << pc; // address
-        out << std::setfill(' ') << std::setw(10) << std::left << bytes.str() // opcodes
-            << ' ' << std::setw(4) << ins.name; // instruction
-        if (!operand1.empty())
-        {
-            out << ' ' << operand1;
-            if (!operand2.empty())
-                out << ',' << operand2;
-        }
-        out << '\n';
-    }
-    return out.str();
-}
-
-class Hex // for more convenient formatting
-{
-    public:
-    explicit Hex(int x) : x_ {x} {}
-    friend std::ostream &operator<<(std::ostream &os, const Hex &h)
-    {
-        os << std::right << std::hex << std::setfill('0')
-           << std::uppercase << std::setw(2) << h.x_;
-        return os;
-    }
-
-    private:
-    int x_;
-};
-
-Assembly Debugger::disassemble_op() const
-{
-    return disassemble_op(dump_cpu().pc);
-}
-
-Assembly Debugger::disassemble_op(uint16_t adr) const
-{
-    const std::array<uint8_t, 3> &ops
-    {{
-        system_->memory_read(adr),
-        system_->memory_read(adr+1),
-        system_->memory_read(adr+2)
-    }};
-    Instruction ins;
-    if (ops[0] == 0xcb)
-        ins = cb_instructions[ops[1]];
-    else
-        ins = instructions[ops[0]];
-    std::ostringstream code {};
-    const std::string operand1 {ins.operand1.empty() ? "" : ins.operand1};
-    const std::string operand2 {ins.operand2.empty() ? "" : ins.operand2};
-    code << std::setfill(' ') << std::left << std::setw(4) << ins.name; // instruction
-    if (!operand1.empty())
-    {
-        code << ' ' << parse_operand(ops, operand1, adr);
-        if (!operand2.empty())
-        {
-            code << ',' << parse_operand(ops, operand2, adr);
-        }
-    }
-    std::vector<uint8_t> ops_used(ins.length);
-    for (uint8_t i {0}; i < ops.size(); ++i)
-        ops_used[i] = ops[i];
-    return Assembly {ops_used, ins, code.str()};
-}
 
 std::vector<Assembly> Debugger::disassemble() const
 {
     const std::vector<uint8_t> &ops {dump_memory()};
-    std::vector<Assembly> out {};
-    for (uint16_t i {0}; i < ops.size(); i += instructions[ops[i]].length)
-    {
-        out.push_back(disassemble_op(i));
-    }
-    return out;
-}
-
-void Debugger::step_callback()
-{
-    if (at_breakpoint())
-        system_->pause();
-    if (log_)
-        write_log();
+    return disassembler_.disassemble(ops);
 }
 
 bool Debugger::at_breakpoint()
 {
     uint16_t pc {dump_cpu().pc};
     if (breaks_[pc])
+    {
+        std::cout << "Reached breakpoint " << std::hex << pc;
         return true;
+    }
     return false;
-}
-
-std::string Debugger::parse_operand(const std::array<uint8_t, 3> &ops,
-                                    const std::string &operand,
-                                    uint16_t adr) const
-{
-    std::ostringstream out {};
-    if (operand == "a16" || operand == "d16") // 16-bit immediate
-        out << '#' << Hex(ops[2]) << Hex(ops[1]) << 'h';
-    else if (operand == "r8") // 8-bit signed immediate
-        out << '#' << Hex(static_cast<int8_t>(adr+ops[1])) << 'h';
-    else if (operand == "d8") // 8-bit unsigned immediate
-        out << '#' << Hex(ops[1]) << 'h';
-    else if (operand == "(a8)") // 8-bit unsigned indexing
-        out << "(#" << Hex(ops[1]) << "h)";
-    else if (operand == "(a16)" || operand == "(d16)") // 16-bit direct
-        out << "(#" << Hex(ops[2]) << Hex(ops[1]) << "h)";
-    else
-        out << operand;
-    return out.str();
 }
 
 }

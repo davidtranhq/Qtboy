@@ -8,47 +8,55 @@
 #include <QLineEdit>
 #include <QPlainTextEdit>
 #include <QCheckBox>
+#include <QThread>
 
-#include <string>
-#include <vector>
-
-#include "debugger.hpp"
 #include "disassembler.hpp"
+#include "debugger_thread.h"
+
+namespace gameboy
+{
+    class Debugger;
+}
+
+class Memory_viewer;
 
 class Debugger_window : public QWidget
 {
     Q_OBJECT
-public:
-    explicit Debugger_window(QWidget *parent, gameboy::System *s);
 
-private slots:
-    void run();
+    public:
+    explicit Debugger_window(QWidget *parent, gameboy::Debugger *d);
+
+    protected:
+    void closeEvent(QCloseEvent *event) override;
+
+    private slots:
+    void run_no_break();
+    void run_until_break();
     void step();
     void stepN();
     void reset();
-    void show_frame_buffer();
+    void openBreakpointWindow();
     void pause();
     void toggle_log(int state);
 
-private:
-    void create_stack_viewer();
-    void create_memory_viewer();
-    void create_instruction_viewer();
+    void update_info(const gameboy::Cpu_dump &,
+                     const QString &disassembly,
+                     const QString &memory,
+                     const QString &stack);
+
+    private:
     void create_layout();
 
-    void update_viewers();
-    void update_labels();
-    void highlight_byte();
-    void highlight_stack();
-
-    gameboy::Debugger debugger_;
+    gameboy::Debugger *debugger_;
     gameboy::Disassembler disassembler_;
+    Debugger_thread debug_thread_ {debugger_, &disassembler_};
 
     QLabel *af_, *bc_, *de_, *hl_, *sp_, *pc_, *cycles_,
            *steps_;
     QLineEdit *steps_to_take_;
-    QPlainTextEdit *rom_, *memory_, *stack_;
-    QCheckBox *enable_viewer_update_, *enable_log_;
+    Memory_viewer *rom_viewer_, *memory_viewer_, *stack_viewer_;
+    QCheckBox *enable_log_;
 
 };
 

@@ -44,7 +44,7 @@ const std::array<std::string, 11> Memory_range_names
 };
 
 // for dumping CPU values
-struct Cpu_values
+struct Cpu_dump
 {
     uint16_t af, bc, de, hl, sp, pc;
     uint32_t cycles;

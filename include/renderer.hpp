@@ -11,7 +11,7 @@ class Texture;
 class Renderer
 {
     public:
-    virtual void draw_texture(const Texture &t, int x, int y) = 0;
+    virtual void draw_texture(const Texture &t, unsigned x, unsigned y) = 0;
     virtual void present_screen() = 0;
 };
 

@@ -66,7 +66,12 @@ void Apu::tick(size_t cycles)
                 mix /= 4;
             audio_.push(mix);
             if (audio_.size() >= SAMPLE_SIZE)
-                speaker_->push_samples(audio_);
+            {
+                if (speaker_)
+                    speaker_->push_samples(audio_);
+                else
+                    audio_.reset();
+            }
         }
     }
 }

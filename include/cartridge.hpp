@@ -28,7 +28,7 @@ class Cartridge
 	uint8_t read(uint16_t adr) const;
     void write(uint8_t b, uint16_t adr);
     bool load_save(const std::string &path);
-    std::map<std::string, Memory_range> dump() const;
+    std::unordered_map<std::string, Memory_range> dump() const;
     std::vector<uint8_t> dump_rom() const;
     std::vector<uint8_t> dump_ram() const;
     bool is_cgb() const;

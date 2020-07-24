@@ -53,7 +53,7 @@ uint8_t Mbc3::read(uint16_t adr) const
                     b = rtc_.base_regs[mapped_rtc_];
                 }
             }
-            else // RAM Bank 00-07 is mapped
+            else // RAM Bank 00-03 is mapped
             {
                 b = ram_->value().read(ram_bank_, adr - 0xa000);
             }
@@ -76,6 +76,7 @@ void Mbc3::write(uint8_t b, uint16_t adr)
     {
         // b = rom bank, except when b == 0, then bank 1 is selected
         rom_bank_ = (b == 0) ? 1 : b;
+        rom_bank_ &= 0x7f;
     }
     else if (adr < 0x6000) // RAM Bank Number or RTC register select
     {
@@ -86,10 +87,10 @@ void Mbc3::write(uint8_t b, uint16_t adr)
             mapped_rtc_ = b-0x8;
             is_rtc_ = true;
         }
-        // otherwise it selects the RAM bank
-        else
+        // otherwise it selects the RAM bank 00-03
+        else if (b <= 0x3)
         {
-            ram_bank_ = (b & 7); // only banks 00-07 are addressable
+            ram_bank_ = (b & 3); // only banks 00-03 are addressable
             is_rtc_ = false;
         }
     }

@@ -10,7 +10,7 @@ struct Instruction
     std::string name;
 	uint8_t length;
 	uint8_t cycles;
-	uint8_t alt_cycles;
+    uint8_t branch_cycles;
     std::string operand1;
     std::string operand2;
 };
@@ -347,7 +347,7 @@ const std::array<Instruction, 256> cb_instructions
 	{"BIT", 2, 8, 8, "0", "E"},
 	{"BIT", 2, 8, 8, "0", "H"},
 	{"BIT", 2, 8, 8, "0", "L"},
-	{"BIT", 2, 16, 16, "0", "(HL)"},
+    {"BIT", 2, 12, 12, "0", "(HL)"},
 	{"BIT", 2, 8, 8, "0", "A"},
 	{"BIT", 2, 8, 8, "1", "B"},
 	{"BIT", 2, 8, 8, "1", "C"},
@@ -355,7 +355,7 @@ const std::array<Instruction, 256> cb_instructions
 	{"BIT", 2, 8, 8, "1", "E"},
 	{"BIT", 2, 8, 8, "1", "H"},
 	{"BIT", 2, 8, 8, "1", "L"},
-	{"BIT", 2, 16, 16, "1", "(HL)"},
+    {"BIT", 2, 12, 12, "1", "(HL)"},
 	{"BIT", 2, 8, 8, "1", "A"},
 	{"BIT", 2, 8, 8, "2", "B"},
 	{"BIT", 2, 8, 8, "2", "C"},
@@ -363,7 +363,7 @@ const std::array<Instruction, 256> cb_instructions
 	{"BIT", 2, 8, 8, "2", "E"},
 	{"BIT", 2, 8, 8, "2", "H"},
 	{"BIT", 2, 8, 8, "2", "L"},
-	{"BIT", 2, 16, 16, "2", "(HL)"},
+    {"BIT", 2, 12, 12, "2", "(HL)"},
 	{"BIT", 2, 8, 8, "2", "A"},
 	{"BIT", 2, 8, 8, "3", "B"},
 	{"BIT", 2, 8, 8, "3", "C"},
@@ -371,7 +371,7 @@ const std::array<Instruction, 256> cb_instructions
 	{"BIT", 2, 8, 8, "3", "E"},
 	{"BIT", 2, 8, 8, "3", "H"},
 	{"BIT", 2, 8, 8, "3", "L"},
-	{"BIT", 2, 16, 16, "3", "(HL)"},
+    {"BIT", 2, 12, 12, "3", "(HL)"},
 	{"BIT", 2, 8, 8, "3", "A"},
 	{"BIT", 2, 8, 8, "4", "B"},
 	{"BIT", 2, 8, 8, "4", "C"},
@@ -379,7 +379,7 @@ const std::array<Instruction, 256> cb_instructions
 	{"BIT", 2, 8, 8, "4", "E"},
 	{"BIT", 2, 8, 8, "4", "H"},
 	{"BIT", 2, 8, 8, "4", "L"},
-	{"BIT", 2, 16, 16, "4", "(HL)"},
+    {"BIT", 2, 12, 12, "4", "(HL)"},
 	{"BIT", 2, 8, 8, "4", "A"},
 	{"BIT", 2, 8, 8, "5", "B"},
 	{"BIT", 2, 8, 8, "5", "C"},
@@ -387,7 +387,7 @@ const std::array<Instruction, 256> cb_instructions
 	{"BIT", 2, 8, 8, "5", "E"},
 	{"BIT", 2, 8, 8, "5", "H"},
 	{"BIT", 2, 8, 8, "5", "L"},
-	{"BIT", 2, 16, 16, "5", "(HL)"},
+    {"BIT", 2, 12, 12, "5", "(HL)"},
 	{"BIT", 2, 8, 8, "5", "A"},
 	{"BIT", 2, 8, 8, "6", "B"},
 	{"BIT", 2, 8, 8, "6", "C"},
@@ -395,7 +395,7 @@ const std::array<Instruction, 256> cb_instructions
 	{"BIT", 2, 8, 8, "6", "E"},
 	{"BIT", 2, 8, 8, "6", "H"},
 	{"BIT", 2, 8, 8, "6", "L"},
-	{"BIT", 2, 16, 16, "6", "(HL)"},
+    {"BIT", 2, 12, 12, "6", "(HL)"},
 	{"BIT", 2, 8, 8, "6", "A"},
 	{"BIT", 2, 8, 8, "7", "B"},
 	{"BIT", 2, 8, 8, "7", "C"},
@@ -403,7 +403,7 @@ const std::array<Instruction, 256> cb_instructions
 	{"BIT", 2, 8, 8, "7", "E"},
 	{"BIT", 2, 8, 8, "7", "H"},
 	{"BIT", 2, 8, 8, "7", "L"},
-	{"BIT", 2, 16, 16, "7", "(HL)"},
+    {"BIT", 2, 12, 12, "7", "(HL)"},
 	{"BIT", 2, 8, 8, "7", "A"},
 	{"RES", 2, 8, 8, "0", "B"},
 	{"RES", 2, 8, 8, "0", "C"},
