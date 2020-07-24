@@ -32,6 +32,7 @@ System::~System()
 
 void System::run()
 {
+    emu_running_ = true;
     while (emu_running_)
     {
         auto start = std::chrono::high_resolution_clock::now();
@@ -55,18 +56,25 @@ void System::run()
 
 void System::run_concurrently()
 {
-    emu_running_ = true;
-    emu_thread_.queue();
+    pause(); // stop if a thread is already running
+    auto run_fn = [this]{ this->run(); };
+    emu_thread_ = std::thread(run_fn);
 }
 
 void System::pause()
 {
     emu_running_ = false;
+    // join thread if joinable and emu_thread_ doesn't refer to this thread
+    if (emu_thread_.joinable()
+            && std::this_thread::get_id() != emu_thread_.get_id())
+        emu_thread_.join();
 }
 
 void System::reset()
 {
     emu_running_ = false;
+    if (emu_thread_.joinable())
+        emu_thread_.join();
     memory_.reset();
     cpu_.reset();
     ppu_.reset();
@@ -79,9 +87,9 @@ void System::reset()
 size_t System::step(size_t n)
 {
     size_t cycles_passed = 0;
+    emu_running_ = true;
     for (size_t i {0}; i < n; ++i)
     {
-        emu_running_ = true;
         if (debugging_)
             debug_callback_();
         // check if emu was paused because of debugger

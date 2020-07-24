@@ -16,9 +16,18 @@ Debugger::Debugger(System *s)
     if (!system_)
         throw Bad_debugger {"Could not attach system to debugger",
                             __FILE__, __LINE__};
+    // call update() every step
     system_->set_debug_callback([this]{ update(); });
     // initial load of memory
     memory_map_ = system_->dump_memory();
+}
+
+Debugger::~Debugger()
+{
+    // set empty debug callback function
+    system_->set_debug_callback( std::function<void(void)>() );
+    system_->set_debug(false);
+    run_no_break();
 }
 
 void Debugger::enable_debug(bool b)
@@ -28,6 +37,7 @@ void Debugger::enable_debug(bool b)
 
 void Debugger::update()
 {
+    std::lock_guard<std::mutex> lock(update_mutex_);
     updated_ = true;
     if (logging_)
         write_log();
@@ -37,6 +47,7 @@ void Debugger::update()
 
 bool Debugger::was_updated()
 {
+    std::lock_guard<std::mutex> lock(update_mutex_);
     bool b = updated_;
     updated_ = false;
     return b;
@@ -82,11 +93,15 @@ void Debugger::reset()
 void Debugger::add_breakpoint(uint16_t adr)
 {
     breaks_[adr] = true;
+    std::lock_guard<std::mutex> lock(update_mutex_);
+    updated_ = true;
 }
 
 void Debugger::delete_breakpoint(uint16_t adr)
 {
     breaks_[adr] = false;
+    std::lock_guard<std::mutex> lock(update_mutex_);
+    updated_ = true;
 }
 
 const std::unordered_map<uint16_t, bool> &Debugger::breakpoints() const

@@ -26,7 +26,9 @@ class Debugger_window : public QWidget
 
     public:
     explicit Debugger_window(QWidget *parent, gameboy::Debugger *d);
-    ~Debugger_window();
+
+    protected:
+    void closeEvent(QCloseEvent *event) override;
 
     private slots:
     void run_no_break();

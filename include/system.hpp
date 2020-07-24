@@ -81,7 +81,7 @@ class System
     void run();
 
     private:
-    Reusable_thread emu_thread_ { [this]{run();} };
+    std::thread emu_thread_;
     std::function<void()> debug_callback_;
     std::atomic<bool> emu_running_ {false};
     mutable std::mutex mutex_;

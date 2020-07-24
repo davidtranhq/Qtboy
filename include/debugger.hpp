@@ -7,6 +7,7 @@
 #include <fstream>
 #include <thread>
 #include <mutex>
+#include <atomic>
 
 #include "debug_types.hpp"
 #include "instruction_info.hpp"
@@ -22,6 +23,7 @@ class Debugger
 {
     public:
     explicit Debugger(System *);
+    ~Debugger();
 
     void enable_debug(bool b);
     void update();
@@ -69,7 +71,8 @@ class Debugger
     bool paused_ {false};
     bool logging_ {false};
     bool breaking_ {true};
-    bool updated_ {true};
+    bool updated_ {true}; // for a debugger viewer to know when to update
+    std::mutex update_mutex_;
     std::ofstream log_file_;
     // memory map cache
     mutable std::unordered_map<std::string, Memory_range> memory_map_ {};

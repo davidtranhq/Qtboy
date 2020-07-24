@@ -50,6 +50,7 @@ void Memory_viewer::update(const QString &txt)
 void Memory_viewer::highlight_lines()
 {
     setExtraSelections(selections_);
+    selections_.clear();
 }
 
 void Memory_viewer::make_selection(uint16_t adr, const QColor &color)
