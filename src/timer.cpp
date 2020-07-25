@@ -7,7 +7,7 @@ Timer::Timer(Processor &p)
     : cpu_ {p}
 {}
 
-void Timer::update(size_t cycles)
+void Timer::update(std::size_t cycles)
 {
     div_ticks_ += cycles;
     if (div_ticks_ >= 0xff)

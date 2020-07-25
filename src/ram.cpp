@@ -19,17 +19,13 @@ Ram<bank_sz>::Ram(uint8_t banks, const std::vector<uint8_t> &sram)
 template <uint16_t bank_sz>
 uint8_t Ram<bank_sz>::read(uint8_t bank, uint16_t adr) const
 {
-	if (bank > data_.size() || adr > bank_sz)
-        throw std::out_of_range {"Invalid RAM read address"};
-	return data_[bank][adr];
+    return data_[bank][adr];
 }
 
 template <uint16_t bank_sz>
 void Ram<bank_sz>::write(uint8_t b, uint8_t bank, uint16_t adr)
 {
-	if (bank > data_.size() || adr > bank_sz)
-        throw std::out_of_range {"Invalid RAM write address"};
-	data_[bank][adr] = b;
+    data_[bank][adr] = b;
 }
 
 template<uint16_t bank_sz>

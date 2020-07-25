@@ -12,7 +12,7 @@ class Timer
     public:
     Timer(Processor &p);
 
-    void update(size_t cycles);
+    void update(std::size_t cycles);
     uint8_t read(uint16_t adr);
     void write(uint8_t b, uint16_t adr);
     void reset();
