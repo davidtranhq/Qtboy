@@ -30,5 +30,6 @@ void Debugger_thread::run()
         auto stack(QString::fromStdString(
             debugger_->dump_formatted_memory(gameboy::Dump_format::Stack)));
         emit info_ready(dump, disassembly, memory, stack);
+        msleep(500);
     }
 }
