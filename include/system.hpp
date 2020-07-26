@@ -76,7 +76,6 @@ class System
     bool force_dmg {false};
 
     private:
-    void update_debugger();
     void write_save(const std::vector<uint8_t> &sram);
     void run();
 

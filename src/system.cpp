@@ -72,9 +72,7 @@ void System::pause()
 
 void System::reset()
 {
-    emu_running_ = false;
-    if (emu_thread_.joinable())
-        emu_thread_.join();
+    pause();
     memory_.reset();
     cpu_.reset();
     ppu_.reset();
