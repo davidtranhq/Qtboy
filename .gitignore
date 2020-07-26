@@ -4,7 +4,6 @@
 # project specific
 tools/
 platforms/qt/build/
-roms/
 
 *~
 *.autosave
