@@ -31,6 +31,7 @@ SOURCES += \
     ../../../src/ram.cpp \
     ../../../src/reusable_thread.cpp \
     ../../../src/rom.cpp \
+    ../../../src/speaker.cpp \
     ../../../src/square_channel.cpp \
     ../../../src/system.cpp \
     ../../../src/thread_safe_system.cpp \

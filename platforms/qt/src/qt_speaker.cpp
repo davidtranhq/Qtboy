@@ -18,6 +18,7 @@ Qt_speaker::Qt_speaker()
     QAudioDeviceInfo info(QAudioDeviceInfo::defaultOutputDevice());
     if (!info.isFormatSupported(fmt)) {
         qWarning() << "raw audio format not supported by backend, cannot play audio.";
+        toggle(false);
         return;
     }
     output_ = new QAudioOutput(fmt, nullptr);

@@ -4,6 +4,7 @@
 
 #include <vector>
 #include <cmath>
+#include <cstddef>
 
 using namespace gameboy;
 
@@ -20,7 +21,7 @@ void Apu::reset()
     downsample_cnt_ = DOWNSAMPLE_FREQ;
 }
 
-void Apu::tick(size_t cycles)
+void Apu::tick(std::size_t cycles)
 {
     while (cycles-- > 0)
     {
@@ -55,6 +56,8 @@ void Apu::tick(size_t cycles)
         square2_.tick(1);
         wave_.tick(1);
         noise_.tick(1);
+        if (!speaker_->enabled())
+            return;
         // take a sample only once ever DOWNSAMPLE_FREQ cycles
         if (--downsample_cnt_<= 0)
         {

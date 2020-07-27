@@ -5,6 +5,7 @@
 #include <bitset>
 #include <array>
 #include <vector>
+#include <cstddef>
 
 #include "square_channel.hpp"
 #include "wave_channel.hpp"
@@ -21,7 +22,7 @@ class Speaker;
 class Apu
 {
     public:
-    void tick(size_t cycles);
+    void tick(std::size_t cycles);
     uint8_t read_reg(uint16_t adr);
     void write_reg(uint8_t b, uint16_t adr);
     void set_speaker(Speaker *s);
@@ -31,7 +32,7 @@ class Apu
     // clockfreq/samplingrate
     // 4.93MHz/44100
     static constexpr uint8_t DOWNSAMPLE_FREQ {95};
-    static constexpr size_t SAMPLE_SIZE {2048};
+    static constexpr std::size_t SAMPLE_SIZE {2048};
 
     Speaker *speaker_ {nullptr};
     Square_channel square1_ {};
