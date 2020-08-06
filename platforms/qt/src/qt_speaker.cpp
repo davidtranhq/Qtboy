@@ -17,10 +17,16 @@ Qt_speaker::Qt_speaker()
 
     QAudioDeviceInfo info(QAudioDeviceInfo::defaultOutputDevice());
     if (!info.isFormatSupported(fmt)) {
-        qWarning() << "raw audio format not supported by backend, cannot play audio.";
+        qWarning() << "Raw audio format not supported by backend, cannot play audio.\n"
+                      "If you're running a Debian system, try manually installing Qt's"
+                      "multimedia plugins with\n"
+                      "\t'sudo apt-get install libqt5multimedia5-plugins'";
         toggle(false);
         return;
-    }
+    }qWarning() << "Raw audio format not supported by backend, cannot play audio.\n"
+                   "If you're running a Debian system, try manually installing Qt's"
+                   "multimedia plugins with\n"
+                   "\t'sudo apt-get install libqt5multimedia5-plugins'";
     output_ = new QAudioOutput(fmt, nullptr);
     output_->setBufferSize(44100);
     //connect(output_, SIGNAL(stateChanged(QAudio::State)),
