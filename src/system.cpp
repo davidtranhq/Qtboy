@@ -56,6 +56,8 @@ void System::run()
 
 void System::run_concurrently()
 {
+    if (!rom_loaded_)
+        return;
     pause(); // stop if a thread is already running
     auto run_fn = [this]{ this->run(); };
     emu_thread_ = std::thread(run_fn);
@@ -80,6 +82,7 @@ void System::reset()
     timer_.reset();
     joypad_.reset();
     rom_title_ = {};
+    rom_loaded_ = false;
 }
 
 size_t System::step(size_t n)
@@ -163,6 +166,7 @@ bool System::load_cartridge(const std::string &path)
     ppu_.enable_cgb(cgb_mode_);
     memory_.enable_cgb(cgb_mode_);
     memory_.load_save(save_dir + "/" + rom_title_ + ".sav");
+    rom_loaded_ = true;
     return true;
 }
 

@@ -99,6 +99,7 @@ class System
     Apu apu_ {};
     Memory memory_ { cpu_, ppu_, timer_, joypad_, apu_};
     std::string rom_title_ {};
+    bool rom_loaded_ {false};
     bool cgb_mode_ {!force_dmg};
     std::atomic<double> throttle_ {1.0};
     bool debugging_ {false};
