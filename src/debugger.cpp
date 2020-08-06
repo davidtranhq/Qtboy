@@ -37,20 +37,10 @@ void Debugger::enable_debug(bool b)
 
 void Debugger::update()
 {
-    std::lock_guard<std::mutex> lock(update_mutex_);
-    updated_ = true;
     if (logging_)
         write_log();
     if (breaking_ && at_breakpoint())
         pause();
-}
-
-bool Debugger::was_updated()
-{
-    std::lock_guard<std::mutex> lock(update_mutex_);
-    bool b = updated_;
-    updated_ = false;
-    return b;
 }
 
 void Debugger::run_until_break()
@@ -93,15 +83,11 @@ void Debugger::reset()
 void Debugger::add_breakpoint(uint16_t adr)
 {
     breaks_[adr] = true;
-    std::lock_guard<std::mutex> lock(update_mutex_);
-    updated_ = true;
 }
 
 void Debugger::delete_breakpoint(uint16_t adr)
 {
     breaks_[adr] = false;
-    std::lock_guard<std::mutex> lock(update_mutex_);
-    updated_ = true;
 }
 
 const std::unordered_map<uint16_t, bool> &Debugger::breakpoints() const
