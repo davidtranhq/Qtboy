@@ -71,12 +71,6 @@ void Memory_viewer::make_selection(uint16_t adr, const QColor &color)
         // if still not found, there is no match
         if (!find(qhex_str))
         {
-            QMessageBox msg;
-            msg.setText(QString(tr("Unable to locate address %1 in memory viewer"))
-                        .arg(adr, 4, 16));
-            msg.setStandardButtons(QMessageBox::Ok);
-            msg.setDefaultButton(QMessageBox::Ok);
-            msg.exec();
             // word not found : set the cursor back to its initial position
             setTextCursor(saved_cursor);
         }
