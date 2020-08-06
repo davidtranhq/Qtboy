@@ -20,8 +20,6 @@ void Debugger_thread::run()
 {
     while (true)
     {
-        if (!debugger_->was_updated())
-            continue;
         auto dump = debugger_->dump_cpu();
         auto disassembly(QString::fromStdString(
             disassembler_->pretty_disassemble(debugger_->dump_memory())));
@@ -30,6 +28,6 @@ void Debugger_thread::run()
         auto stack(QString::fromStdString(
             debugger_->dump_formatted_memory(gameboy::Dump_format::Stack)));
         emit info_ready(dump, disassembly, memory, stack);
-        msleep(500);
+        msleep(100);
     }
 }
