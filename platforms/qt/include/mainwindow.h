@@ -61,6 +61,7 @@ private slots:
     void toggleAntiAlias(bool);
     void toggleForceDmg(bool);
     void openCustomPaletteWindow();
+    void toggleSound(bool);
 
     void update_display();
 

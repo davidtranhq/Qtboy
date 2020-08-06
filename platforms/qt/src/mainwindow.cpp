@@ -124,6 +124,11 @@ void MainWindow::openCustomPaletteWindow()
 
 }
 
+void MainWindow::toggleSound(bool b)
+{
+    system_.toggle_sound(b);
+}
+
 void MainWindow::update_display()
 {
     QImage img {renderer_->image()};
@@ -155,6 +160,12 @@ void MainWindow::createActions()
     forceDmgAct->setCheckable(true);
     connect(forceDmgAct, SIGNAL(toggled(bool)), this, SLOT(toggleForceDmg(bool)));
     optionsMenu->addAction(forceDmgAct);
+
+    QAction *enableSoundAct = new QAction(tr("Enable Sound"), this);
+    enableSoundAct->setCheckable(true);
+    enableSoundAct->setChecked(true);
+    connect(enableSoundAct, SIGNAL(toggled(bool)), this, SLOT(toggleSound(bool)));
+    optionsMenu->addAction(enableSoundAct);
 
 
     QMenu *toolsMenu = menuBar()->addMenu(tr("&Tools"));

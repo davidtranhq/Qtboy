@@ -44,6 +44,7 @@ class System
     bool is_running();
     void set_throttle(double factor);
     void set_debug(bool b);
+    void toggle_sound(bool b);
 
     // system setup
     bool load_cartridge(const std::string &path);

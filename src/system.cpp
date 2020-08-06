@@ -189,6 +189,11 @@ void System::set_debug_callback(std::function<void()> fn)
     debug_callback_ = std::move(fn);
 }
 
+void System::toggle_sound(bool b)
+{
+    apu_.toggle_sound(b);
+}
+
 std::unordered_map<std::string, Memory_range> System::dump_memory() const
 {
     return memory_.dump();

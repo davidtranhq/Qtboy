@@ -126,3 +126,8 @@ void Apu::set_speaker(Speaker *s)
     speaker_ = s;
 }
 
+void Apu::toggle_sound(bool b)
+{
+    speaker_->toggle(b);
+}
+

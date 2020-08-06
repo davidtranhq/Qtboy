@@ -27,6 +27,7 @@ class Apu
     void write_reg(uint8_t b, uint16_t adr);
     void set_speaker(Speaker *s);
     void reset();
+    void toggle_sound(bool b);
 
     private:
     // clockfreq/samplingrate
