@@ -29,6 +29,7 @@ SOURCES += \
     ../../../src/ppu.cpp \
     ../../../src/processor.cpp \
     ../../../src/ram.cpp \
+    ../../../src/raw_audio.cpp \
     ../../../src/reusable_thread.cpp \
     ../../../src/rom.cpp \
     ../../../src/speaker.cpp \
@@ -57,7 +58,6 @@ SOURCES += \
 
 HEADERS += \
     ../../../include/apu.hpp \
-    ../../../include/audio_types.hpp \
     ../../../include/cartridge.hpp \
     ../../../include/debug_types.hpp \
     ../../../include/debugger.hpp \
@@ -72,6 +72,7 @@ HEADERS += \
     ../../../include/ppu.hpp \
     ../../../include/processor.hpp \
     ../../../include/ram.hpp \
+    ../../../include/raw_audio.hpp \
     ../../../include/register_pair.hpp \
     ../../../include/renderer.hpp \
     ../../../include/reusable_thread.hpp \
