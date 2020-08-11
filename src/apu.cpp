@@ -8,13 +8,18 @@
 
 using namespace gameboy;
 
+
+Apu::Apu()
+    : samples_(SAMPLE_SIZE)
+{}
+
 void Apu::reset()
 {
     square1_ = {};
     square2_ = {};
     wave_ = {};
     noise_ = {};
-    audio_ = Raw_audio<uint8_t>(SAMPLE_SIZE);
+    samples_.clear();
     volume_ = 0x77;
     output_ = 0xf3;
     enable_ = 0xf1;
@@ -67,16 +72,20 @@ void Apu::tick(std::size_t cycles)
             // normalize audio
             if (mix > 0xff)
                 mix /= 4;
-            audio_.push(mix);
-            if (audio_.size() >= SAMPLE_SIZE)
+            samples_.push(mix);
+            if (samples_.size() >= SAMPLE_SIZE)
             {
-                if (speaker_)
-                    speaker_->push_samples(audio_);
-                else
-                    audio_.reset();
+                // push filled buffer to speaker
+                speaker_->push_samples(std::move(samples_));
+                samples_.clear();
             }
         }
     }
+}
+
+int Apu::samples_queued()
+{
+    return speaker_->samples_queued();
 }
 
 uint8_t Apu::read_reg(uint16_t adr)

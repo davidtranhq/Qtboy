@@ -35,6 +35,12 @@ void System::run()
     emu_running_ = true;
     while (emu_running_)
     {
+        std::cout << apu_.samples_queued() << '\n';
+        while (apu_.samples_queued() < Apu::SAMPLE_SIZE)
+        {
+            execute(70224);
+        }
+        /*
         auto start = std::chrono::high_resolution_clock::now();
         // run for one frame
         size_t cycles = execute(70224); // number of cycles in one frame
@@ -51,6 +57,7 @@ void System::run()
             auto t = std::chrono::duration<double, std::nano>(expected-duration);
             std::this_thread::sleep_for(t);
         }
+        */
     }
 }
 
