@@ -1,5 +1,5 @@
 #include "qt_speaker.h"
-#include "audio_types.hpp"
+#include "raw_audio.hpp"
 
 #include <QAudioOutput>
 #include <QTimer>
@@ -32,12 +32,15 @@ Qt_speaker::Qt_speaker()
 
 }
 
-void Qt_speaker::push_samples(gameboy::Raw_audio<uint8_t> &a)
+void Qt_speaker::push_samples(const gameboy::Raw_audio &a)
 {
     device_->write(reinterpret_cast<const char *>(a.data()), a.size());
-    a.reset();
 }
 
+int Qt_speaker::samples_queued()
+{
+    return output_->bufferSize() - output_->bytesFree();
+}
 
 void Qt_speaker::output_state_changed(const QAudio::State &state)
 {

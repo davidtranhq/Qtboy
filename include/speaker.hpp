@@ -1,7 +1,7 @@
 #ifndef SPEAKER_HPP
 #define SPEAKER_HPP
 
-#include "audio_types.hpp"
+#include "raw_audio.hpp"
 
 namespace gameboy
 {
@@ -9,7 +9,8 @@ namespace gameboy
 class Speaker
 {
     public:
-    virtual void push_samples(Raw_audio<uint8_t> &a) = 0;
+    virtual void push_samples(const Raw_audio &a) = 0;
+    virtual int samples_queued() = 0;
     void toggle(bool);
     bool enabled() const noexcept;
 
