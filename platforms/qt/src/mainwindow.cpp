@@ -5,6 +5,9 @@
 #include "vram_window.h"
 #include "qt_speaker.h"
 
+#include <chrono>
+#include <sstream>
+
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow {parent},
       renderer_ {new Qt_renderer(160, 144)},
@@ -140,6 +143,28 @@ void MainWindow::update_display()
                            centralWidget()->height(),
                            Qt::IgnoreAspectRatio,
                            transformation_mode));
+    static auto last = std::chrono::high_resolution_clock::now();
+    static auto last_frame = last;
+    static int frames = 0, skipped_frames = 0;
+    auto now = std::chrono::high_resolution_clock::now();
+    uint64_t elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(now-last).count();
+    uint64_t frame_time = std::chrono::duration_cast<std::chrono::milliseconds>(now-last_frame).count();
+    if (frame_time < 5)
+    {
+        ++skipped_frames;
+    }
+    ++frames;
+    std::cout << frame_time << std::endl;
+    if (elapsed >= 1000)
+    {
+        std::ostringstream oss;
+        oss << "QtBoy - FPS: " << frames << ", skipped frames: " << skipped_frames;
+        setWindowTitle(QString::fromStdString(oss.str()));
+        frames = 0;
+        skipped_frames = 0;
+        last = now;
+    }
+    last_frame = now;
 }
 
 

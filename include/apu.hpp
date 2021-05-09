@@ -22,7 +22,9 @@ class Apu
     explicit Apu();
 
     void tick(std::size_t cycles);
+    void queue_samples();
     int samples_queued();
+    int samples_buffered();
     uint8_t read_reg(uint16_t adr);
     void write_reg(uint8_t b, uint16_t adr);
     void set_speaker(Speaker *s);
@@ -31,8 +33,8 @@ class Apu
 
     public:
 
-    static constexpr int SAMPLE_RATE {44100};
-    static constexpr int SAMPLE_SIZE {4096};
+    static constexpr int SAMPLE_RATE {65536};
+    static constexpr int SAMPLE_SIZE {1024};
 
     private:
     // downsample = clockfreq/samplingrate

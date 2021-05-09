@@ -179,7 +179,7 @@ void Memory::write(uint8_t b, uint16_t adr)
 
     if (adr == 0xff02 && b == 0x81)
             // qStdOut() << static_cast<char>(read(0xff01));
-            std::cout << static_cast<char>(read(0xff01));
+            // std::cout << static_cast<char>(read(0xff01));
     // don't include ROM in memory logging b/c it shouldn't change
     // don't include echo RAM (WRAM log will handle it)
     // don't include unused portion

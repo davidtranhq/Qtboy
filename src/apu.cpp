@@ -5,6 +5,8 @@
 #include <vector>
 #include <cmath>
 #include <cstddef>
+#include <SDL.h>
+#include <chrono>
 
 using namespace gameboy;
 
@@ -64,7 +66,7 @@ void Apu::tick(std::size_t cycles)
         if (!speaker_->enabled())
             return;
         // take a sample only once ever DOWNSAMPLE_FREQ cycles
-        if (--downsample_cnt_<= 0)
+        if (--downsample_cnt_ <= 0)
         {
             downsample_cnt_ = DOWNSAMPLE_FREQ;
             uint16_t mix = square1_.output() + square2_.output()
@@ -75,17 +77,26 @@ void Apu::tick(std::size_t cycles)
             samples_.push(mix);
             if (samples_.size() >= SAMPLE_SIZE)
             {
-                // push filled buffer to speaker
-                speaker_->push_samples(std::move(samples_));
-                samples_.clear();
+                queue_samples();
             }
         }
     }
 }
 
+void Apu::queue_samples()
+{
+    speaker_->queue_samples(std::move(samples_));
+    samples_.clear();
+}
+
 int Apu::samples_queued()
 {
     return speaker_->samples_queued();
+}
+
+int Apu::samples_buffered()
+{
+    return samples_.size();
 }
 
 uint8_t Apu::read_reg(uint16_t adr)

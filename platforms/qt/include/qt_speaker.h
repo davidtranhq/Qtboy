@@ -5,11 +5,7 @@
 #include "speaker.hpp"
 
 #include <QObject>
-#include <QAudioOutput>
-
-
-class QAudioOutput;
-class QIODevice;
+#include <SDL_audio.h>
 
 class Qt_speaker : public QObject, public gameboy::Speaker
 {
@@ -18,16 +14,14 @@ class Qt_speaker : public QObject, public gameboy::Speaker
     public:
     explicit Qt_speaker();
 
-    void push_samples(const gameboy::Raw_audio &a) override;
+    void queue_samples(const gameboy::Raw_audio &a) override;
     int samples_queued() override;
-
-    private slots:
-    void output_state_changed(const QAudio::State &);
 
     private:
     int buffer_size_ {};
-    QAudioOutput *output_ {nullptr};
-    QIODevice *device_ {nullptr};
+    SDL_AudioDeviceID device_id_;
 };
 
-#endif // QT_SPEAKER_H
+#endif // QT_SPEAKER_
+
+

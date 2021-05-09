@@ -1,5 +1,7 @@
 #include "mainwindow.h"
 #include <QApplication>
+#include <SDL.h>
+#include <iostream>
 
 int main(int argc, char *argv[])
 {
@@ -7,7 +9,10 @@ int main(int argc, char *argv[])
     QCoreApplication::setOrganizationName("David Tran");
     QCoreApplication::setApplicationName("Qtboy");
     QCoreApplication::setApplicationVersion(QT_VERSION_STR);
-
+    if (SDL_Init(SDL_INIT_AUDIO) < 0)
+    {
+        std::cout << "Could not initialize SDL_Audio: " << SDL_GetError();
+    }
     MainWindow mainWin;
     mainWin.show();
     return app.exec();

@@ -8,6 +8,9 @@ greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
 INCLUDEPATH += ../../../include \
                ../include \
+               "C:\Program Files\mingw-w64\dev_lib\include\SDL2" # path to SDL2 includes
+
+LIBS += -L"C:\Program Files\mingw-w64\dev_lib\lib" -lmingw32 -lSDL2main -lSDL2 # path to SDL2 libraries
 
 SOURCES += \
     ../../../src/apu.cpp \
@@ -35,7 +38,6 @@ SOURCES += \
     ../../../src/speaker.cpp \
     ../../../src/square_channel.cpp \
     ../../../src/system.cpp \
-    ../../../src/thread_safe_system.cpp \
     ../../../src/timer.cpp \
     ../../../src/wave_channel.cpp \
     ../src/breakpoint_window.cpp \
@@ -50,6 +52,8 @@ SOURCES += \
     ../src/palette_tab.cpp \
     ../src/qt_renderer.cpp \
     ../src/qt_speaker.cpp \
+#    ../src/sdl_speaker.cpp \
+#    ../src/qt_speaker_copy.cpp \
     ../src/sprite_tab.cpp \
     ../src/tile.cpp \
     ../src/tile_tab.cpp \
@@ -80,7 +84,6 @@ HEADERS += \
     ../../../include/speaker.hpp \
     ../../../include/square_channel.hpp \
     ../../../include/system.hpp \
-    ../../../include/thread_safe_system.hpp \
     ../../../include/timer.hpp \
     ../../../include/wave_channel.hpp \
     ../include/breakpoint_window.h \
@@ -95,6 +98,7 @@ HEADERS += \
     ../include/qt_renderer.h \
     ../include/qt_speaker.h \
 #    ../include/sdl_speaker.h \
+#    ../include/qt_speaker_copy.h \
     ../include/sprite_tab.h \
     ../include/tile.h \
     ../include/tile_tab.h \

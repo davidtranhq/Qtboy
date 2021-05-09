@@ -11,6 +11,8 @@
 #include "exception.hpp"
 #include "disassembler.hpp"
 
+#include <SDL.h>
+
 using std::chrono::duration_cast;
 using std::chrono::nanoseconds;
 
@@ -35,29 +37,11 @@ void System::run()
     emu_running_ = true;
     while (emu_running_)
     {
-        std::cout << apu_.samples_queued() << '\n';
-        while (apu_.samples_queued() < Apu::SAMPLE_SIZE)
+        while (apu_.samples_queued() > Apu::SAMPLE_SIZE*4)
         {
-            execute(70224);
+            std::this_thread::sleep_for(std::chrono::milliseconds(1));
         }
-        /*
-        auto start = std::chrono::high_resolution_clock::now();
-        // run for one frame
-        size_t cycles = execute(70224); // number of cycles in one frame
-        auto finish = std::chrono::high_resolution_clock::now();
-        double expected = NANOSECONDS_PER_CYCLE * cycles;
-        auto duration = duration_cast<nanoseconds>(finish-start).count();
-        // don't framelimit if throttle is 0
-        if (throttle_ <= 0.0)
-            continue;
-        else
-            expected /= throttle_;
-        if (duration < expected)
-        {
-            auto t = std::chrono::duration<double, std::nano>(expected-duration);
-            std::this_thread::sleep_for(t);
-        }
-        */
+        execute(70224);
     }
 }
 
@@ -98,12 +82,12 @@ size_t System::step(size_t n)
     emu_running_ = true;
     for (size_t i {0}; i < n; ++i)
     {
-        if (debugging_)
-            debug_callback_();
+        //if (debugging_)
+            //debug_callback_();
         // check if emu was paused because of debugger
         if (emu_running_)
         {
-            const std::lock_guard<std::mutex> lock(mutex_);
+            // const std::lock_guard<std::mutex> lock(mutex_);
             size_t old_cycles {cpu_.cycles()};
             cpu_.step();
             cycles_passed += (cpu_.cycles() - old_cycles);
