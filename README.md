@@ -22,4 +22,4 @@ Space|Turbo
 
 ## Screenshots
 
-![Screenshot](docs/preview/pokemon_gold.png)![Screenshot](docs/preview/links_awakening.png)![Screenshot](docs/preview/super_mario_land.png)
+![Pokemon Gold](docs/preview/pokemon_gold.png)![Link's Awakening](docs/preview/links_awakening.png)![Super Mario Land](docs/preview/super_mario_land.png)![Shantae](docs/preview/shantae.png)
