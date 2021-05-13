@@ -1,6 +1,6 @@
 # QtBoy
 
-A Game Boy and Game Boy Color emulator written in C++ using [Qt 5.13](https://qt.io).
+A Game Boy and Game Boy Color emulator written in C++ using [Qt 5.13](https://qt.io). Get the latest release [here](https://github.com/davidtranhq/Qtboy/releases).
 
 ## Build
 
