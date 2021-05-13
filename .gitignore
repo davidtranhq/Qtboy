@@ -5,6 +5,7 @@
 tools/
 platforms/qt/build/
 platforms/qt/build*
+releases/
 
 *~
 *.autosave
