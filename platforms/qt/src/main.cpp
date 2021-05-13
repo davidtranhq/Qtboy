@@ -13,7 +13,7 @@ int main(int argc, char *argv[])
     {
         std::cout << "Could not initialize SDL_Audio: " << SDL_GetError();
     }
-    MainWindow mainWin;
+    MainWindow mainWin(nullptr, "QtBoy");
     mainWin.show();
     return app.exec();
 }

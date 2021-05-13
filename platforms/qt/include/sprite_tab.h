@@ -1,6 +1,6 @@
 #ifndef SPRITE_TAB_H
 #define SPRITE_TAB_H
-
+/*
 #include <QWidget>
 #include <QLabel>
 
@@ -13,12 +13,13 @@ class Sprite_tab : public QWidget
 {
     Q_OBJECT
     public:
-    explicit Sprite_tab(gameboy::System *s);
+    explicit Sprite_tab(qtboy::Gameboy *s);
 
     private:
-    gameboy::Debugger debugger_;
+    qtboy::Debugger debugger_;
     Qt_renderer *renderer_;
     QLabel *bg_;
 };
+*/
 
 #endif // SPRITE_TAB_H

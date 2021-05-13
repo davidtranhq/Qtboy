@@ -21,7 +21,6 @@ SOURCES += \
     ../../../src/exception.cpp \
     ../../../src/graphic_types.cpp \
     ../../../src/instructions.cpp \
-#    ../../../src/main.cpp \
     ../../../src/joypad.cpp \
     ../../../src/mbc1.cpp \
     ../../../src/mbc2.cpp \
@@ -41,19 +40,14 @@ SOURCES += \
     ../../../src/timer.cpp \
     ../../../src/wave_channel.cpp \
     ../src/breakpoint_window.cpp \
-    ../src/debugger_thread.cpp \
     ../src/debuggerwindow.cpp \
-    ../src/disassemblerwindow.cpp \
     ../src/frame_buffer_tab.cpp \
     ../src/main.cpp \
     ../src/mainwindow.cpp \
-    ../src/memory_viewer.cpp \
     ../src/memoryviewer.cpp \
     ../src/palette_tab.cpp \
     ../src/qt_renderer.cpp \
     ../src/qt_speaker.cpp \
-#    ../src/sdl_speaker.cpp \
-#    ../src/qt_speaker_copy.cpp \
     ../src/sprite_tab.cpp \
     ../src/tile.cpp \
     ../src/tile_tab.cpp \
@@ -88,17 +82,13 @@ HEADERS += \
     ../../../include/wave_channel.hpp \
     ../include/breakpoint_window.h \
     ../include/custom_palette_window.h \
-    ../include/debugger_thread.h \
+#    ../include/debugger_thread.h \
     ../include/debuggerwindow.h \
-    ../include/disassemblerwindow.h \
     ../include/frame_buffer_tab.h \
     ../include/mainwindow.h \
-    ../include/memory_viewer.h \
     ../include/memoryviewer.h \
     ../include/qt_renderer.h \
     ../include/qt_speaker.h \
-#    ../include/sdl_speaker.h \
-#    ../include/qt_speaker_copy.h \
     ../include/sprite_tab.h \
     ../include/tile.h \
     ../include/tile_tab.h \

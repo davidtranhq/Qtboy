@@ -1,3 +1,4 @@
+/*
 #include "tile_tab.h"
 #include "qt_renderer.h"
 #include <QGridLayout>
@@ -5,7 +6,7 @@
 #include <QHBoxLayout>
 #include <QFormLayout>
 
-Tile_tab::Tile_tab(gameboy::System *s)
+Tile_tab::Tile_tab(qtboy::Gameboy *s)
     : debugger_ {s},
       renderer_ {new Qt_renderer(128, 192)},
       tilemap_ {new QLabel},
@@ -43,7 +44,7 @@ void Tile_tab::resizeEvent(QResizeEvent *)
 
 QPixmap Tile_tab::load_tilemap(bool idx)
 {
-    std::array<gameboy::Texture, 384> tiles(debugger_.dump_tileset(idx));
+    std::array<qtboy::Texture, 384> tiles(debugger_.dump_tileset(idx));
     for (unsigned i = 0; i < tiles.size(); ++i)
     {
         int x = (i%16) * 8; // 16 tiles per row, 8 pixels per tile
@@ -69,3 +70,4 @@ void Tile_tab::button1ClickedEvent()
 {
     display_tilemap(1);
 }
+*/

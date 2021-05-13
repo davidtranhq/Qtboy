@@ -1,3 +1,4 @@
+/*
 #include "palette_tab.h"
 
 #include "system.hpp"
@@ -8,10 +9,10 @@
 #include <QPixmap>
 #include <QLabel>
 
-using gameboy::Palette;
-using gameboy::Ppu;
+using qtboy::Palette;
+using qtboy::Ppu;
 
-Palette_tab::Palette_tab(gameboy::System *s, QWidget *parent)
+Palette_tab::Palette_tab(qtboy::Gameboy *s, QWidget *parent)
     : QWidget(parent),
       debugger_(s)
 {
@@ -28,7 +29,7 @@ Palette_tab::Palette_tab(gameboy::System *s, QWidget *parent)
     setLayout(layout);
 }
 
-QLabel *Palette_tab::create_swatch(const gameboy::Color &c)
+QLabel *Palette_tab::create_swatch(const qtboy::Color &c)
 {
     QPixmap pix(50, 20);
     double b = (c & 0x1f) / 0x1f;
@@ -41,7 +42,7 @@ QLabel *Palette_tab::create_swatch(const gameboy::Color &c)
 }
 
 QVBoxLayout *Palette_tab::create_palette_views(Palette_type t,
-    const std::array<gameboy::Palette, 8> &pals,
+    const std::array<qtboy::Palette, 8> &pals,
     const std::array<uint8_t, 64> &raw_pals)
 {
     QVBoxLayout *palette_view = new QVBoxLayout;
@@ -61,7 +62,7 @@ QVBoxLayout *Palette_tab::create_palette_views(Palette_type t,
         for (uint8_t col = 0; col < 4; ++col)
         {
             // create swatch
-            gameboy::Color c = pals[pal][col];
+            qtboy::Color c = pals[pal][col];
             QLabel *swatch = create_swatch(c);
             // create color label (#xxxx)
             uint16_t color_value = static_cast<uint16_t>(
@@ -76,3 +77,4 @@ QVBoxLayout *Palette_tab::create_palette_views(Palette_type t,
     }
     return palette_view;
 }
+*/

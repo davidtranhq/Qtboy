@@ -6,7 +6,7 @@
 #include <vector>
 #include <string>
 
-namespace gameboy
+namespace qtboy
 {
 	
 class Disassembler

@@ -8,7 +8,7 @@
 
 #include "graphic_types.hpp"
 
-namespace gameboy
+namespace qtboy
 {
 
 class Renderer;

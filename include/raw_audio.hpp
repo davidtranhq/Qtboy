@@ -4,7 +4,7 @@
 #include <vector>
 #include <cstdint>
 
-namespace gameboy
+namespace qtboy
 {
 
 // PCM codec

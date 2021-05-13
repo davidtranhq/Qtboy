@@ -6,7 +6,7 @@
 
 #include "debug_types.hpp"
 
-namespace gameboy
+namespace qtboy
 {
 
 class Rom

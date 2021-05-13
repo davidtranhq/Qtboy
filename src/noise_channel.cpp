@@ -1,7 +1,7 @@
 #include "noise_channel.hpp"
 #include <cstdint>
 
-using namespace gameboy;
+using namespace qtboy;
 
 uint8_t Noise_channel::read_reg(uint16_t adr)
 {

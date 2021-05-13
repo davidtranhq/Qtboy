@@ -5,7 +5,7 @@
 
 #include "debug_types.hpp"
 
-namespace gameboy
+namespace qtboy
 {
 
 template <uint16_t bank_sz>

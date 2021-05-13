@@ -1,3 +1,4 @@
+/*
 #include "tile.h"
 
 Tile::Tile()
@@ -34,3 +35,4 @@ const QImage &Tile::image() const
 {
     return img_;
 }
+*/

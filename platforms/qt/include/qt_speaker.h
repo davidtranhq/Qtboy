@@ -7,15 +7,17 @@
 #include <QObject>
 #include <SDL_audio.h>
 
-class Qt_speaker : public QObject, public gameboy::Speaker
+class Qt_speaker : public QObject, public qtboy::Speaker
 {
     Q_OBJECT
 
     public:
-    explicit Qt_speaker();
+    explicit Qt_speaker(QObject *parent = nullptr);
+    virtual ~Qt_speaker();
 
-    void queue_samples(const gameboy::Raw_audio &a) override;
+    void queue_samples(const qtboy::Raw_audio &a) override;
     int samples_queued() override;
+    void clear_samples() override;
 
     private:
     int buffer_size_ {};

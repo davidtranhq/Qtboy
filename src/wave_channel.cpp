@@ -1,6 +1,6 @@
 #include "wave_channel.hpp"
 
-using namespace gameboy;
+using namespace qtboy;
 
 uint8_t Wave_channel::read_reg(uint16_t adr)
 {

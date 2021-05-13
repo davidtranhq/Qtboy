@@ -2,7 +2,7 @@
 
 #include <exception>
 
-namespace gameboy
+namespace qtboy
 {
 	
 class Exception : public std::exception

@@ -7,7 +7,7 @@ Qt_renderer::Qt_renderer(unsigned w, unsigned h, QObject *parent)
       w_ {w}, h_ {h}, buf_(2*w*h)
 {}
 
-void Qt_renderer::draw_texture(const gameboy::Texture &t,
+void Qt_renderer::draw_texture(const qtboy::Texture &t,
                                unsigned x_off, unsigned y_off)
 {
     const unsigned int w {t.width()};
@@ -23,7 +23,7 @@ void Qt_renderer::draw_texture(const gameboy::Texture &t,
                 continue;
             int j = y*w_+x;
             // represent in RGB555
-            gameboy::Color c = t.pixel(i);
+            qtboy::Color c = t.pixel(i);
             buf_[2*j] = c & 0xff;
             buf_[2*j+1] = c >> 8;
         }

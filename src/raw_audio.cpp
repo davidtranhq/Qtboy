@@ -1,6 +1,6 @@
 #include "raw_audio.hpp"
 
-using namespace gameboy;
+using namespace qtboy;
 
 Raw_audio::Raw_audio(std::size_t buffer_size)
 {

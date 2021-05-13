@@ -30,7 +30,7 @@
 #define SET_BIT(b, n) b |= (1UL << n)
 #define CLEAR_BIT(b, n) b &= ~(1UL << n)
 
-namespace gameboy
+namespace qtboy
 {
 
 Processor::Processor(std::function<uint8_t(uint16_t)> rd,
@@ -58,6 +58,11 @@ void Processor::reset(bool force_dmg)
     di_set_ = false;
     halt_bug_ = false;
     double_speed_ = false;
+}
+
+void Processor::add_cycles(uint32_t c)
+{
+    cycles_ += c;
 }
 
 std::vector<uint8_t> Processor::next_ops(uint16_t n) const

@@ -7,7 +7,7 @@
 #include "rom.hpp"
 #include "ram.hpp"
 
-namespace gameboy
+namespace qtboy
 {
 
 class Memory_bank_controller

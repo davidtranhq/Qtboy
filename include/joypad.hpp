@@ -4,7 +4,7 @@
 #include <cstdint>
 #include <bitset>
 
-namespace gameboy
+namespace qtboy
 {
 
 class Processor;

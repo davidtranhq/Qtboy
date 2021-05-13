@@ -4,7 +4,7 @@
 #include "ram.hpp"
 #include "exception.hpp"
 
-namespace gameboy
+namespace qtboy
 {
 
 Mbc5::Mbc5(Rom *rom, std::optional<External_ram> *ram)

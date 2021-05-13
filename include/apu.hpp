@@ -5,13 +5,16 @@
 #include <bitset>
 #include <vector>
 #include <cstddef>
+#include <memory>
+#include <utility> // std::pair
 
 #include "square_channel.hpp"
 #include "wave_channel.hpp"
 #include "noise_channel.hpp"
 #include "raw_audio.hpp"
+#include "speaker.hpp"
 
-namespace gameboy
+namespace qtboy
 {
 
 class Speaker;
@@ -22,13 +25,15 @@ class Apu
     explicit Apu();
 
     void tick(std::size_t cycles);
-    void queue_samples();
     int samples_queued();
-    int samples_buffered();
     uint8_t read_reg(uint16_t adr);
     void write_reg(uint8_t b, uint16_t adr);
-    void set_speaker(Speaker *s);
+
+    // Set the speaker used for audio output.
+    void set_speaker(std::shared_ptr<Speaker> s);
     void reset();
+
+    // When disabled, all samples are reduced to 0 before being pushed to speaker.
     void toggle_sound(bool b);
 
     public:
@@ -37,15 +42,20 @@ class Apu
     static constexpr int SAMPLE_SIZE {1024};
 
     private:
+    // Mix the samples from the 4 audio channels to generate a left/right sample pair.
+    std::pair<uint8_t, uint8_t> mix_samples(uint8_t square1,
+                                            uint8_t square2,
+                                            uint8_t wave,
+                                            uint8_t noise);
     // downsample = clockfreq/samplingrate
     // 4.93MHz/44100
     static constexpr int DOWNSAMPLE_FREQ {4194304/SAMPLE_RATE};
 
-    Speaker *speaker_ {nullptr};
+    std::shared_ptr<Speaker> speaker_ {nullptr};
     Square_channel square1_ {};
     Square_channel square2_ {};
-    Noise_channel noise_ {};
     Wave_channel wave_ {};
+    Noise_channel noise_ {};
     Raw_audio samples_;
     uint8_t volume_ {0x77}; // ff24
     uint8_t output_ {0xf3}; // ff25

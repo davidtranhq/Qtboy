@@ -1,6 +1,5 @@
 #include <QtWidgets>
 #include "mainwindow.h"
-#include "disassemblerwindow.h"
 #include "debuggerwindow.h"
 #include "vram_window.h"
 #include "qt_speaker.h"
@@ -8,75 +7,106 @@
 #include <chrono>
 #include <sstream>
 
-MainWindow::MainWindow(QWidget *parent)
+MainWindow::MainWindow(QWidget *parent,
+                       const QString &title)
     : QMainWindow {parent},
-      renderer_ {new Qt_renderer(160, 144)},
-      speaker_ {new Qt_speaker},
-      display {new QLabel}
+      system_ {std::make_shared<qtboy::Gameboy>()},
+      display_ {new QLabel(this)},
+      renderer_ {new Qt_renderer(160, 144, this)},
+      speaker_ {new Qt_speaker(this)},
+      fpsTimer_ {new QTimer(this)},
+      title_ {title}
 {
-    system_.set_renderer(renderer_);
-    system_.set_speaker(speaker_);
+    setCentralWidget(display_);
+    setWindowTitle(title);
+
+    display_->setScaledContents(true);
+    display_->setMinimumSize(160, 144);
+
+    system_->set_renderer(renderer_);
+    system_->set_speaker(speaker_);
+
+    fpsTimer_->setInterval(1000);
+    fpsTimer_->callOnTimeout(this, &MainWindow::updateFps);
+    fpsTimer_->start();
+
+    connect(renderer_, SIGNAL(present_screen()), this, SLOT(updateDisplay()));
     createActions();
-    display->setScaledContents(true);
-    display->setMinimumSize(160, 144);
-    setCentralWidget(display);
-    connect(renderer_, SIGNAL(present_screen()), this, SLOT(update_display()));
 }
 
 
 void MainWindow::loadRom(const QString &fileName)
 {
-    system_.reset();
-    system_.load_cartridge(fileName.toStdString());
-    system_.run_concurrently();
+    system_->reset();
+    system_->load_cartridge(fileName.toStdString());
+    system_->run_concurrently();
 }
 
 void MainWindow::keyPressEvent(QKeyEvent *event)
 {
-    auto controls = controls_;
     auto key = event->key();
-    if (key == controls_.b)
-        system_.press(gameboy::Joypad::Input::B);
-    else if (key == controls.a)
-        system_.press(gameboy::Joypad::Input::A);
-    else if (key == controls.up)
-        system_.press(gameboy::Joypad::Input::Up);
-    else if (key == controls.down)
-        system_.press(gameboy::Joypad::Input::Down);
-    else if (key == controls.left)
-        system_.press(gameboy::Joypad::Input::Left);
-    else if (key == controls.right)
-        system_.press(gameboy::Joypad::Input::Right);
-    else if (key == controls.select)
-        system_.press(gameboy::Joypad::Input::Select);
-    else if (key == controls.start)
-        system_.press(gameboy::Joypad::Input::Start);
-    else if (key == controls.turbo)
-        system_.set_throttle(0.0);
+    if (key == controls_.a)
+        system_->press(qtboy::Joypad::Input::A);
+    else if (key == controls_.b)
+        system_->press(qtboy::Joypad::Input::B);
+    else if (key == controls_.up)
+        system_->press(qtboy::Joypad::Input::Up);
+    else if (key == controls_.down)
+        system_->press(qtboy::Joypad::Input::Down);
+    else if (key == controls_.left)
+        system_->press(qtboy::Joypad::Input::Left);
+    else if (key == controls_.right)
+        system_->press(qtboy::Joypad::Input::Right);
+    else if (key == controls_.select)
+        system_->press(qtboy::Joypad::Input::Select);
+    else if (key == controls_.start)
+        system_->press(qtboy::Joypad::Input::Start);
+    else if (key == controls_.turbo)
+        system_->set_throttle(false);
 }
 
 void MainWindow::keyReleaseEvent(QKeyEvent *event)
 {
-    auto controls = controls_;
     auto key = event->key();
-    if (key == controls_.b)
-        system_.release(gameboy::Joypad::Input::B);
-    else if (key == controls.a)
-        system_.release(gameboy::Joypad::Input::A);
-    else if (key == controls.up)
-        system_.release(gameboy::Joypad::Input::Up);
-    else if (key == controls.down)
-        system_.release(gameboy::Joypad::Input::Down);
-    else if (key == controls.left)
-        system_.release(gameboy::Joypad::Input::Left);
-    else if (key == controls.right)
-        system_.release(gameboy::Joypad::Input::Right);
-    else if (key == controls.select)
-        system_.release(gameboy::Joypad::Input::Select);
-    else if (key == controls.start)
-        system_.release(gameboy::Joypad::Input::Start);
-    else if (key == controls.turbo)
-        system_.set_throttle(1.0);
+    if (key == controls_.a)
+        system_->release(qtboy::Joypad::Input::A);
+    else if (key == controls_.b)
+        system_->release(qtboy::Joypad::Input::B);
+    else if (key == controls_.up)
+        system_->release(qtboy::Joypad::Input::Up);
+    else if (key == controls_.down)
+        system_->release(qtboy::Joypad::Input::Down);
+    else if (key == controls_.left)
+        system_->release(qtboy::Joypad::Input::Left);
+    else if (key == controls_.right)
+        system_->release(qtboy::Joypad::Input::Right);
+    else if (key == controls_.select)
+        system_->release(qtboy::Joypad::Input::Select);
+    else if (key == controls_.start)
+        system_->release(qtboy::Joypad::Input::Start);
+    else if (key == controls_.turbo)
+        system_->set_throttle(true);
+}
+
+void MainWindow::updateDisplay()
+{
+    QImage img {renderer_->image()};
+    Qt::TransformationMode transformation_mode = prefs_.antialiasing
+            ? Qt::SmoothTransformation
+            : Qt::FastTransformation;
+    display_->setPixmap(QPixmap::fromImage(img).scaled(
+                           centralWidget()->width(),
+                           centralWidget()->height(),
+                           Qt::IgnoreAspectRatio,
+                           transformation_mode));
+    ++frames_;
+}
+
+void MainWindow::updateFps()
+{
+    QString newTitle {title_ + " - FPS: " + QString::number(frames_)};
+    setWindowTitle(newTitle);
+    frames_ = 0;
 }
 
 void MainWindow::openRom()
@@ -86,22 +116,21 @@ void MainWindow::openRom()
         loadRom(fileName);
 }
 
-void MainWindow::showDisassembler()
-{
-    auto disassembler = new DisassemblerWindow(this, &system_);
-    disassembler->show();
-}
-
 void MainWindow::showDebugger()
 {
-    auto *debug_window = new Debugger_window(this, &debugger_);
-    debug_window->show();
+    /*
+    if (!debuggerWindow_)
+        debuggerWindow_ = new DebuggerWindow(system_, this);
+    debuggerWindow_->show();
+    */
 }
 
 void MainWindow::showVramViewer()
 {
-    auto *vram_viewer = new Vram_window(&system_);
-    vram_viewer->show();
+    /*
+     auto *vram_viewer = new Vram_window(system_);
+     vram_viewer->show();
+     */
 }
 
 
@@ -118,86 +147,73 @@ void MainWindow::toggleAntiAlias(bool b)
 
 void MainWindow::toggleForceDmg(bool b)
 {
-    prefs_.force_dmg = b;
-    system_.force_dmg = b;
+    system_->set_force_dmg(b);
 }
 
-void MainWindow::openCustomPaletteWindow()
-{
-
-}
 
 void MainWindow::toggleSound(bool b)
 {
-    system_.toggle_sound(b);
+    system_->toggle_sound(b);
 }
 
-void MainWindow::update_display()
+QMenu *MainWindow::createMenu(const QString &name)
 {
-    QImage img {renderer_->image()};
-    Qt::TransformationMode transformation_mode = prefs_.antialiasing
-            ? Qt::SmoothTransformation
-            : Qt::FastTransformation;
-    display->setPixmap(QPixmap::fromImage(img).scaled(
-                           centralWidget()->width(),
-                           centralWidget()->height(),
-                           Qt::IgnoreAspectRatio,
-                           transformation_mode));
-    static auto last = std::chrono::high_resolution_clock::now();
-    static auto last_frame = last;
-    static int frames = 0, skipped_frames = 0;
-    auto now = std::chrono::high_resolution_clock::now();
-    uint64_t elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(now-last).count();
-    uint64_t frame_time = std::chrono::duration_cast<std::chrono::milliseconds>(now-last_frame).count();
-    if (frame_time < 5)
-    {
-        ++skipped_frames;
-    }
-    ++frames;
-    std::cout << frame_time << std::endl;
-    if (elapsed >= 1000)
-    {
-        std::ostringstream oss;
-        oss << "QtBoy - FPS: " << frames << ", skipped frames: " << skipped_frames;
-        setWindowTitle(QString::fromStdString(oss.str()));
-        frames = 0;
-        skipped_frames = 0;
-        last = now;
-    }
-    last_frame = now;
+    return menuBar()->addMenu(name);
 }
 
+QAction *MainWindow::createSingleAction(const QString &name,
+                                        QMenu *menu,
+                                        void (MainWindow::*slot)())
+{
+    if (!menu)
+        throw std::runtime_error {"Cannot add single action to menu pointing to null"};
+    return menu->addAction(name, this, slot);
+}
+
+QAction *MainWindow::createCheckableAction(const QString &name,
+                                           QMenu *menu,
+                                           void (MainWindow::*slot)(bool),
+                                           bool initiallyChecked)
+{
+    if (!menu)
+        throw std::runtime_error {"Cannot add checkable action to menu pointing to null"};
+    QAction *action = new QAction(name, this);
+    action->setCheckable(true);
+    action->setChecked(initiallyChecked);
+    connect(action, &QAction::toggled, this, slot);
+    menu->addAction(action);
+    return action;
+}
 
 void MainWindow::createActions()
 {
-    QMenu *fileMenu = menuBar()->addMenu(tr("&File"));
-    QAction *openAct = fileMenu->addAction(tr("&Open"), this, &MainWindow::openRom);
+    // File menu
+    QMenu *fileMenu = createMenu(tr("&File"));
+    QAction *openAct = createSingleAction(tr("&Open"), fileMenu, &MainWindow::openRom);
     openAct->setShortcuts(QKeySequence::Open);
 
-    QMenu *optionsMenu = menuBar()->addMenu(tr("&Options"));
-    QAction *antiAliasAct = new QAction(tr("Anti-aliasing"), this);
-    antiAliasAct->setCheckable(true);
-    connect(antiAliasAct, SIGNAL(toggled(bool)), this, SLOT(toggleAntiAlias(bool)));
-    optionsMenu->addAction(antiAliasAct);
-    optionsMenu->addAction(tr("Custom Palettes"), this,
-                           &MainWindow::openCustomPaletteWindow);
-    QAction *forceDmgAct = new QAction(tr("Force DMG"), this);
-    forceDmgAct->setCheckable(true);
-    connect(forceDmgAct, SIGNAL(toggled(bool)), this, SLOT(toggleForceDmg(bool)));
-    optionsMenu->addAction(forceDmgAct);
+    // Options menu
+    QMenu *optionsMenu = createMenu(tr("&Options"));
+    createCheckableAction(tr("Anti-aliasing"),
+                          optionsMenu,
+                          &MainWindow::toggleAntiAlias);
+    createCheckableAction(tr("Force DMG"),
+                          optionsMenu,
+                          &MainWindow::toggleForceDmg,
+                          true);
+    createCheckableAction(tr("Enable Sound"),
+                          optionsMenu,
+                          &MainWindow::toggleSound,
+                          true);
 
-    QAction *enableSoundAct = new QAction(tr("Enable Sound"), this);
-    enableSoundAct->setCheckable(true);
-    enableSoundAct->setChecked(true);
-    connect(enableSoundAct, SIGNAL(toggled(bool)), this, SLOT(toggleSound(bool)));
-    optionsMenu->addAction(enableSoundAct);
+    /*
+    // Tools menu
+    QMenu *toolsMenu = createMenu(tr("&Tools"));
+    createSingleAction(tr("Debugger"), toolsMenu, &MainWindow::showDebugger);
+    createSingleAction(tr("VRAM Viewer"), toolsMenu, &MainWindow::showVramViewer);
+    */
 
-
-    QMenu *toolsMenu = menuBar()->addMenu(tr("&Tools"));
-    toolsMenu->addAction(tr("Disassemble"), this, &MainWindow::showDisassembler);
-    toolsMenu->addAction(tr("Debugger"), this, &MainWindow::showDebugger);
-    toolsMenu->addAction(tr("VRAM Viewer"), this, &MainWindow::showVramViewer);
-
-    QMenu *helpMenu = menuBar()->addMenu(tr("&Help"));
-    helpMenu->addAction(tr("&About"), this, &MainWindow::about);
+    // Help menu
+    QMenu *helpMenu = createMenu(tr("&Help"));
+    createSingleAction(tr("&About"), helpMenu, &MainWindow::about);
 }

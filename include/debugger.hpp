@@ -8,62 +8,82 @@
 #include <thread>
 #include <mutex>
 #include <atomic>
+#include <memory>
 
 #include "debug_types.hpp"
 #include "instruction_info.hpp"
 #include "ppu.hpp"
 #include "disassembler.hpp"
 
-namespace gameboy
+namespace qtboy
 {
 
-class System;
+class Gameboy;
 
 class Debugger
 {
     public:
-    explicit Debugger(System *);
+    // Construct a debugger attached to a Gameboy.
+    explicit Debugger(std::shared_ptr<Gameboy> g);
     ~Debugger();
 
-    void enable_debug(bool b);
-    void update();
+    // Enables or disables debug mode on the attached system.
+    void set_debug_mode(bool b);
+
+    // Passed to the system to be called after every CPU instruction.
+    bool cpu_callback();
+
+    // Passed to the system to be called after every memory write.
+    void memory_callback(uint8_t b, uint16_t adr);
+
+    // Run until a breakpoint is reached (continue).
     void run_until_break();
+
+    // Run, ignoring breakpoints.
     void run_no_break();
-    bool running();
-    void pause();
-    void step(size_t n = 1);
-    void reset();
+
+    // Adds a breakpoint at the specified address (0000h-ffffh)
     void add_breakpoint(uint16_t);
+
+    // Deletes the breakpoint at the specified address. If there is no breakpoint,
+    // nothing happens.
     void delete_breakpoint(uint16_t);
+
+    // Get all currently set breakpoints.
     const std::unordered_map<uint16_t, bool> &breakpoints() const;
-    void enable_logging(bool b = true);
-    bool set_log_file(const std::string &);
-    void write_log(); // write log to file
+
+    // Sets whether or not a CPU trace is output after every CPU instruction.
+    void set_logging(bool b);
+
+    // Sets the path for the output of the CPU trace. Returns true if the log file is valid.
+    bool set_log_file(const std::string &path);
+
+    // Writes a CPU trace to the file specified by set_log_file().
+    void write_log();
+
+    // Get how many CPU steps have been taken.
     size_t steps() const;
+
+    // Disassemble everything currently mapped in memory.
+    std::vector<Assembly> disassemble() const;
+
+    // Reset the debugger and the system.
+    void reset();
 
     void update_memory_cache() const;
     std::vector<uint8_t> dump_memory() const;
     std::string dump_formatted_memory(Dump_format d = Dump_format::Hex) const;
-    std::vector<uint8_t> dump_rom() const noexcept;
-    Cpu_dump dump_cpu() const noexcept;
-    Ppu::Dump dump_ppu() const noexcept;
-    std::array<Palette, 8> dump_bg_palettes() const;
-    std::array<Palette, 8> dump_sprite_palettes() const;
-    std::array<Texture, 384> dump_tileset(uint8_t bank);
-    Texture dump_framebuffer(bool with_bg = true, bool with_win = true,
-                             bool with_sprites = true) const;
-    Texture dump_background() const;
-    Texture dump_window() const;
-    std::array<Texture, 40> dump_sprites();
 
-    std::vector<Assembly> disassemble() const; // disassemble all
 
     private:
-    std::string log(); // return log as string
+    // Generate a CPU trace
+    std::string log();
+
+    // Check if execution is currently at a breakpoint.
     bool at_breakpoint();
 
     private:
-    System *system_ {nullptr};
+    std::shared_ptr<Gameboy> system_ {nullptr};
     Disassembler disassembler_ {};
     std::unordered_map<uint16_t, bool> breaks_ {false};
     size_t steps_ {0};

@@ -2,7 +2,7 @@
 
 #include <cstdint>
 
-namespace gameboy
+namespace qtboy
 {
 
 class Processor;

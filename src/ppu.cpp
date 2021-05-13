@@ -24,7 +24,7 @@
 #define GBC_CC_BR -0.05
 #define GBC_CC_BG 0.225
 
-using namespace gameboy;
+using namespace qtboy;
 
 Ppu::Ppu(Memory &m,
          Processor &p,
@@ -138,7 +138,7 @@ uint8_t Ppu::read_reg(uint16_t adr)
         case 0xff6b: b = obpd_[obpi_ & 0x3f]; break;
 
         default:
-            throw gameboy::Exception("Attempted to read invalid PPU register.",
+            throw qtboy::Exception("Attempted to read invalid PPU register.",
                                      __FILE__, __LINE__);
     }
     return b;
@@ -190,7 +190,7 @@ void Ppu::write_reg(uint8_t b, uint16_t adr)
         } break;
 
         default:
-            throw gameboy::Exception("Attempted to write invalid PPU register.",
+            throw qtboy::Exception("Attempted to write invalid PPU register.",
                                      __FILE__, __LINE__);
     }
 }

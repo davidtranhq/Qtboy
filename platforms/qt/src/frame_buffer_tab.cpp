@@ -1,3 +1,4 @@
+/*
 #include "frame_buffer_tab.h"
 #include "qt_renderer.h"
 #include "tile.h"
@@ -6,7 +7,7 @@
 #include <QFormLayout>
 #include <QCheckBox>
 
-Frame_buffer_tab::Frame_buffer_tab(gameboy::System *s)
+Frame_buffer_tab::Frame_buffer_tab(qtboy::Gameboy *s)
     : debugger_ {s},
       renderer_ {new Qt_renderer(256, 256)},
       framebuffer_ {new QLabel},
@@ -59,3 +60,4 @@ void Frame_buffer_tab::display()
     int w = fb->geometry().width(), h = fb->geometry().height();
     framebuffer_->setPixmap(renderer_->pixmap().scaled(w, h, Qt::KeepAspectRatio));
 }
+*/

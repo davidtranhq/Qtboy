@@ -5,7 +5,7 @@
 #include <vector>
 #include <algorithm>
 
-namespace gameboy
+namespace qtboy
 {
 
 template <uint16_t bank_sz>

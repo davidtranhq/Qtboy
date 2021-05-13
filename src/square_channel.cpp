@@ -1,7 +1,7 @@
 #include "square_channel.hpp"
 #include <cstdint>
 
-using namespace gameboy;
+using namespace qtboy;
 
 void Square_channel::tick(size_t cycles)
 {

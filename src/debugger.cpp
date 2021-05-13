@@ -7,77 +7,66 @@
 #include <iomanip>
 #include <cctype>
 
-namespace gameboy
+namespace qtboy
 {
 
-Debugger::Debugger(System *s)
-    : system_ {s}
+Debugger::Debugger(std::shared_ptr<Gameboy> g)
+    : system_ {std::move(g)}
 {
     if (!system_)
-        throw Bad_debugger {"Could not attach system to debugger",
-                            __FILE__, __LINE__};
-    // call update() every step
-    system_->set_debug_callback([this]{ update(); });
-    // initial load of memory
-    memory_map_ = system_->dump_memory();
+        throw std::runtime_error {"Could not construct Debugger from nullptr"};
+    // use update() as the debug_callback for Gameboy to be called after every CPU instruction
+    system_->set_cpu_debug_callback([this]{ return cpu_callback(); });
+    system_->set_memory_debug_callback([this](uint8_t b, uint16_t adr)
+    {
+        return memory_callback(b, adr);
+    });
+    // memory_map_ = system_->dump_mapped_memory();
 }
+
 
 Debugger::~Debugger()
 {
-    // set empty debug callback function
-    system_->set_debug_callback( std::function<void(void)>() );
-    system_->set_debug(false);
-    run_no_break();
+    if (!system_)
+        return;
+    // unset the debug_callback
+    system_->set_cpu_debug_callback({});
+    system_->set_memory_debug_callback({});
+    system_->set_debug_mode(false);
 }
 
-void Debugger::enable_debug(bool b)
+void Debugger::set_debug_mode(bool b)
 {
-    system_->set_debug(b);
+    system_->set_debug_mode(b);
 }
 
-void Debugger::update()
+// CPU callback handles logging and breakpoints.
+bool Debugger::cpu_callback()
 {
+    ++steps_;
     if (logging_)
         write_log();
     if (breaking_ && at_breakpoint())
-        pause();
+        // return true to request a CPU break
+        return true;
+    return false;
+}
+
+void Debugger::memory_callback(uint8_t b, uint16_t adr)
+{
+
 }
 
 void Debugger::run_until_break()
 {
     breaking_ = true;
-    system_->run_concurrently();
+    system_->resume();
 }
 
 void Debugger::run_no_break()
 {
     breaking_ = false;
-    system_->run_concurrently();
-}
-
-bool Debugger::running()
-{
-    return system_->is_running();
-}
-
-void Debugger::pause()
-{
-    system_->pause();
-}
-
-void Debugger::step(size_t n)
-{
-    system_->pause();
-    for (size_t i {0}; i < n; ++i)
-    {
-        system_->step(1);
-    }
-}
-
-void Debugger::reset()
-{
-    system_->reset();
-    steps_ = 0;
+    system_->resume();
 }
 
 void Debugger::add_breakpoint(uint16_t adr)
@@ -95,7 +84,7 @@ const std::unordered_map<uint16_t, bool> &Debugger::breakpoints() const
     return breaks_;
 }
 
-void Debugger::enable_logging(bool b)
+void Debugger::set_logging(bool b)
 {
     logging_ = b;
 }
@@ -114,9 +103,22 @@ bool Debugger::set_log_file(const std::string &path)
 void Debugger::write_log()
 {
     if (!log_file_.is_open())
+        // use "cpu.log" as the default log file if no path is specified
         log_file_.open("cpu.log");
     log_file_ << Debugger::log() << '\n';
 }
+
+size_t Debugger::steps() const
+{
+    return steps_;
+}
+
+void Debugger::reset()
+{
+    system_->reset();
+    steps_ = 0;
+}
+
 
 std::string Debugger::log()
 {
@@ -174,9 +176,10 @@ std::string Debugger::log()
     return out.str();
 }
 
-size_t Debugger::steps() const
+std::vector<Assembly> Debugger::disassemble() const
 {
-    return steps_;
+    const std::vector<uint8_t> &ops {dump_memory()};
+    return disassembler_.disassemble(ops);
 }
 
 void Debugger::update_memory_cache() const
@@ -261,7 +264,7 @@ void Debugger::update_memory_cache() const
 std::vector<uint8_t> Debugger::dump_memory() const
 {
     // check if changes to memory have been made and update accordingly
-    memory_map_ = system_->dump_memory();
+    memory_map_ = system_->dump_mapped_memory();
     // concatenate memory map into a series of bytes
     std::vector<uint8_t> out {};
     for (const std::string &r : Memory_range_names)
@@ -273,7 +276,7 @@ std::vector<uint8_t> Debugger::dump_memory() const
 
 std::string Debugger::dump_formatted_memory(Dump_format d) const
 {
-    memory_map_ = system_->dump_memory();
+    memory_map_ = system_->dump_mapped_memory();
     std::ostringstream dump {};
     std::ostringstream out {};
     out << std::hex << std::setfill('0');
@@ -340,68 +343,9 @@ std::string Debugger::dump_formatted_memory(Dump_format d) const
     return out.str();
 }
 
-std::vector<uint8_t> Debugger::dump_rom() const noexcept
-{
-    return system_->dump_rom();
-}
-
-Cpu_dump Debugger::dump_cpu() const noexcept
-{
-    return system_->dump_cpu();
-}
-
-Ppu::Dump Debugger::dump_ppu() const noexcept
-{
-    return system_->dump_ppu();
-}
-
-std::array<Palette, 8> Debugger::dump_bg_palettes() const
-{
-    return system_->dump_bg_palettes();
-}
-
-std::array<Palette, 8> Debugger::dump_sprite_palettes() const
-{
-    return system_->dump_sprite_palettes();
-}
-
-std::array<Texture, 384> Debugger::dump_tileset(uint8_t bank)
-{
-    return system_->dump_tileset(bank);
-}
-
-Texture Debugger::dump_framebuffer(bool with_bg, bool with_win,
-                                   bool with_sprites) const
-{
-    return system_->dump_framebuffer(with_bg, with_win, with_sprites);
-}
-
-Texture Debugger::dump_background() const
-{
-    return system_->dump_background();
-}
-
-Texture Debugger::dump_window() const
-{
-    return system_->dump_window();
-}
-
-
-std::array<Texture, 40> Debugger::dump_sprites()
-{
-    return system_->dump_sprites();
-}
-
-
-std::vector<Assembly> Debugger::disassemble() const
-{
-    const std::vector<uint8_t> &ops {dump_memory()};
-    return disassembler_.disassemble(ops);
-}
-
 bool Debugger::at_breakpoint()
 {
-    uint16_t pc {dump_cpu().pc};
+    uint16_t pc {system_->dump_cpu().pc};
     if (breaks_[pc])
     {
         std::cout << "Reached breakpoint " << std::hex << pc;
