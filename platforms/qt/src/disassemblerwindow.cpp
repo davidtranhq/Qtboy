@@ -1,12 +1,14 @@
+/*
 #include "disassemblerwindow.h"
 #include "disassembler.hpp"
 
 #include <QFont>
 #include <sstream>
 
-DisassemblerWindow::DisassemblerWindow(QWidget *parent, gameboy::System *s)
+DisassemblerWindow::DisassemblerWindow(std::shared_ptr<qtboy::Gameboy> g,
+                                       QWidget *parent)
     : QWidget {parent, Qt::Window},
-      debugger {s},
+      debugger {std::move(g)},
       mainLayout {new QVBoxLayout},
       goToLayout {new QHBoxLayout},
       goToPrompt {new QLineEdit},
@@ -36,3 +38,4 @@ void DisassemblerWindow::goToAddress()
     textArea->find(goToPrompt->text());
 }
 
+*/

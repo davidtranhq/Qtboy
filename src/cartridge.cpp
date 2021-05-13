@@ -9,7 +9,7 @@
 #include "rom.hpp"
 #include "ram.hpp"
 
-namespace gameboy
+namespace qtboy
 {	
 
 Cartridge::Cartridge(std::istream &is)

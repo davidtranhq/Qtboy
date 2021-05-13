@@ -10,7 +10,7 @@
 #include "disassembler.hpp"
 
 
-namespace gameboy
+namespace qtboy
 {
 
 class Processor
@@ -41,13 +41,14 @@ class Processor
     uint16_t sp() const noexcept { return sp_; }
     uint16_t pc() const noexcept { return pc_; }
     uint32_t cycles() const noexcept { return cycles_; }
+    // Manually add cycles to cycle count. This is useful for OAM DMA transfers: they need to take
+    // 160 machine cycles (640 clock cycles).
+    void add_cycles(uint32_t c);
     bool stopped() const noexcept { return stpd_; }
     bool halted() const noexcept { return hltd_; }
     bool double_speed() const noexcept { return double_speed_; }
 
     std::vector<uint8_t> next_ops(uint16_t n) const;
-
-
 
     private:
 

@@ -1,11 +1,12 @@
 #ifndef BREAKPOINT_WINDOW_H
 #define BREAKPOINT_WINDOW_H
+/*
 
 #include <QWidget>
 
 #include <unordered_map>
 
-namespace gameboy
+namespace qtboy
 {
 
 class Debugger;
@@ -21,7 +22,7 @@ class Breakpoint_window : public QWidget
     Q_OBJECT
 
     public:
-    Breakpoint_window(gameboy::Debugger *d, QWidget *parent = nullptr);
+    Breakpoint_window(qtboy::Debugger *d, QWidget *parent = nullptr);
 
     private slots:
     void add_breakpoint();
@@ -32,10 +33,11 @@ class Breakpoint_window : public QWidget
     void add_breakpoint_to_list(uint16_t adr);
 
     private:
-    gameboy::Debugger *debugger_;
+    qtboy::Debugger *debugger_;
     QLineEdit *breakpoint_adr_;
     QListWidget *breakpoint_list_;
     std::unordered_map<uint16_t, QLabel *> breakpoints_;
 };
+*/
 
 #endif // BREAKPOINT_WINDOW_H

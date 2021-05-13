@@ -6,7 +6,7 @@
 #define CLEAR_BIT(b, n) b &= ~(1UL << n)
 #define SET_BIT(b, n) b |= (1UL << n)
 
-namespace gameboy
+namespace qtboy
 {
 
 inline bool half_check(const uint8_t a, const uint8_t b, const uint8_t res)

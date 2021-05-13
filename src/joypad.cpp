@@ -1,7 +1,7 @@
 #include "joypad.hpp"
 #include "processor.hpp"
 
-using gameboy::Joypad;
+using qtboy::Joypad;
 
 #define CHANGE_BIT(b, n, x) b ^= (-x ^ b) & (1UL << n)
 #define CLEAR_BIT(b, n) b &= ~(1UL << n)

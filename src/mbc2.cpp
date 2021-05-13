@@ -4,7 +4,7 @@
 #include "ram.hpp"
 #include "exception.hpp"
 
-namespace gameboy
+namespace qtboy
 {
 
 Mbc2::Mbc2(Rom *rom)

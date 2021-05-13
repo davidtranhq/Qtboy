@@ -1,6 +1,6 @@
 #include "exception.hpp"
 
-namespace gameboy
+namespace qtboy
 {
 
 Exception::Exception(const char *msg, const char *file, size_t ln)

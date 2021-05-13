@@ -1,6 +1,6 @@
 #include "speaker.hpp"
 
-using namespace gameboy;
+using namespace qtboy;
 
 void Speaker::toggle(bool b)
 {

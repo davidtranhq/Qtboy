@@ -8,6 +8,9 @@ greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
 INCLUDEPATH += ../../../include \
                ../include \
+               "C:\Program Files\mingw-w64\dev_lib\include\SDL2" # path to SDL2 includes
+
+LIBS += -L"C:\Program Files\mingw-w64\dev_lib\lib" -lmingw32 -lSDL2main -lSDL2 # path to SDL2 libraries
 
 SOURCES += \
     ../../../src/apu.cpp \
@@ -18,7 +21,6 @@ SOURCES += \
     ../../../src/exception.cpp \
     ../../../src/graphic_types.cpp \
     ../../../src/instructions.cpp \
-#    ../../../src/main.cpp \
     ../../../src/joypad.cpp \
     ../../../src/mbc1.cpp \
     ../../../src/mbc2.cpp \
@@ -29,22 +31,19 @@ SOURCES += \
     ../../../src/ppu.cpp \
     ../../../src/processor.cpp \
     ../../../src/ram.cpp \
+    ../../../src/raw_audio.cpp \
     ../../../src/reusable_thread.cpp \
     ../../../src/rom.cpp \
     ../../../src/speaker.cpp \
     ../../../src/square_channel.cpp \
     ../../../src/system.cpp \
-    ../../../src/thread_safe_system.cpp \
     ../../../src/timer.cpp \
     ../../../src/wave_channel.cpp \
     ../src/breakpoint_window.cpp \
-    ../src/debugger_thread.cpp \
     ../src/debuggerwindow.cpp \
-    ../src/disassemblerwindow.cpp \
     ../src/frame_buffer_tab.cpp \
     ../src/main.cpp \
     ../src/mainwindow.cpp \
-    ../src/memory_viewer.cpp \
     ../src/memoryviewer.cpp \
     ../src/palette_tab.cpp \
     ../src/qt_renderer.cpp \
@@ -57,7 +56,6 @@ SOURCES += \
 
 HEADERS += \
     ../../../include/apu.hpp \
-    ../../../include/audio_types.hpp \
     ../../../include/cartridge.hpp \
     ../../../include/debug_types.hpp \
     ../../../include/debugger.hpp \
@@ -72,6 +70,7 @@ HEADERS += \
     ../../../include/ppu.hpp \
     ../../../include/processor.hpp \
     ../../../include/ram.hpp \
+    ../../../include/raw_audio.hpp \
     ../../../include/register_pair.hpp \
     ../../../include/renderer.hpp \
     ../../../include/reusable_thread.hpp \
@@ -79,21 +78,17 @@ HEADERS += \
     ../../../include/speaker.hpp \
     ../../../include/square_channel.hpp \
     ../../../include/system.hpp \
-    ../../../include/thread_safe_system.hpp \
     ../../../include/timer.hpp \
     ../../../include/wave_channel.hpp \
     ../include/breakpoint_window.h \
     ../include/custom_palette_window.h \
-    ../include/debugger_thread.h \
+#    ../include/debugger_thread.h \
     ../include/debuggerwindow.h \
-    ../include/disassemblerwindow.h \
     ../include/frame_buffer_tab.h \
     ../include/mainwindow.h \
-    ../include/memory_viewer.h \
     ../include/memoryviewer.h \
     ../include/qt_renderer.h \
     ../include/qt_speaker.h \
-#    ../include/sdl_speaker.h \
     ../include/sprite_tab.h \
     ../include/tile.h \
     ../include/tile_tab.h \

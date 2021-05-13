@@ -1,59 +1,45 @@
-#include "debuggerwindow.h"
-#include "debugger.hpp"
-#include "qt_renderer.h"
-#include "debug_types.hpp"
-#include "breakpoint_window.h"
-#include "debugger_thread.h"
+/*
 
-#include <QTextCursor>
-#include <QScrollBar>
-#include <QCoreApplication>
-#include <QMessageBox>
+#include "debuggerwindow.h"
+#include "memoryviewer.h"
+#include "system.hpp"
+
+#include <memory> // std::shared_ptr
+
+#include <QPushButton>
+#include <QLineEdit>
+#include <QLabel>
+#include <QHBoxLayout>
+#include <QGridLayout>
 #include <QCheckBox>
 
-#include <sstream>
-#include <iomanip>
-#include <cstdlib>
-
-#include "memory_viewer.h"
-
-Q_DECLARE_METATYPE(gameboy::Cpu_dump);
-
-Debugger_window::Debugger_window(QWidget *parent, gameboy::Debugger *d)
+DebuggerWindow::DebuggerWindow(std::shared_ptr<qtboy::Gameboy> g, QWidget *parent)
     : QWidget {parent, Qt::Window},
-      debugger_ {d},
-      disassembler_ {},
-      rom_viewer_(new Memory_viewer(this)),
-      memory_viewer_(new Memory_viewer(this)),
-      stack_viewer_(new Memory_viewer(this))
+      system_ {g},
+      debugger_ {std::move(g)},
+      rom_viewer_(new MemoryViewer(this)),
+      memory_viewer_(new MemoryViewer(this)),
+      stack_viewer_(new MemoryViewer(this))
 {
-    if (!d)
-        throw std::runtime_error("Unable to start debugger: Invalid pointer");
     // enable debugging on system and pause the emulator when window is opened
-    debugger_->enable_debug(true);
-    debugger_->pause();
+    debugger_.set_debug_mode(true);
+    system_->pause();
     // create widgets, connect signals and slots
     create_layout();
-    // run seperate debug thread to continuously check for updates
-    qRegisterMetaType<gameboy::Cpu_dump>();
-    connect(&debug_thread_, &Debugger_thread::info_ready,
-            this, &Debugger_window::update_info);
-    debug_thread_.start();
 }
 
-void Debugger_window::closeEvent(QCloseEvent *event)
+void DebuggerWindow::closeEvent(QCloseEvent *event)
 {
-    debugger_->enable_debug(false);
+    debugger_.set_debug_mode(false);
     // resume emulator when window is closed
-    debugger_->run_no_break();
+    debugger_.run_no_break();
 }
 
-void Debugger_window::create_layout()
+void DebuggerWindow::create_layout()
 {
     auto *run = new QPushButton(tr("Run"));
     auto *run_until_break = new QPushButton(tr("Run until break"));
     auto *step = new QPushButton(tr("Step"));
-    auto *stepN = new QPushButton(tr("Step n"));
     steps_to_take_ = new QLineEdit;
     auto *reset = new QPushButton(tr("Reset"));
     auto *breakpoints = new QPushButton(tr("Breakpoints"));
@@ -64,7 +50,6 @@ void Debugger_window::create_layout()
     connect(run, SIGNAL(clicked()), this, SLOT(run_no_break()));
     connect(run_until_break, SIGNAL(clicked()), this, SLOT(run_until_break()));
     connect(step, SIGNAL(clicked()), this, SLOT(step()));
-    connect(stepN, SIGNAL(clicked()), this, SLOT(stepN()));
     connect(reset, SIGNAL(clicked()), this, SLOT(reset()));
     connect(breakpoints, SIGNAL(clicked()), this, SLOT(openBreakpointWindow()));
     connect(pause, SIGNAL(clicked()), this, SLOT(pause()));
@@ -118,7 +103,7 @@ void Debugger_window::create_layout()
     setLayout(mainLayout);
 }
 
-void Debugger_window::update_info(const gameboy::Cpu_dump &dump,
+void DebuggerWindow::update_info(const qtboy::Cpu_dump &dump,
                                   const QString &disassembly,
                                   const QString &memory,
                                   const QString &stack)
@@ -131,7 +116,7 @@ void Debugger_window::update_info(const gameboy::Cpu_dump &dump,
     sp_->setText(QStringLiteral("SP: %1").arg(dump.sp, 4, 16, QChar('0')));
     pc_->setText(QStringLiteral("PC: %1").arg(dump.pc, 4, 16, QChar('0')));
     cycles_->setText(QStringLiteral("Cycles: %1").arg(dump.cycles));
-    steps_->setText(QStringLiteral("Steps taken: %1").arg(debugger_->steps()));
+    steps_->setText(QStringLiteral("Steps taken: %1").arg(debugger_.steps()));
 
     // update contents in memory viewers
     rom_viewer_->update(disassembly);
@@ -141,7 +126,7 @@ void Debugger_window::update_info(const gameboy::Cpu_dump &dump,
     rom_viewer_->make_selection(dump.pc, Qt::cyan);
     stack_viewer_->make_selection(dump.sp, Qt::cyan);
     // select lines with breakpoints
-    std::unordered_map<uint16_t, bool> breakpoints = debugger_->breakpoints();
+    std::unordered_map<uint16_t, bool> breakpoints = debugger_.breakpoints();
     for (const auto &b : breakpoints)
         if (b.second)
             rom_viewer_->make_selection(b.first, Qt::red);
@@ -150,44 +135,40 @@ void Debugger_window::update_info(const gameboy::Cpu_dump &dump,
     stack_viewer_->highlight_lines();
 }
 
-void Debugger_window::run_no_break()
+void DebuggerWindow::run_no_break()
 {
-    debugger_->run_no_break();
+    debugger_.run_no_break();
 }
 
-void Debugger_window::run_until_break()
+void DebuggerWindow::run_until_break()
 {
-    debugger_->run_until_break();
+    debugger_.run_until_break();
 }
 
-void Debugger_window::step()
+void DebuggerWindow::step()
 {
-    debugger_->step(1);
+    system_->step(steps_to_take_->text().toULongLong());
 }
 
-void Debugger_window::stepN()
+void DebuggerWindow::reset()
 {
-    size_t n {steps_to_take_->text().toULongLong()};
-    debugger_->step(n);
+    system_->reset();
 }
 
-void Debugger_window::reset()
+void DebuggerWindow::pause()
 {
-    debugger_->reset();
+    system_->pause();
 }
 
-void Debugger_window::pause()
+void DebuggerWindow::openBreakpointWindow()
 {
-    debugger_->pause();
+    //auto *bp_win = new Breakpoint_window(debugger_);
+    //bp_win->show();
 }
 
-void Debugger_window::openBreakpointWindow()
+void DebuggerWindow::toggle_log(int state)
 {
-    auto *bp_win = new Breakpoint_window(debugger_);
-    bp_win->show();
+    debugger_.set_logging(state);
 }
 
-void Debugger_window::toggle_log(int state)
-{
-    debugger_->enable_logging(state);
-}
+*/

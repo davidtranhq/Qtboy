@@ -7,7 +7,7 @@
 #include <cstdint>
 #include <vector>
 
-namespace gameboy
+namespace qtboy
 {
 
 // for dumping memory

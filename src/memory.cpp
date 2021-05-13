@@ -9,7 +9,7 @@
 #include <cstdint>
 // #include <QDebug>
 
-namespace gameboy
+namespace qtboy
 {
 
 Memory::Memory(Processor &c, Ppu &p, Timer &t, Joypad &j, Apu &a)
@@ -173,13 +173,13 @@ uint8_t Memory::read(uint16_t adr) const
 void Memory::write(uint8_t b, uint16_t adr)
 {
     if (!cart_) // no cartridge inserted
-    {
         return;
-    }
-
+    if (debug_mode_)
+        debug_callback_(b, adr);
+    /*
     if (adr == 0xff02 && b == 0x81)
             // qStdOut() << static_cast<char>(read(0xff01));
-            std::cout << static_cast<char>(read(0xff01));
+            // std::cout << static_cast<char>(read(0xff01));
     // don't include ROM in memory logging b/c it shouldn't change
     // don't include echo RAM (WRAM log will handle it)
     // don't include unused portion
@@ -193,6 +193,7 @@ void Memory::write(uint8_t b, uint16_t adr)
         mb.val = b;
         log_.push_back(mb);
     }
+    */
 
     if (adr < 0x8000) // enabling flags (dependant on MBC)
     {
@@ -302,10 +303,10 @@ void Memory::write(uint8_t b, uint16_t adr)
                     hdma_src_ = static_cast<uint16_t>(
                                 (hdma_src_ & 0xff) | (b << 8));
                 } break;
-                case 0xff52: // HDMA src lo (ignore lo 4 bits)
+                case 0xff52: // HDMA src lo
                 {
                     b &= 0xf0;
-                    hdma_src_ = (hdma_src_ & 0xff00) | b;
+                    hdma_src_ = static_cast<uint16_t>((hdma_src_ & 0xff00) | b);
                 } break;
                 case 0xff53: // HDMA dst hi (upper 3 bits ignored), bit 7 always 1
                 {
@@ -359,6 +360,8 @@ Cartridge *Memory::load_cartridge(std::istream &is)
 {
     cart_ = std::make_unique<Cartridge>(is);
     set_ram_size();
+    if (cart_->is_cgb())
+        cgb_mode_ = true;
     return cart_.get();
 }
 
@@ -385,7 +388,7 @@ std::vector<uint8_t> Memory::dump_rom() const
     return (cart_ ? cart_->dump_rom() : std::vector<uint8_t> {});
 }
 
-std::unordered_map<std::string, Memory_range> Memory::dump() const
+std::unordered_map<std::string, Memory_range> Memory::dump_mapped() const
 {
     std::unordered_map<std::string, Memory_range> out;
     if (!cart_) // no cartridge loaded
@@ -446,13 +449,28 @@ std::vector<Memory_byte> Memory::log()
     return out;
 }
 
+void Memory::load_memory(const Memory::Dump &dump)
+{
+    vram_ = dump.vram;
+    wram_ = dump.wram;
+    oam_ = dump.oam;
+    io_ = dump.io;
+    hram_ = dump.hram;
+    ie_ = dump.ie;
+}
+
+Memory::Dump Memory::dump_memory() const
+{
+    return Memory::Dump {vram_, wram_, oam_, io_, hram_, ie_};
+}
+
 std::vector<uint8_t> Memory::dump_sram() const
 {
+    // no need to dump anything if nothing was written to SRAM
+    if (!sram_written_ || !cart_)
+        return std::vector<uint8_t> {};
     sram_written_ = false;
-    if (cart_)
-        return cart_->dump_ram();
-    else
-        throw std::runtime_error("Unable to dump SRAM: no cartridge is inserted");
+    return cart_->dump_ram();
 }
 
 bool Memory::sram_changed() const
@@ -511,22 +529,28 @@ void Memory::init_io()
 void Memory::oam_dma_transfer(uint8_t b)
 {
     if (b > 0xf1) // only defined for range between 00-f1
-        throw Bad_memory("Attempted to write value outside 00-f1"
-                         "to DMA register (ff46)\n", __FILE__, __LINE__);
+        throw std::runtime_error {"Attempted to write value outside 00-f1 for OAM DMA transfer"};
+    // make sure OAM is the correct size (not really necessary but just to make sure OAM DMA
+    // doesn't access out of bounds.
+    static_assert(std::tuple_size<decltype(oam_)>::value == 0xa0,
+                  "OAM is incorrect size, should be 0xa0)");
     // copy from XX00-XX9f to oam (fe00-fe9f), where XXh = b
-    for (uint8_t i {0}; i < oam_.size(); ++i)
+    for (uint8_t i {0}; i < 0x9f; ++i)
         oam_[i] = read(static_cast<uint16_t>(b << 8 | i));
+    // OAM DMA transfer should take 160 machine cycles (160*4 clock cycles)
+    cpu_.add_cycles(160*4);
 }
 
 void Memory::vram_dma_transfer(uint8_t b)
 {
-    hdma_len_ = b & 0x7f;
+    hdma_len_ = (b & 0x7f);
+    // uint8_t hdma_len = (b & 0x7f);
     // bit 7 is 0: GDMA (instant)
     if ((b & 0x80) == 0)
     {
         // if HDMA isn't active, do a GDMA
         if (!hdma_active_)
-            general_dma();
+            general_dma(hdma_len_);
         // if HDMA is active, stop it
         else
         {
@@ -540,7 +564,7 @@ void Memory::vram_dma_transfer(uint8_t b)
     }
 }
 
-void Memory::general_dma()
+void Memory::general_dma(uint8_t hdma_len)
 {
     // copy everything all at once
     for (uint16_t i = 0; i < (hdma_len_ & 0x7f); ++i)
@@ -579,6 +603,16 @@ void Memory::dma_copy()
     }
     hdma_src_ += 0x10;
     hdma_dest_ += 0x10;
+}
+
+void Memory::set_debug_mode(bool b)
+{
+    debug_mode_ = b;
+}
+
+void Memory::set_debug_callback(std::function<void(uint8_t, uint16_t)> fn)
+{
+    debug_callback_ = std::move(fn);
 }
 
 }

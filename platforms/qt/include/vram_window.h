@@ -1,6 +1,6 @@
 #ifndef VRAM_WINDOW_H
 #define VRAM_WINDOW_H
-
+/*
 #include <QWidget>
 #include <QTabWidget>
 #include <QLabel>
@@ -14,12 +14,13 @@ class Vram_window : public QTabWidget
 {
     Q_OBJECT
     public:
-    explicit Vram_window(gameboy::System *s);
+    explicit Vram_window(qtboy::Gameboy *s);
 
     private:
-    gameboy::System *system_;
+    qtboy::Gameboy *system_;
 
 
 };
+*/
 
 #endif // VRAM_WINDOW_H

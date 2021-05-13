@@ -1,5 +1,5 @@
-#include "audio_types.hpp"
+#include "raw_audio.hpp"
 
-using namespace gameboy;
+using namespace qtboy;
 
 

@@ -6,7 +6,7 @@
 
 #include <ctime>
 
-namespace gameboy
+namespace qtboy
 {
 
 Mbc3::Mbc3(Rom *rom, std::optional<External_ram> *ram)

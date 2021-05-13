@@ -3,7 +3,7 @@
 
 #include "ppu.hpp"
 
-namespace gameboy
+namespace qtboy
 {
 
 class Texture;

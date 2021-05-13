@@ -4,7 +4,7 @@
 #include <cstdint>
 #include <array>
 
-namespace gameboy
+namespace qtboy
 {
 
 class Square_channel

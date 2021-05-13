@@ -1,6 +1,6 @@
 #ifndef FRAME_BUFFER_TAB_H
 #define FRAME_BUFFER_TAB_H
-
+/*
 #include <QWidget>
 #include <QLabel>
 
@@ -14,7 +14,7 @@ class Frame_buffer_tab : public QWidget
 {
     Q_OBJECT
     public:
-    explicit Frame_buffer_tab(gameboy::System *s);
+    explicit Frame_buffer_tab(qtboy::Gameboy *s);
 
     private slots:
     void layersChangedEvent();
@@ -25,11 +25,12 @@ class Frame_buffer_tab : public QWidget
 
     private:
     enum Layers { Background, Window, Sprite };
-    gameboy::Debugger debugger_;
-    gameboy::Texture fb_texture_ {};
+    qtboy::Debugger debugger_;
+    qtboy::Texture fb_texture_ {};
     Qt_renderer *renderer_;
     QLabel *framebuffer_;
     QCheckBox *show_bg_, *show_window_, *show_sprites_, *show_viewport_;
 };
+*/
 
 #endif // Frame_buffer_tab_H

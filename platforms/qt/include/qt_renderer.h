@@ -8,14 +8,14 @@
 #include <QPixmap>
 #include <mutex>
 
-class Qt_renderer : public QObject, public gameboy::Renderer
+class Qt_renderer : public QObject, public qtboy::Renderer
 {
     Q_OBJECT
 
     public:
     explicit Qt_renderer(unsigned w, unsigned h, QObject *parent = nullptr);
 
-    void draw_texture(const gameboy::Texture &,
+    void draw_texture(const qtboy::Texture &,
                       unsigned x = 0, unsigned y = 0) override;
 
     void clear();

@@ -1,7 +1,7 @@
 #include "timer.hpp"
 #include "processor.hpp"
 
-using gameboy::Timer;
+using qtboy::Timer;
 
 Timer::Timer(Processor &p)
     : cpu_ {p}

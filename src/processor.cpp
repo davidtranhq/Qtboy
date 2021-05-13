@@ -1,4 +1,6 @@
 #include <iomanip>
+#include <chrono>
+#include <ctime>
 
 #include "processor.hpp"
 #include "register_pair.hpp"
@@ -28,7 +30,7 @@
 #define SET_BIT(b, n) b |= (1UL << n)
 #define CLEAR_BIT(b, n) b &= ~(1UL << n)
 
-namespace gameboy
+namespace qtboy
 {
 
 Processor::Processor(std::function<uint8_t(uint16_t)> rd,
@@ -56,6 +58,11 @@ void Processor::reset(bool force_dmg)
     di_set_ = false;
     halt_bug_ = false;
     double_speed_ = false;
+}
+
+void Processor::add_cycles(uint32_t c)
+{
+    cycles_ += c;
 }
 
 std::vector<uint8_t> Processor::next_ops(uint16_t n) const
@@ -106,6 +113,17 @@ bool Processor::execute_interrupt(Interrupt i)
     stpd_ = false;
     if (!ime_)
         return false; // don't service the interrupt if IME is disabled
+    /*
+    if (i == VBLANK)
+    {
+        static auto last = std::chrono::high_resolution_clock::now();
+        auto now = std::chrono::high_resolution_clock::now();
+        uint64_t frame_time = std::chrono::duration_cast<std::chrono::milliseconds>(now-last).count();
+        std::cout << "Frame time: " << frame_time << "ms\n";
+        last = now;
+    }
+    */
+
     write(pc_.hi, --sp_);
     write(pc_.lo, --sp_);
     pc_.hi = 0;

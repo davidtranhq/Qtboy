@@ -1,32 +1,29 @@
 #ifndef QT_SPEAKER_H
 #define QT_SPEAKER_H
 
-#include "audio_types.hpp"
+#include "raw_audio.hpp"
 #include "speaker.hpp"
 
 #include <QObject>
-#include <QAudioOutput>
+#include <SDL_audio.h>
 
-
-class QAudioOutput;
-class QIODevice;
-
-class Qt_speaker : public QObject, public gameboy::Speaker
+class Qt_speaker : public QObject, public qtboy::Speaker
 {
     Q_OBJECT
 
     public:
-    explicit Qt_speaker();
+    explicit Qt_speaker(QObject *parent = nullptr);
+    virtual ~Qt_speaker();
 
-    void push_samples(gameboy::Raw_audio<uint8_t> &a) override;
-
-    private slots:
-    void output_state_changed(const QAudio::State &);
+    void queue_samples(const qtboy::Raw_audio &a) override;
+    int samples_queued() override;
+    void clear_samples() override;
 
     private:
-    bool initial_buffer_ {true};
-    QAudioOutput *output_ {nullptr};
-    QIODevice *device_ {nullptr};
+    int buffer_size_ {};
+    SDL_AudioDeviceID device_id_;
 };
 
-#endif // QT_SPEAKER_H
+#endif // QT_SPEAKER_
+
+

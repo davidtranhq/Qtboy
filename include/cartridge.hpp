@@ -12,7 +12,7 @@
 #include "memory_bank_controller.hpp"
 #include "debug_types.hpp"
 
-namespace gameboy
+namespace qtboy
 {
 
 class Cartridge

@@ -4,7 +4,7 @@
 #include <stdexcept>
 #include <iomanip>
 
-namespace gameboy
+namespace qtboy
 {
 	
 Rom::Rom(std::istream &is)

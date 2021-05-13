@@ -5,7 +5,7 @@
 #include <array>
 #include <vector>
 
-namespace gameboy
+namespace qtboy
 {
 
 using Color = uint16_t;
@@ -37,5 +37,5 @@ struct Sprite
     uint8_t y, x, tile, attr, line, id;
 };
 
-} // namespace gameboy
+} // namespace qtboy
 #endif // GRAPHICS_H

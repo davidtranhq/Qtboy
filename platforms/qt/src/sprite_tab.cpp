@@ -1,9 +1,10 @@
+/*
 #include "sprite_tab.h"
 #include "qt_renderer.h"
 
 #include <QGridLayout>
 
-Sprite_tab::Sprite_tab(gameboy::System *s)
+Sprite_tab::Sprite_tab(qtboy::Gameboy *s)
     : debugger_ {s},
       renderer_ {new Qt_renderer(8, 8)},
       bg_ {new QLabel}
@@ -11,7 +12,7 @@ Sprite_tab::Sprite_tab(gameboy::System *s)
     auto sprites = debugger_.dump_sprites();
     QGridLayout *layout = new QGridLayout;
     int i = 0;
-    for (const gameboy::Texture &t : sprites)
+    for (const qtboy::Texture &t : sprites)
     {
         QLabel *label = new QLabel;
         renderer_->draw_texture(t);
@@ -22,3 +23,4 @@ Sprite_tab::Sprite_tab(gameboy::System *s)
     }
     setLayout(layout);
 }
+*/

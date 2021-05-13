@@ -1,15 +1,23 @@
 #ifndef SPEAKER_HPP
 #define SPEAKER_HPP
 
-#include "audio_types.hpp"
+#include "raw_audio.hpp"
 
-namespace gameboy
+namespace qtboy
 {
 
 class Speaker
 {
     public:
-    virtual void push_samples(Raw_audio<uint8_t> &a) = 0;
+    // Queue raw PCM samples in the audio buffer.
+    virtual void queue_samples(const Raw_audio &a) = 0;
+
+    // Get how many samples are queued in the audio buffer.
+    virtual int samples_queued() = 0;
+
+    // Clear the audio buffer.
+    virtual void clear_samples() = 0;
+
     void toggle(bool);
     bool enabled() const noexcept;
 

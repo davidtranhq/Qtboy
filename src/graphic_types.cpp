@@ -1,6 +1,6 @@
 #include "graphic_types.hpp"
 
-using namespace gameboy;
+using namespace qtboy;
 
 Texture::Texture(unsigned w, unsigned h)
     : w_ {w}, h_ {h}, data_(w*h), indices_(w*h)

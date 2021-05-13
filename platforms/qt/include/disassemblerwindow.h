@@ -1,6 +1,6 @@
 #ifndef DISASSEMBLERWINDOW_H
 #define DISASSEMBLERWINDOW_H
-
+/*
 #include "system.hpp"
 #include "disassembler.hpp"
 #include "debugger.hpp"
@@ -14,22 +14,24 @@
 class DisassemblerWindow : public QWidget
 {
     Q_OBJECT
-public:
-    explicit DisassemblerWindow(QWidget *parent, gameboy::System *s);
 
-signals:
+    public:
+    explicit DisassemblerWindow(std::shared_ptr<qtboy::Gameboy> g,
+                                QWidget *parent = nullptr);
 
-private slots:
+    signals:
+
+    private slots:
     void goToAddress();
 
 private:
-    gameboy::Debugger debugger;
-    gameboy::Disassembler dsmblr;
+    qtboy::Debugger debugger_;
+    qtboy::Disassembler dsmblr;
     QVBoxLayout *mainLayout;
     QHBoxLayout *goToLayout;
     QLineEdit *goToPrompt;
     QPushButton *goToButton;
     QTextEdit *textArea;
 };
-
+*/
 #endif // DISASSEMBLERWINDOW_H

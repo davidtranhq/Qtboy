@@ -1,3 +1,4 @@
+/*
 #include "vram_window.h"
 #include "system.hpp"
 #include "tile_tab.h"
@@ -6,7 +7,7 @@
 #include "window_tab.h"
 #include "palette_tab.h"
 
-Vram_window::Vram_window(gameboy::System *s)
+Vram_window::Vram_window(qtboy::Gameboy *s)
     :
       system_ {s}
 {
@@ -20,3 +21,4 @@ Vram_window::Vram_window(gameboy::System *s)
     addTab(sprite_tab, tr("Sprites"));
     addTab(palette_tab, tr("Palettes"));
 }
+*/

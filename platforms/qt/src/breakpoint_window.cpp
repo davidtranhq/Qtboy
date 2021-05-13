@@ -1,3 +1,4 @@
+/*
 #include "breakpoint_window.h"
 #include "debugger.hpp"
 
@@ -9,7 +10,7 @@
 #include <QListWidget>
 #include <QMessageBox>
 
-Breakpoint_window::Breakpoint_window(gameboy::Debugger *d,
+Breakpoint_window::Breakpoint_window(qtboy::Debugger *d,
                                      QWidget *parent)
     : QWidget(parent),
       debugger_ {d},
@@ -99,3 +100,4 @@ void Breakpoint_window::add_breakpoint_to_list(uint16_t adr)
     QListWidgetItem *new_bp = new QListWidgetItem(str);
     breakpoint_list_->insertItem(adr, new_bp);
 }
+*/

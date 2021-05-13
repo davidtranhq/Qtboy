@@ -8,7 +8,7 @@
 #include <iomanip>
 #include <iostream>
 
-namespace gameboy
+namespace qtboy
 {
 	
 Disassembler::Disassembler()
