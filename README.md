@@ -23,3 +23,15 @@ Space|Turbo
 ## Screenshots
 
 ![Pokemon Gold](docs/preview/pokemon_gold.png)![Link's Awakening](docs/preview/links_awakening.png)![Super Mario Land](docs/preview/super_mario_land.png)![Shantae](docs/preview/shantae.png)
+
+### Debugger
+
+![Debugger](docs/preview/debugger_preview.png)
+
+### Disassembler
+
+![Disassembler](docs/preview/disassembler_preview.png)
+
+### VRAM Viewer
+
+![VRAM Viewer](docs/preview/vram_viewer_preview.png)
