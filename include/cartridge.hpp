@@ -5,7 +5,7 @@
 #include <cstdint>
 #include <memory>
 #include <optional>
-#include <map>
+#include <unordered_map>
 
 #include "rom.hpp"
 #include "ram.hpp"

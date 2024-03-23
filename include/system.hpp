@@ -7,6 +7,7 @@
 #include <condition_variable>
 #include <atomic>
 #include <memory>
+#include <unordered_map>
 
 #include "processor.hpp"
 #include "memory.hpp"

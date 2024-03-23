@@ -9,6 +9,7 @@
 #include <mutex>
 #include <atomic>
 #include <memory>
+#include <unordered_map>
 
 #include "debug_types.hpp"
 #include "instruction_info.hpp"

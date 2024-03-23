@@ -2,16 +2,16 @@ TEMPLATE = app
 TARGET = QtBoy
 
 CONFIG += c++17 O3
-QT = gui core multimedia
+QT = gui core
 win32:RC_ICONS += QtBoy.ico
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
 INCLUDEPATH += ../../../include \
                ../include \
-               "C:\Program Files\mingw-w64\dev_lib\include\SDL2" # path to SDL2 includes
+               /opt/homebrew/opt/sdl2/include
 
-LIBS += -L"C:\Program Files\mingw-w64\dev_lib\lib" -lmingw32 -lSDL2main -lSDL2 # path to SDL2 libraries
+LIBS += -L/opt/homebrew/opt/sdl2/lib -lSDL2main -lSDL2 # path to SDL2 libraries
 
 SOURCES += \
     ../../../src/apu.cpp \
@@ -82,7 +82,6 @@ HEADERS += \
     ../../../include/timer.hpp \
     ../../../include/wave_channel.hpp \
     ../include/breakpoint_window.h \
-    ../include/custom_palette_window.h \
     ../include/debuggerwindow.h \
     ../include/frame_buffer_tab.h \
     ../include/mainwindow.h \

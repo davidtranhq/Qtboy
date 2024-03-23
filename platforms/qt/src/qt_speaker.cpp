@@ -2,12 +2,11 @@
 #include "raw_audio.hpp"
 #include <iostream>
 
-#include <QAudioOutput>
 #include <QBuffer>
 #include <QTimer>
 #include <QDebug>
 
-#include <SDL_audio.h>
+#include <SDL2/SDL_audio.h>
 
 Qt_speaker::Qt_speaker(QObject *parent)
     : QObject {parent}

@@ -5,7 +5,7 @@
 #include "speaker.hpp"
 
 #include <QObject>
-#include <SDL_audio.h>
+#include <SDL2/SDL_audio.h>
 
 class Qt_speaker : public QObject, public qtboy::Speaker
 {
